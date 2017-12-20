@@ -11,7 +11,8 @@ from helper import argget, convolution_helper_padding_same
 from helper import get_modified_xavier_method
 from model import batch_norm
 from ..rnn import CGRU
-from tensorflow_extra_ops import CaffeBiCGRU3D
+#not supported anymore, uncomment at your own risk.
+#from tensorflow_extra_ops import CaffeBiCGRU3D
 
 
 
