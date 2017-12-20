@@ -1,8 +1,6 @@
 __author__ = "Simon Andermatt"
 __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
-from __future__ import print_function  # Only needed for Python 2
-
 import copy
 import logging
 import os
