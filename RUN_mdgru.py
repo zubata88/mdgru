@@ -2,8 +2,7 @@ __author__ = "Simon Andermatt"
 __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import logging
-
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 import os
 import argparse
 import numpy as np
