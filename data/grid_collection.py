@@ -127,7 +127,7 @@ class GridDataCollection(DataCollection):
                 arr = []
                 for f in [f for f in sorted(listdir(file), key=str.lower) if isfile(join(file, f))]:
                     fi = join(file, f)
-                    if splitext(f)[-1].lower() in ['.png', '.pgm', '.pnm']:
+                    if splitext(f)[-1].lower() in ['.png', '.pgm', '.pnm', '.tif']:
                         arr.append(imread(fi))
                     else:
                         raise Exception(
