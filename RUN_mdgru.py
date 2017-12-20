@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(description="evaluate any data with given param
 
 data_parameters = parser.add_argument_group('data parameters')
 data_parameters.add_argument('--datapath', help='path where training, validation and testing and experiments folder'
-                                                + ' lie. Can be overriden for the data folders, '
+                                                + ' lie. Can be overridden for the data folders, '
                                                 + 'if location* is provided as an absolute path', required=True)
 data_parameters.add_argument('--locationtraining', nargs='+',
                              help='foldername for training location or all training folders')
