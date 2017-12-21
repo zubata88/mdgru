@@ -190,9 +190,10 @@ class GridDataCollection(DataCollection):
                 except:
                     try:
                         dst_affine = nib.load(os.path.join(tporigin, self.featurefiles[0])).affine
-                    except:
+                    except Exception as e:
                         logging.getLogger('data').warning('could not correct orientation for file {} from {}'
                                                           .format(filename, tporigin))
+                        logging.getLogger('data').debug('because {}'.format(e))
                 try:
                     ndim = data.ndim
 
@@ -203,12 +204,17 @@ class GridDataCollection(DataCollection):
                     else:
                         matrix *= dst_affine[:len(matrix), :len(matrix)]
                     data = swap(data, matrix, ndim)
-                except:
+                except Exception as e:
                     logging.getLogger('data').warning('could not correct orientation for file {} from {} using {}'
                                                       .format(filename, tporigin, dst_affine))
+                    logging.getLogger('data').debug('because {}'.format(e))
+
                 finally:
                     nib.save(nib.Nifti1Image(data, dst_affine), filename + ".nii.gz")
             else:
+                if self.correct_nifti_orientation:
+                    logging.getLogger('data').warning('could not correct orientation for file {} since tporigin is None: {}'
+                                                  .format(filename, tporigin))
                 nib.save(nib.Nifti1Image(data, self.affine), filename + ".nii.gz")
         else:
             if np.max(data) <= 1.0 and np.min(data) >= 0:
