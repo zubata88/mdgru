@@ -380,13 +380,16 @@ class LargeVolumeEvaluation(Evaluation):
             # evaluate accuracy...
             name = os.path.split(file)
             name = name[-1] if len(name[-1]) else os.path.basename(name[0])
-            if len(dc.maskfiles) > 0:
-                mfile = os.path.join(file, dc.maskfiles[0])
-                if os.path.exists(mfile):
-                    mf = np.expand_dims(dc.load(mfile).squeeze(), 0)
-                    errs.append([name, self.test_scores(res, mf)])
+            try:
+                if len(dc.maskfiles) > 0:
+                    mfile = os.path.join(file, dc.maskfiles[0])
+                    if os.path.exists(mfile):
+                        mf = np.expand_dims(dc.load(mfile).squeeze(), 0)
+                        errs.append([name, self.test_scores(res, mf)])
+            except Exception as e:
+                logging.getLogger('eval').warning('was not able to save test scores, even though ground truth was available.')
+                logging.getLogger('eval').debug('{}'.format(e))
             if return_results:
-
                 full_vols.append([name, file, res])
             else:
                 dc.save(res, os.path.join(file, self.estimatefilename), tporigin=file)
