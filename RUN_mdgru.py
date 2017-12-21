@@ -231,8 +231,8 @@ if modelname is None:
                                                                             args.learningrate,
                                                                             args.putrback,
                                                                             args.dontsumcgrus,
-                                                                            args.deformSigma if np.isscalar(
-                                                                                args.deformSigma) else "_".join(
+                                                                            args.deformSigma if np.isscalar(args.deformSigma)
+                                                                                or args.deformSigma is None else "_".join(
                                                                                 ["{}".format(x) for x in
                                                                                  args.deformSigma]),
                                                                             "-".join(
