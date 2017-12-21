@@ -185,7 +185,8 @@ class SupervisedEvaluation(Evaluation):
         super(SupervisedEvaluation, self).__init__(collectioninst, **kw)
         self.setupCollections(collectioninst)
         self.currit = 0
-        with tf.variable_scope(argget(kw, "namespace", "default")):
+        self.namespace = argget(kw, "namespace", "default")
+        with tf.variable_scope(self.namespace):
             self.training = tf.placeholder(dtype=tf.bool)
             self.dropout = tf.placeholder(dtype=tf.float32)
             self.data = tf.placeholder(dtype=tf.float32, shape=self.trdc.get_shape())
@@ -195,8 +196,35 @@ class SupervisedEvaluation(Evaluation):
             else:
                 self.target = tf.placeholder(dtype=tf.float32,
                                              shape=self.trdc.get_target_shape()[:-1] + [self.nclasses])
+            kw_copy = copy.deepcopy(kw)
             self.model = model(self.data, self.target, self.dropout, training=self.training, **kw)
             self.model.optimize
+# in the case we have a different testing set, we can construct 2 graphs, one for training and testing case
+        if self.tedc.get_shape() != self.trdc.get_shape():
+            self.test_graph = tf.Graph()
+            with self.test_graph.as_default():
+                with tf.variable_scope(self.namespace):
+                    self.test_training = tf.placeholder(dtype=tf.bool)
+                    self.test_dropout = tf.placeholder(dtype=tf.float32)
+                    self.test_data = tf.placeholder(dtype=tf.float32, shape=self.tedc.get_shape())
+                    if type(self.nclasses) == list:  # for location classification
+                        self.test_target = tf.placeholder(dtype=tf.float32,
+                                                     shape=self.tedc.get_target_shape()[:-1] + [np.sum(self.nclasses)])
+                    else:
+                        self.test_target = tf.placeholder(dtype=tf.float32,
+                                                     shape=self.tedc.get_target_shape()[:-1] + [self.nclasses])
+                    self.test_model = model(self.test_data, self.test_target, self.test_dropout, training=self.test_training,
+                                            **kw_copy)
+                    self.test_model.prediction
+                    self.test_model.cost
+        else:
+            self.test_graph = tf.get_default_graph()
+            self.test_model = self.model
+            self.test_training = self.training
+            self.test_dropout = self.dropout
+            self.test_data = self.data
+            self.test_target = self.target
+
         self.batch_size = argget(kw, 'batch_size', 1)
         self.validate_same = argget(kw, 'validate_same', False)
 
@@ -294,9 +322,19 @@ class LargeVolumeEvaluation(Evaluation):
         self.evaluate_uncertainty_saveall = argget(kw, "evaluate_uncertainty_saveall", False)
         super(LargeVolumeEvaluation, self).__init__(model, collectioninst, **kw)
 
-    def test_all_available(self, batch_size=None, dc=None, return_results=False, dropout=None):
+    def test_all_available(self, batch_size=None, dc=None, return_results=False, dropout=None, testing=False):
         if dc is None:
             dc = self.tedc
+        if testing:
+            model = self.test_model
+            data = self.test_data
+            dropoutph = self.test_dropout
+            trainingph = self.test_training
+        else:
+            model = self.model
+            data = self.data
+            trainingph = self.training
+            dropoutph = self.dropout
         if batch_size > 1:
             logging.getLogger('eval').error('not supported yet to have more than batchsize 1')
         volgens = dc.get_volume_batch_generators()
@@ -334,16 +372,16 @@ class LargeVolumeEvaluation(Evaluation):
                 if self.evaluate_uncertainty_times > 1:
                     preds = []
                     for i in range(self.evaluate_uncertainty_times):
-                        preds.append(self.sess.run(self.model.prediction,
-                                                   {self.data: subvol, self.dropout: dropout, self.training: False}))
+                        preds.append(self.sess.run(model.prediction,
+                                                   {data: subvol, dropoutph: dropout, trainingph: False}))
                         logging.getLogger('eval').debug(
                             'evaluated run {} of subvolume from {} to {}'.format(i, imin, imax))
                     pred = np.mean(np.asarray(preds), 0)
                     uncert = np.std(np.asarray(preds), 0)
                     preds = [x * certainty for x in preds]
                 else:
-                    pred = self.sess.run(self.model.prediction,
-                                         {self.data: subvol, self.dropout: dropout, self.training: False})
+                    pred = self.sess.run(model.prediction,
+                                         {data: subvol, dropoutph: dropout, trainingph: False})
                     logging.getLogger('eval').debug('evaluated subvolume from {} to {}'.format(imin, imax))
 
                 pred *= certainty

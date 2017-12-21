@@ -180,8 +180,7 @@ class Runner(object):
         if self.notifyme is not None:
             if signal != 0:
                 notify_user(self.notifyme['chat_id'], self.notifyme['token'], message='Process was killed')
-
-        self.ev.save(os.path.join(self.cachefolder, fname + '.ckpt'))
+        self.save(fname + '.ckpt')
         with open(os.path.join(self.cachefolder, 'trainloss.pickle'), 'wb') as f:
             pickle.dump(self.train_losses, f)
         with open(os.path.join(self.cachefolder, 'valloss.pickle'), 'wb') as f:
@@ -235,17 +234,23 @@ class Runner(object):
                                                                   difftime / divisor * self.its_per_epoch * self.epochs,
                                                                   difftime / divisor * self.its_per_epoch * self.epochs - difftime))
                 if it % self.save_each == self.save_each - 1:
-                    self.ev.save(os.path.join(self.cachefolder, 'temp-{}.ckpt'.format(epoch)))
-                    logging.getLogger('runner').info("saved instance")
+                    self.save('temp-{}.ckpt'.format(epoch))
 
             self.ev.current_iteration = 0
 
         self.ev.current_epoch = self.epochs
         self._finish(0)
 
+    def save(self, filename):
+        globalstep = self.ev.sess.run(self.ev.model.global_step)
+        abspath = os.path.join(self.cachefolder, filename)
+        self.ev.save(abspath)
+        self.checkpointfile = abspath+'-{}'.format(globalstep)
+        logging.getLogger('runner').info('Saved checkpoint {}'.format(filename+'-{}'.format(globalstep)))
+
     def test(self):
         self.ev.tedc.p = np.int32(self.ev.tedc.p)
-        self.ev.test_all_available(batch_size=1)
+        self.ev.test_all_available(batch_size=1, testing=True)
 
     def run(self, **kw):
         # save this file as txt to cachefolder:
@@ -256,17 +261,21 @@ class Runner(object):
                 config = tf.ConfigProto(gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=self.gpubound))
             else:
                 config = tf.ConfigProto()
-        with tf.Session(config=config) as sess:
-            self.ev.set_session(sess, self.cachefolder)
-
-            if self.checkpointfile:
-                self.ev.load(self.checkpointfile)
             shutil.copyfile(self.runfile, os.path.join(self.cachefolder, 'runfile.py'))
 
             if "train" in self.episodes:
-                self.train()
+                with tf.Session(config=config) as sess:
+                    self.ev.set_session(sess, self.cachefolder)
+                    if self.checkpointfile:
+                        self.ev.load(self.checkpointfile)
+                    self.train()
 
             if "test" in self.episodes or "evaluate" in self.episodes:
-                self.test()
+                self.use_tensorboard = False # no need, since we evaluate everything anyways.
+                with tf.Session(config=config, graph=self.ev.test_graph) as sess:
+                    self.ev.set_session(sess, self.cachefolder)
+                    if self.checkpointfile:
+                        self.ev.load(self.checkpointfile)
+                    self.test()
         if self.notifyme:
             notify_user(self.notifyme['chat_id'], self.notifyme['token'], message='{} has/have finished'.format(" and ".join(self.episodes)))

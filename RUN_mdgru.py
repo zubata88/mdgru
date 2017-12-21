@@ -154,6 +154,7 @@ else:
     wt = w
 
 if args.windowsizevalidation:
+    raise NotImplementedError('Unfortunately, windowsizevalidation can not yet be used!')
     wv = np.asarray(args.windowsizevalidation)
 else:
     wv = w
@@ -165,6 +166,7 @@ else:
     pt = p
 
 if args.paddingvalidation:
+    raise NotImplementedError('Unfortunately, paddingvalidation can not yet be used!')
     pv = np.asarray(args.paddingvalidation)
 else:
     pv = p
