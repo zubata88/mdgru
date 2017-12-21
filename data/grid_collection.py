@@ -103,7 +103,10 @@ class GridDataCollection(DataCollection):
         self.lazy = argget(kw, 'lazy', True)
         self.imagedict = {}
         self.perform_one_hot_encoding = argget(kw, 'perform_one_hot_encoding', True)
-        self.correct_nifti_orientation = argget(kw, 'correct_nifti_orientation', True)
+        self.correct_nifti_orientation = argget(kw, 'correct_nifti_orientation', len(self.w) == 3)
+        if self.correct_nifti_orientation and len(self.w) != 3:
+            self.correct_nifti_orientation = False
+            logging.getLogger('data').warning('Can only correct for orientation for 3d data so far!')
         self.numoffeatures = argget(kw, 'numoffeatures', len(self._get_features_and_masks(self.tps[0])[0]))
         self.sample_counter = 0
         self.minlabel = argget(kw, 'minlabel', 1)
