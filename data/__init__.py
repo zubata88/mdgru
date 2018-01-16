@@ -636,7 +636,7 @@ class DataCollection(object):
         res, err = subprocess.Popen(comm, stdout=subprocess.PIPE, shell=True).communicate()
         if (sys.version_info > (3, 0)):
             # Python 3 code in this block
-            return [str(r, 'utf-8') for r in res.split() if r]
+            return sorted([str(r, 'utf-8') for r in res.split() if r])
         else:
             # Python 2 code in this block
-            return [str(r) for r in res.split() if r]
+            return sorted([str(r) for r in res.split() if r])
