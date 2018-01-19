@@ -150,10 +150,15 @@ class ClassificationModel(Model):
         self.learning_rate = argget(kw, 'learning_rate', 0.001)
         self.momentum = argget(kw, 'momentum', 0.9)
         self.nclasses = argget(kw, 'nclasses', 2)
-        self.dice = argget(kw, 'show_dice', True)
+
+        self.f05 = argget(kw, 'show_f05', True)
         self.f1 = argget(kw, 'show_f1', True)
+        self.f2 = argget(kw, 'show_f2', True)
+
+        self.dice = argget(kw, 'show_dice', not self.f1)
+        
         self.cross_entropy = argget(kw, 'show_cross_entropy_loss', True)
-        self.binary_evaluation = self.dice or self.f1
+        self.binary_evaluation = self.dice or self.f1 or self.f05 or self.f2
         self.eps = 1e-15
         fullscoreshape = [None for _ in self.target.get_shape()[:-1]]+[np.sum(self.nclasses)]
         fullscoreshape_minimum = [1 if s is None else s for s in fullscoreshape]
@@ -189,11 +194,20 @@ class ClassificationModel(Model):
             enc_ref = np.argmax(ref,-1)
             enc_pred = self.nclasses*np.argmax(pred,-1)
             enc_both = enc_ref+enc_pred
-            bins = np.bincount(enc_both.flatten(),minlength=self.nclasses**2).reshape((self.nclasses,self.nclasses))
+            bins = np.bincount(enc_both.flatten(), minlength=self.nclasses**2).reshape((self.nclasses, self.nclasses))
         if self.dice:
-            res['dice'] = [bins[c,c] * 2 / (np.sum(bins,-1)[c] + np.sum(bins,-2)[c] + eps) for c in range(self.nclasses)]
+            res['dice'] = [bins[c, c] * 2 / (np.sum(bins,-1)[c] + np.sum(bins,-2)[c] + eps) for c in range(self.nclasses)]
+        if self.f05 or self.f2:
+            precision = np.array([bins[c, c] / (np.sum(bins, -1)[c]) for c in range(self.nclasses)])
+            recall = np.array([bins[c, c] / (np.sum(bins, -2)[c]) for c in range(self.nclasses)])
+        if self.f05:
+            beta2 = 0.5**2
+            res['f05'] = (1 + beta2) * precision * recall / ((beta2 * precision) + recall)
         if self.f1:
             res['f1'] = [bins[c,c] * 2 / (np.sum(bins,-2)[c] + np.sum(bins,-1)[c] + eps) for c in range(self.nclasses)]
+        if self.f2:
+            beta2 = 2**2
+            res['f2'] = (1 + beta2) * precision * recall / (beta2 * precision + recall)
         if self.cross_entropy:
             res['cross_entropy'] = np.mean(np.sum(ref*np.log(pred+self.eps),-1))
         if self.l2:
