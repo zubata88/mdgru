@@ -198,16 +198,16 @@ class ClassificationModel(Model):
         if self.dice:
             res['dice'] = [bins[c, c] * 2 / (np.sum(bins,-1)[c] + np.sum(bins,-2)[c] + eps) for c in range(self.nclasses)]
         if self.f05 or self.f2:
-            precision = np.array([bins[c, c] / (np.sum(bins, -1)[c]) for c in range(self.nclasses)])
-            recall = np.array([bins[c, c] / (np.sum(bins, -2)[c]) for c in range(self.nclasses)])
+            precision = np.array([bins[c, c] / (np.sum(bins, -1)[c] + eps) for c in range(self.nclasses)])
+            recall = np.array([bins[c, c] / (np.sum(bins, -2)[c] + eps) for c in range(self.nclasses)])
         if self.f05:
             beta2 = 0.5**2
-            res['f05'] = (1 + beta2) * precision * recall / ((beta2 * precision) + recall)
+            res['f05'] = (1 + beta2) * precision * recall / ((beta2 * precision) + recall + eps)
         if self.f1:
             res['f1'] = [bins[c,c] * 2 / (np.sum(bins,-2)[c] + np.sum(bins,-1)[c] + eps) for c in range(self.nclasses)]
         if self.f2:
             beta2 = 2**2
-            res['f2'] = (1 + beta2) * precision * recall / (beta2 * precision + recall)
+            res['f2'] = (1 + beta2) * precision * recall / (beta2 * precision + recall + eps)
         if self.cross_entropy:
             res['cross_entropy'] = np.mean(np.sum(ref*np.log(pred+self.eps),-1))
         if self.l2:
