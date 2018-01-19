@@ -152,9 +152,15 @@ class Runner(object):
 
         errors = list(itertools.chain.from_iterable(errors))
         avgerrors = {}
+        minerrors = {}
+        medianerrors = {}
+        maxerrors = {}
         for k in errors[0][1].keys():
             val = [errors[i][1][k] for i in range(len(errors)) if k in errors[i][1].keys()]
             avgerrors[k] = np.mean(val, 0)
+            minerrors[k] = np.nanmin(val, 0)
+            medianerrors[k] = np.median(val, 0)
+            maxerrors[k] = np.nanmax(val, 0)
         if self.ev.use_tensorboard:
             for k, v in avgerrors.items():
                 if np.isscalar(v):
@@ -167,7 +173,10 @@ class Runner(object):
                     except Exception as e:
                         logging.getLogger('runner').warning('could not save {} as scalar value'.format(vv))
 
-        logging.getLogger('runner').info("mean errors {}".format(avgerrors))
+        logging.getLogger('runner').info("min    errors {}".format(minerrors))
+        logging.getLogger('runner').info("mean   errors {}".format(avgerrors))
+        logging.getLogger('runner').info("median errors {}".format(medianerrors))
+        logging.getLogger('runner').info("max    errors {}".format(maxerrors))
 
         return avgerrors
 
