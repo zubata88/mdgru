@@ -270,21 +270,22 @@ class Runner(object):
                 config = tf.ConfigProto(gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=self.gpubound))
             else:
                 config = tf.ConfigProto()
-            shutil.copyfile(self.runfile, os.path.join(self.cachefolder, 'runfile.py'))
+                
+        shutil.copyfile(self.runfile, os.path.join(self.cachefolder, 'runfile.py'))
 
-            if "train" in self.episodes:
-                with tf.Session(config=config) as sess:
-                    self.ev.set_session(sess, self.cachefolder)
-                    if self.checkpointfile:
-                        self.ev.load(self.checkpointfile)
-                    self.train()
+        if "train" in self.episodes:
+            with tf.Session(config=config) as sess:
+                self.ev.set_session(sess, self.cachefolder)
+                if self.checkpointfile:
+                    self.ev.load(self.checkpointfile)
+                self.train()
 
-            if "test" in self.episodes or "evaluate" in self.episodes:
-                self.use_tensorboard = False # no need, since we evaluate everything anyways.
-                with tf.Session(config=config, graph=self.ev.test_graph) as sess:
-                    self.ev.set_session(sess, self.cachefolder)
-                    if self.checkpointfile:
-                        self.ev.load(self.checkpointfile)
-                    self.test()
+        if "test" in self.episodes or "evaluate" in self.episodes:
+            self.use_tensorboard = False # no need, since we evaluate everything anyways.
+            with tf.Session(config=config, graph=self.ev.test_graph) as sess:
+                self.ev.set_session(sess, self.cachefolder)
+                if self.checkpointfile:
+                    self.ev.load(self.checkpointfile)
+                self.test()
         if self.notifyme:
             notify_user(self.notifyme['chat_id'], self.notifyme['token'], message='{} has/have finished'.format(" and ".join(self.episodes)))
