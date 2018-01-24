@@ -10,6 +10,7 @@ import shutil
 import signal
 import sys
 import time as time
+import csv
 from threading import Thread
 
 import matplotlib.pyplot as plt
@@ -97,6 +98,14 @@ class Runner(object):
         self.printIt = argget(kw, "print_testing_results", True)
         self.gpubound = argget(kw, 'gpubound', 1)
         self.notifyme = argget(kw, 'notifyme', None)
+        self.results_to_csv = argget(kw, 'results_to_csv', False)
+
+        if self.results_to_csv:
+            try:
+                open(os.path.join(self.cachefolder, 'evaluation_scores.csv'),'w')
+                logging.getLogger('runner').info('evaluation_scores.csv created.')
+            except:
+                logging.getLogger('runner').warning('could not create evaluation_scores.csv.')
 
         self.train_losses = []
         self.test_losses = []
@@ -140,6 +149,7 @@ class Runner(object):
             except:
                 logging.getLogger('runner').info(error)
 
+
             def save_all_res(cachefolder, rr, dc, tname):
                 for rit, r in enumerate(rr):
                     if showIt:
@@ -151,6 +161,23 @@ class Runner(object):
             Thread(target=save_all_res, args=(self.cachefolder, res, self.ev.valdc, name,)).start()
 
         errors = list(itertools.chain.from_iterable(errors))
+
+        try:
+            if self.results_to_csv:
+                with open(os.path.join(self.cachefolder, 'evaluation_scores.csv'),'a') as csvfile:
+                    validationWriter = csv.writer(csvfile)
+
+                    validationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))])
+
+                    for key in errors[0][1].keys():
+                        try:
+                            for label in range(0, len(error[0][1][key])):
+                                validationWriter.writerow([key] + ['label' + str(label)] + [str(errors[i][1][key][label]) for i in range(0, len(errors))])
+                        except:
+                            validationWriter.writerow([key] + ['all_labels'] + [str(errors[i][1][key]) for i in range(0, len(errors))])
+        except:
+            logging.getLogger('runner').warning('could not write error to evaluation_scores.csv')
+
         avgerrors = {}
         minerrors = {}
         medianerrors = {}
@@ -270,7 +297,7 @@ class Runner(object):
                 config = tf.ConfigProto(gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=self.gpubound))
             else:
                 config = tf.ConfigProto()
-                
+
         shutil.copyfile(self.runfile, os.path.join(self.cachefolder, 'runfile.py'))
 
         if "train" in self.episodes:

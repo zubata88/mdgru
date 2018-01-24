@@ -130,6 +130,7 @@ execution_parameters.add_argument('--notifyme', default=None, nargs='?', type=st
                                        + ' follows: {"chat_id": CHATID, "token": TOKEN}, where CHATID and TOKEN '
                                        + 'have to be created with Telegrams BotFather. The chatid from config can be '
                                        + 'overriden using a parameter together with this option.')
+execution_parameters.add_argument('--results_to_csv', action="store_true", help='Writes validation scores to validation_scores.csv')
 
 args = parser.parse_args()
 
@@ -189,6 +190,9 @@ args_runner = {
     "experimentloc": os.path.join(args.datapath, 'experiments'),
     "fullparameters": fullparameters,
 }
+
+if args.results_to_csv:
+    args_runner["results_to_csv"] = True
 
 if args.notifyme:
     try:
