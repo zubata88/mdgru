@@ -10,6 +10,7 @@ import shutil
 import signal
 import sys
 import time as time
+import datetime
 import csv
 from threading import Thread
 
@@ -164,17 +165,19 @@ class Runner(object):
 
         try:
             if self.results_to_csv:
-                with open(os.path.join(self.cachefolder, 'evaluation_scores.csv'),'a') as csvfile:
+                with open(os.path.join(self.cachefolder, 'evaluation_scores.csv'), 'a') as csvfile:
+
+                    globalstep = self.ev.sess.run(self.ev.model.global_step)
+                    currenttime = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+
                     validationWriter = csv.writer(csvfile)
-
-                    validationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))])
-
+                    validationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['iteration','time-stamp'])
                     for key in errors[0][1].keys():
                         try:
                             for label in range(0, len(error[0][1][key])):
-                                validationWriter.writerow([key] + ['label' + str(label)] + [str(errors[i][1][key][label]) for i in range(0, len(errors))])
+                                validationWriter.writerow([key] + ['label' + str(label)] + [str(errors[i][1][key][label]) for i in range(0, len(errors))] + [str(globalstep), currenttime])
                         except:
-                            validationWriter.writerow([key] + ['all_labels'] + [str(errors[i][1][key]) for i in range(0, len(errors))])
+                            validationWriter.writerow([key] + ['all_labels'] + [str(errors[i][1][key]) for i in range(0, len(errors))] + [str(globalstep), currenttime])
         except:
             logging.getLogger('runner').warning('could not write error to evaluation_scores.csv')
 
