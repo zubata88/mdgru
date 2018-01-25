@@ -102,11 +102,18 @@ class Runner(object):
         self.results_to_csv = argget(kw, 'results_to_csv', False)
 
         if self.results_to_csv:
-            try:
-                open(os.path.join(self.cachefolder, 'evaluation_scores.csv'),'w')
-                logging.getLogger('runner').info('evaluation_scores.csv created.')
-            except:
-                logging.getLogger('runner').warning('could not create evaluation_scores.csv.')
+            if 'train' in self.episodes:
+                try:
+                    open(os.path.join(self.cachefolder, 'validation_scores.csv'), 'w') # mode w: any existing files with the same name in this cache folder will be erased
+                    logging.getLogger('runner').info('validation_scores.csv created.')
+                except:
+                    logging.getLogger('runner').warning('could not create validation_scores.csv.')
+            if 'test' in self.episodes:
+                try:
+                    open(os.path.join(self.cachefolder, 'testing_scores.csv'), 'w') # mode w: any existing files with the same name in this cache folder will be erased
+                    logging.getLogger('runner').info('testing_scores.csv created.')
+                except:
+                    logging.getLogger('runner').warning('could not create testing_scores.csv.')
 
         self.train_losses = []
         self.test_losses = []
@@ -165,13 +172,13 @@ class Runner(object):
 
         try:
             if self.results_to_csv:
-                with open(os.path.join(self.cachefolder, 'evaluation_scores.csv'), 'a') as csvfile:
+                with open(os.path.join(self.cachefolder, 'validation_scores.csv'), 'a') as csvfile:
 
                     globalstep = self.ev.sess.run(self.ev.model.global_step)
                     currenttime = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
                     validationWriter = csv.writer(csvfile)
-                    validationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['iteration','time-stamp'])
+                    validationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['iteration', 'time-stamp'])
                     for key in errors[0][1].keys():
                         try:
                             for label in range(0, len(error[0][1][key])):
@@ -179,7 +186,7 @@ class Runner(object):
                         except:
                             validationWriter.writerow([key] + ['all_labels'] + [str(errors[i][1][key]) for i in range(0, len(errors))] + [str(globalstep), currenttime])
         except:
-            logging.getLogger('runner').warning('could not write error to evaluation_scores.csv')
+            logging.getLogger('runner').warning('could not write error to validation_scores.csv')
 
         avgerrors = {}
         minerrors = {}
@@ -289,7 +296,26 @@ class Runner(object):
 
     def test(self):
         self.ev.tedc.p = np.int32(self.ev.tedc.p)
-        self.ev.test_all_available(batch_size=1, testing=True)
+        error = self.ev.test_all_available(batch_size=1, testing=True)
+
+        try:
+            if self.results_to_csv:
+                with open(os.path.join(self.cachefolder, 'testing_scores.csv'), 'a') as csvfile:
+
+                    globalstep = self.ev.sess.run(self.ev.model.global_step)
+                    currenttime = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+                    ckptfile = self.checkpointfile # if self.checkpointfile is a list -> adapt ckptfile
+
+                    testWriter = csv.writer(csvfile)
+                    testWriter.writerow(['score', 'label'] + [error[i][0] for i in range(0, len(error))] + ['checkpoint', 'iteration', 'time-stamp'])
+                    for key in error[0][1].keys():
+                        try:
+                            for label in range(0, len(error[0][1][key])):
+                                testWriter.writerow([key] + ['label' + str(label)] + [str(error[i][1][key][label]) for i in range(0, len(error))] + [ckptfile, str(globalstep), currenttime])
+                        except:
+                            testWriter.writerow([key] + ['all_labels'] + [str(error[i][1][key]) for i in range(0, len(error))] + [ckptfile, str(globalstep), currenttime])
+        except:
+            logging.getLogger('runner').warning('could not write error to testing_scores.csv')
 
     def run(self, **kw):
         # save this file as txt to cachefolder:
