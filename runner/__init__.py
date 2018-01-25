@@ -101,20 +101,6 @@ class Runner(object):
         self.notifyme = argget(kw, 'notifyme', None)
         self.results_to_csv = argget(kw, 'results_to_csv', False)
 
-        if self.results_to_csv:
-            if 'train' in self.episodes:
-                try:
-                    open(os.path.join(self.cachefolder, 'validation_scores.csv'), 'w') # mode w: any existing files with the same name in this cache folder will be erased
-                    logging.getLogger('runner').info('validation_scores.csv created.')
-                except:
-                    logging.getLogger('runner').warning('could not create validation_scores.csv.')
-            if 'test' in self.episodes:
-                try:
-                    open(os.path.join(self.cachefolder, 'testing_scores.csv'), 'w') # mode w: any existing files with the same name in this cache folder will be erased
-                    logging.getLogger('runner').info('testing_scores.csv created.')
-                except:
-                    logging.getLogger('runner').warning('could not create testing_scores.csv.')
-
         self.train_losses = []
         self.test_losses = []
         self.val_losses = []
