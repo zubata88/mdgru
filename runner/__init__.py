@@ -156,24 +156,6 @@ class Runner(object):
 
         errors = list(itertools.chain.from_iterable(errors))
 
-        try:
-            if self.results_to_csv:
-                with open(os.path.join(self.cachefolder, 'validation_scores.csv'), 'a') as csvfile:
-
-                    globalstep = self.ev.sess.run(self.ev.model.global_step)
-                    currenttime = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-
-                    validationWriter = csv.writer(csvfile)
-                    validationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['iteration', 'time-stamp'])
-                    for key in errors[0][1].keys():
-                        try:
-                            for label in range(0, len(error[0][1][key])):
-                                validationWriter.writerow([key] + ['label' + str(label)] + [str(errors[i][1][key][label]) for i in range(0, len(errors))] + [str(globalstep), currenttime])
-                        except:
-                            validationWriter.writerow([key] + ['all_labels'] + [str(errors[i][1][key]) for i in range(0, len(errors))] + [str(globalstep), currenttime])
-        except:
-            logging.getLogger('runner').warning('could not write error to validation_scores.csv')
-
         avgerrors = {}
         minerrors = {}
         medianerrors = {}
@@ -200,6 +182,24 @@ class Runner(object):
         logging.getLogger('runner').info("mean   errors {}".format(avgerrors))
         logging.getLogger('runner').info("median errors {}".format(medianerrors))
         logging.getLogger('runner').info("max    errors {}".format(maxerrors))
+
+        try:
+            if self.results_to_csv:
+                with open(os.path.join(self.cachefolder, 'validation_scores.csv'), 'a') as csvfile:
+
+                    globalstep = self.ev.sess.run(self.ev.model.global_step)
+                    currenttime = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+
+                    validationWriter = csv.writer(csvfile)
+                    validationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['iteration', 'time-stamp','score','label','min','mean','median','max'])
+                    for key in errors[0][1].keys():
+                        try:
+                            for label in range(0, len(error[0][1][key])):
+                                validationWriter.writerow([key] + ['label' + str(label)] + [str(errors[i][1][key][label]) for i in range(0, len(errors))] + [str(globalstep), currenttime, key] + ['label' + str(label)] + [str(minerrors[key][label]), str(avgerrors[key][label]), str(medianerrors[key][label]), str(maxerrors[key][label])] )
+                        except:
+                            validationWriter.writerow([key] + ['all_labels'] + [str(errors[i][1][key]) for i in range(0, len(errors))] + [str(globalstep), currenttime, key, 'all_labels'] + [str(minerrors[key]), str(avgerrors[key]), str(medianerrors[key]), str(maxerrors[key])])
+        except:
+            logging.getLogger('runner').warning('could not write error to validation_scores.csv')
 
         return avgerrors
 
@@ -284,6 +284,17 @@ class Runner(object):
         self.ev.tedc.p = np.int32(self.ev.tedc.p)
         error = self.ev.test_all_available(batch_size=1, testing=True)
 
+        avgerrors = {}
+        minerrors = {}
+        medianerrors = {}
+        maxerrors = {}
+        for k in error[0][1].keys():
+            val = [error[i][1][k] for i in range(len(error)) if k in error[i][1].keys()]
+            avgerrors[k] = np.mean(val, 0)
+            minerrors[k] = np.nanmin(val, 0)
+            medianerrors[k] = np.median(val, 0)
+            maxerrors[k] = np.nanmax(val, 0)
+
         try:
             if self.results_to_csv:
                 with open(os.path.join(self.cachefolder, 'testing_scores.csv'), 'a') as csvfile:
@@ -293,13 +304,13 @@ class Runner(object):
                     ckptfile = self.checkpointfile # if self.checkpointfile is a list -> adapt ckptfile
 
                     testWriter = csv.writer(csvfile)
-                    testWriter.writerow(['score', 'label'] + [error[i][0] for i in range(0, len(error))] + ['checkpoint', 'iteration', 'time-stamp'])
+                    testWriter.writerow(['score', 'label'] + [error[i][0] for i in range(0, len(error))] + ['checkpoint', 'iteration', 'time-stamp','score','label','min','mean','median','max'])
                     for key in error[0][1].keys():
                         try:
                             for label in range(0, len(error[0][1][key])):
-                                testWriter.writerow([key] + ['label' + str(label)] + [str(error[i][1][key][label]) for i in range(0, len(error))] + [ckptfile, str(globalstep), currenttime])
+                                testWriter.writerow([key] + ['label' + str(label)] + [str(error[i][1][key][label]) for i in range(0, len(error))] + [ckptfile, str(globalstep), currenttime, key] + ['label' + str(label)] + [str(minerrors[key][label]), str(avgerrors[key][label]), str(medianerrors[key][label]), str(maxerrors[key][label])])
                         except:
-                            testWriter.writerow([key] + ['all_labels'] + [str(error[i][1][key]) for i in range(0, len(error))] + [ckptfile, str(globalstep), currenttime])
+                            testWriter.writerow([key] + ['all_labels'] + [str(error[i][1][key]) for i in range(0, len(error))] + [ckptfile, str(globalstep), currenttime, key, 'all_labels'] + [str(minerrors[key]), str(avgerrors[key]), str(medianerrors[key]), str(maxerrors[key])])
         except:
             logging.getLogger('runner').warning('could not write error to testing_scores.csv')
 
