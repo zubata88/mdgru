@@ -277,7 +277,7 @@ class SupervisedEvaluation(Evaluation):
                              {self.data: self.testbatch, self.dropout: 1, self.training: False})
 
     def test_scores(self, pred, tar):
-        tar = np.expand_dims(tar.squeeze(), 0)
+        tar = np.int32(np.expand_dims(tar.squeeze(), 0))
         pred = np.expand_dims(pred.squeeze(), 0)
         if pred.shape != tar.shape:
             tar2 = np.zeros((np.prod(pred.shape[:-1]), pred.shape[-1]))
@@ -426,7 +426,7 @@ class LargeVolumeEvaluation(Evaluation):
                         errs.append([name, self.test_scores(res, mf)])
             except Exception as e:
                 logging.getLogger('eval').warning('was not able to save test scores, even though ground truth was available.')
-                logging.getLogger('eval').debug('{}'.format(e))
+                logging.getLogger('eval').warning('{}'.format(e))
             if return_results:
                 full_vols.append([name, file, res])
             else:
