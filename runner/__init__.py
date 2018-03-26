@@ -163,7 +163,8 @@ class Runner(object):
         logging.getLogger('runner').info("median errors {}".format(medianerrors))
         logging.getLogger('runner').info("max    errors {}".format(maxerrors))
 
-        self.write_error_to_csv(errors, 'validation_scores.csv', minerrors, avgerrors, medianerrors, maxerrors)
+        if self.results_to_csv:
+            self.write_error_to_csv(errors, 'validation_scores.csv', minerrors, avgerrors, medianerrors, maxerrors)
 
         return avgerrors
 
@@ -245,23 +246,33 @@ class Runner(object):
         logging.getLogger('runner').info('Saved checkpoint {}'.format(filename+'-{}'.format(globalstep)))
 
     def write_error_to_csv(self, errors, filename, minerrors, avgerrors, medianerrors, maxerrors):
-
         try:
-            if self.results_to_csv:
-                with open(os.path.join(self.cachefolder, filename), 'a') as csvfile:
 
-                    globalstep = self.ev.sess.run(self.ev.model.global_step)
-                    currenttime = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-                    ckptfile = self.checkpointfile # if self.checkpointfile is a list -> adapt ckptfile
+            with open(os.path.join(self.cachefolder, filename), 'a') as csvfile:
 
-                    evaluationWriter = csv.writer(csvfile)
-                    evaluationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['checkpoint', 'iteration', 'time-stamp','score','label','min','mean','median','max'])
-                    for key in errors[0][1].keys():
-                        try:
-                            for label in range(0, len(errors[0][1][key])):
-                                evaluationWriter.writerow([key] + ['label' + str(label)] + [str(errors[i][1][key][label]) for i in range(0, len(errors))] + [ckptfile, str(globalstep), currenttime, key] + ['label' + str(label)] + [str(minerrors[key][label]), str(avgerrors[key][label]), str(medianerrors[key][label]), str(maxerrors[key][label])])
-                        except:
-                            evaluationWriter.writerow([key] + ['all_labels'] + [str(errors[i][1][key]) for i in range(0, len(errors))] + [ckptfile, str(globalstep), currenttime, key, 'all_labels'] + [str(minerrors[key]), str(avgerrors[key]), str(medianerrors[key]), str(maxerrors[key])])
+                globalstep = self.ev.sess.run(self.ev.model.global_step)
+                currenttime = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+                ckptfile = self.checkpointfile # if self.checkpointfile is a list -> adapt ckptfile
+
+                evaluationWriter = csv.writer(csvfile)
+                evaluationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['checkpoint', 'iteration', 'time-stamp','score','label','min','mean','median','max'])
+                for key in errors[0][1].keys():
+                    try:
+                        for label in range(0, len(errors[0][1][key])):
+                            evaluationWriter.writerow([key]
+                                                      + ['label' + str(label)]
+                                                      + [str(errors[i][1][key][label]) for i in range(0, len(errors))]
+                                                      + [ckptfile, str(globalstep), currenttime, key]
+                                                      + ['label' + str(label)]
+                                                      + [str(minerrors[key][label]), str(avgerrors[key][label]),
+                                                         str(medianerrors[key][label]), str(maxerrors[key][label])])
+                    except:
+                        evaluationWriter.writerow([key]
+                                                  + ['all_labels']
+                                                  + [str(errors[i][1][key]) for i in range(0, len(errors))]
+                                                  + [ckptfile, str(globalstep), currenttime, key, 'all_labels']
+                                                  + [str(minerrors[key]), str(avgerrors[key]),
+                                                     str(medianerrors[key]), str(maxerrors[key])])
         except:
             logging.getLogger('runner').warning('could not write error to ' + filename)
 
@@ -296,10 +307,9 @@ class Runner(object):
     def test(self):
         self.ev.tedc.p = np.int32(self.ev.tedc.p)
         errors = self.ev.test_all_available(batch_size=1, testing=True)
-
-        minerrors, avgerrors, medianerrors, maxerrors = self.calc_min_mean_median_max_errors(errors)
-
-        self.write_error_to_csv(errors, 'testing_scores.csv', minerrors, avgerrors, medianerrors, maxerrors)
+        if self.results_to_csv and len(errors):
+            minerrors, avgerrors, medianerrors, maxerrors = self.calc_min_mean_median_max_errors(errors)
+            self.write_error_to_csv(errors, 'testing_scores.csv', minerrors, avgerrors, medianerrors, maxerrors)
 
 
 
