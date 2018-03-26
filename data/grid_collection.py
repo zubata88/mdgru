@@ -456,33 +456,13 @@ class GridDataCollection(DataCollection):
             targetindex = [slice(None)] + [slice(np.int32(r[0]), np.int32(r[1])) for r in ranges]
             sourcesindex = [slice(np.int32(mi), np.int32(ma)) for mi, ma in zip(imin, imax)]
             tempdata[targetindex] = np.asarray([f[sourcesindex] for f in featuredata])
-            #             tempdata[:,ranges[0,0]:ranges[0,1],
-            #                  ranges[1,0]:ranges[1,1],
-            #                  ranges[2,0]:ranges[2,1]] = np.asarray(
-            #                      [f[imin[0]:imax[0],
-            #                         imin[1]:imax[1],
-            #                         imin[2]:imax[2]]
-            #             for f in featuredata])
-            # 
+
             if len(masks):
-                templabels = np.zeros([len(masks)] + self.w, dtype=np.int8)
-                templabels[targetindex] = np.asarray([f.squeeze()[sourcesindex] for f in masks])
+                templabels = np.zeros(self.w, dtype=np.int8)
+                templabels[targetindex[1:]] = np.asarray([f.squeeze()[sourcesindex] for f in masks])
                 if one_hot and not self.regression:
                     templabels = self._one_hot_vectorize(templabels, self.nclasses, zero_out_label=self.zero_out_label)
-                if len(masks) > 1:
-                    raise Exception(
-                        'this is not yet properly handled, since we"re supposed to get back only one map with labels. hm...')
-                else:
-                    templabels = templabels.transpose([i for i in range(1, len(templabels.shape))] + [0])
-                #                 templabels[:,ranges[0,0]:ranges[0,1],
-                #                         ranges[1,0]:ranges[1,1],
-                #                         ranges[2,0]:ranges[2,1]] = np.asarray(
-                #                             [f.squeeze()[imin[0]:imax[0],
-                #                                 imin[1]:imax[1],
-                #                                 imin[2]:imax[2]]
-                #                      for f in masks])
-                #                 if one_hot:
-                #                     templabels = self._one_hot_labels(np.asarray([templabels]), self.nclasses, zero_out_label=self.zero_out_label)[0]
+
 
         else:  # we need to interpolate
             coords = np.float64(np.mgrid[[slice(np.int32(imi), np.int32(ima)) for imi, ima in zip(imin, imax)]])
