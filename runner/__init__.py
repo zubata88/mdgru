@@ -10,6 +10,7 @@ import shutil
 import signal
 import sys
 import time as time
+import datetime
 import csv
 from threading import Thread
 
@@ -100,13 +101,6 @@ class Runner(object):
         self.notifyme = argget(kw, 'notifyme', None)
         self.results_to_csv = argget(kw, 'results_to_csv', False)
 
-        if self.results_to_csv:
-            try:
-                open(os.path.join(self.cachefolder, 'evaluation_scores.csv'),'w')
-                logging.getLogger('runner').info('evaluation_scores.csv created.')
-            except:
-                logging.getLogger('runner').warning('could not create evaluation_scores.csv.')
-
         self.train_losses = []
         self.test_losses = []
         self.val_losses = []
@@ -162,48 +156,14 @@ class Runner(object):
 
         errors = list(itertools.chain.from_iterable(errors))
 
-        try:
-            if self.results_to_csv:
-                with open(os.path.join(self.cachefolder, 'evaluation_scores.csv'),'a') as csvfile:
-                    validationWriter = csv.writer(csvfile)
-
-                    validationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))])
-
-                    for key in errors[0][1].keys():
-                        try:
-                            for label in range(0, len(error[0][1][key])):
-                                validationWriter.writerow([key] + ['label' + str(label)] + [str(errors[i][1][key][label]) for i in range(0, len(errors))])
-                        except:
-                            validationWriter.writerow([key] + ['all_labels'] + [str(errors[i][1][key]) for i in range(0, len(errors))])
-        except:
-            logging.getLogger('runner').warning('could not write error to evaluation_scores.csv')
-
-        avgerrors = {}
-        minerrors = {}
-        medianerrors = {}
-        maxerrors = {}
-        for k in errors[0][1].keys():
-            val = [errors[i][1][k] for i in range(len(errors)) if k in errors[i][1].keys()]
-            avgerrors[k] = np.mean(val, 0)
-            minerrors[k] = np.nanmin(val, 0)
-            medianerrors[k] = np.median(val, 0)
-            maxerrors[k] = np.nanmax(val, 0)
-        if self.ev.use_tensorboard:
-            for k, v in avgerrors.items():
-                if np.isscalar(v):
-                    v = [v]
-                for c, vv in enumerate(v):
-                    try:
-                        summary = tf.Summary()
-                        summary.value.add(tag='validation-mean-{}-{}'.format(k, c), simple_value=vv)
-                        self.ev.train_writer.add_summary(summary)
-                    except Exception as e:
-                        logging.getLogger('runner').warning('could not save {} as scalar value'.format(vv))
+        minerrors, avgerrors, medianerrors, maxerrors = self.calc_min_mean_median_max_errors(errors)
 
         logging.getLogger('runner').info("min    errors {}".format(minerrors))
         logging.getLogger('runner').info("mean   errors {}".format(avgerrors))
         logging.getLogger('runner').info("median errors {}".format(medianerrors))
         logging.getLogger('runner').info("max    errors {}".format(maxerrors))
+
+        self.write_error_to_csv(errors, 'validation_scores.csv', minerrors, avgerrors, medianerrors, maxerrors)
 
         return avgerrors
 
@@ -284,9 +244,64 @@ class Runner(object):
         self.checkpointfile = abspath+'-{}'.format(globalstep)
         logging.getLogger('runner').info('Saved checkpoint {}'.format(filename+'-{}'.format(globalstep)))
 
+    def write_error_to_csv(self, errors, filename, minerrors, avgerrors, medianerrors, maxerrors):
+
+        try:
+            if self.results_to_csv:
+                with open(os.path.join(self.cachefolder, filename), 'a') as csvfile:
+
+                    globalstep = self.ev.sess.run(self.ev.model.global_step)
+                    currenttime = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+                    ckptfile = self.checkpointfile # if self.checkpointfile is a list -> adapt ckptfile
+
+                    evaluationWriter = csv.writer(csvfile)
+                    evaluationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['checkpoint', 'iteration', 'time-stamp','score','label','min','mean','median','max'])
+                    for key in errors[0][1].keys():
+                        try:
+                            for label in range(0, len(errors[0][1][key])):
+                                evaluationWriter.writerow([key] + ['label' + str(label)] + [str(errors[i][1][key][label]) for i in range(0, len(errors))] + [ckptfile, str(globalstep), currenttime, key] + ['label' + str(label)] + [str(minerrors[key][label]), str(avgerrors[key][label]), str(medianerrors[key][label]), str(maxerrors[key][label])])
+                        except:
+                            evaluationWriter.writerow([key] + ['all_labels'] + [str(errors[i][1][key]) for i in range(0, len(errors))] + [ckptfile, str(globalstep), currenttime, key, 'all_labels'] + [str(minerrors[key]), str(avgerrors[key]), str(medianerrors[key]), str(maxerrors[key])])
+        except:
+            logging.getLogger('runner').warning('could not write error to ' + filename)
+
+
+    def calc_min_mean_median_max_errors(self, errors):
+        avgerrors = {}
+        minerrors = {}
+        medianerrors = {}
+        maxerrors = {}
+        for k in errors[0][1].keys():
+            val = [errors[i][1][k] for i in range(len(errors)) if k in errors[i][1].keys()]
+            avgerrors[k] = np.mean(val, 0)
+            minerrors[k] = np.nanmin(val, 0)
+            medianerrors[k] = np.median(val, 0)
+            maxerrors[k] = np.nanmax(val, 0)
+
+        if self.ev.use_tensorboard:
+            for k, v in avgerrors.items():
+                if np.isscalar(v):
+                    v = [v]
+                for c, vv in enumerate(v):
+                    try:
+                        summary = tf.Summary()
+                        summary.value.add(tag='validation-mean-{}-{}'.format(k, c), simple_value=vv)
+                        self.ev.train_writer.add_summary(summary)
+                    except Exception as e:
+                        logging.getLogger('runner').warning('could not save {} as scalar value'.format(vv))
+
+        return minerrors, avgerrors, medianerrors, maxerrors
+
+
     def test(self):
         self.ev.tedc.p = np.int32(self.ev.tedc.p)
-        self.ev.test_all_available(batch_size=1, testing=True)
+        errors = self.ev.test_all_available(batch_size=1, testing=True)
+
+        minerrors, avgerrors, medianerrors, maxerrors = self.calc_min_mean_median_max_errors(errors)
+
+        self.write_error_to_csv(errors, 'testing_scores.csv', minerrors, avgerrors, medianerrors, maxerrors)
+
+
 
     def run(self, **kw):
         # save this file as txt to cachefolder:
