@@ -17,7 +17,7 @@ sudo pip3 install tensorflow-gpu
 # or
 sudo pip3 install tensorflow
 
-pip3 install nibabel numpy scipy matplotlib pynrrd scikit-image scikit-learn
+sudo pip3 install nibabel numpy scipy matplotlib pynrrd scikit-image scikit-learn
 
 ```
 
