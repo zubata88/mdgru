@@ -19,6 +19,7 @@ LEARNINGRATE_DEFAULT = 1.0
 RANDOM_SEED_DEFAULT = 123456789
 UNCERTAINTYTIMES_DEFAULT = 1
 TEST_EACH_DEFAULT = 2500
+SAVE_EACH_DEFAULT = 2500
 GPUBOUNDFRACTION_DEFAULT = 1
 
 fullparameters = " ".join(sys.argv)
@@ -114,7 +115,8 @@ execution_parameters.add_argument('--learningrate', type=float, default=LEARNING
 execution_parameters.add_argument('--optionname', help='override optionname (used eg for saving results)')
 
 execution_parameters.add_argument('--testfirst', action="store_true", help="validate first")
-execution_parameters.add_argument('--testeach', default=TEST_EACH_DEFAULT, type=int, help='validate each # iterations')
+execution_parameters.add_argument('--test_each', default=TEST_EACH_DEFAULT, type=int, help='validate each # iterations')
+execution_parameters.add_argument('--save_each', default=SAVE_EACH_DEFAULT, type=int, help='save to ckpt each # iterations')
 execution_parameters.add_argument('--gpuboundfraction', default=GPUBOUNDFRACTION_DEFAULT, type=float,
                                   help='manage how much of the memory of the gpu can be used')
 execution_parameters.add_argument('--cpu', action="store_true", help='Only run on cpu')
@@ -183,7 +185,6 @@ args_runner = {
     "epochs": 0 if args.iterations else args.epochs,
     "test_size": 1,
     "test_iters": 1,
-    "save_each": 2500,
     "show_testing_results": True,
     "perform_n_times_full_validation": 1,
     "perform_n_times_full_validation_dropout": 1,
@@ -267,8 +268,10 @@ if args.ckpt is not None:
     args_runner['checkpointfile'] = args.ckpt
 if args.testbatchsize is not None:
     args_runner['test_size'] = args.testbatchsize
-if args.testeach is not None:
-    args_runner['test_each'] = args.testeach
+if args.test_each is not None:
+    args_runner['test_each'] = args.test_each
+if args.save_each is not None:
+    args_runner['save_each'] = args.save_each
 if args.gpuboundfraction is not None:
     args_runner['gpubound'] = args.gpuboundfraction
 if args.testfirst:
