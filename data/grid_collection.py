@@ -602,36 +602,6 @@ class GridDataCollection(DataCollection):
         else:
             raise Exception('only implemented for 2d and 3d case. feel free to contribute')
 
-    @classmethod
-    def createDataCollections(cls, featurefiles, maskfiles, location=None, tps=None, training=0.8, testing=0.2,
-                              validation=0, **kw):
-        if not isinstance(featurefiles, list):
-            featurefiles = [featurefiles]
-        if not isinstance(maskfiles, list):
-            maskfiles = [maskfiles]
-        if (validation + training + testing != 1):
-            raise Exception('the proportions need to sum up to one!')
-        if tps is not None:
-            pass
-        elif location is not None:
-            tps = DataCollection.get_all_tps(location, featurefiles, maskfiles)
-        else:
-            raise Exception('either tps or location has to be set')
-        np.random.seed(argget(kw, "seed", 12345678))
-        np.random.shuffle(tps)
-        trnum = np.int32(len(tps) * training)
-        tenum = np.int32(len(tps) * testing)
-
-        teset = cls(featurefiles, maskfiles, tps=tps[:tenum], **kw)
-        if validation == 0 and trnum + tenum != len(tps):
-            trnum += len(tps) - trnum - tenum  # add lost tp to tr
-            valset = teset
-        else:
-            valset = cls(featurefiles, maskfiles, tps=tps[trnum + tenum:], **kw)
-        trset = cls(featurefiles, maskfiles, tps=tps[tenum:trnum], **kw)
-
-        return {'train': trset, 'validation': valset, 'test': teset}
-
 
 class ThreadedGridDataCollection(GridDataCollection):
     def __init__(self, featurefiles, maskfiles=[], location=None, tps=None, **kw):
