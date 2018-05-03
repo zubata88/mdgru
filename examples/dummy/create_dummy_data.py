@@ -11,7 +11,8 @@ def create_example_nifti_data():
     border_edges = [[30, 70], [30, 70], [10, 30]]
     edge_variation = (15, 15, 8)
     rater_variation = (2, 2, 2)
-    pats = ["ruedi", "hans", "eva"]
+    pats = ["ruedi", "hans", "eva", "micha", "joerg", "maya", "frieda", "anna", "chelsea", "flynn"]
+    belongs_to = ['train', 'train', 'train', 'train', 'train', 'val', 'val', 'test', 'test', 'test']
     affine = np.zeros((4, 4))
     affine[0, 2] = 1
     affine[1, 0] = 1
@@ -20,8 +21,11 @@ def create_example_nifti_data():
     testdatadir = '.'
     print(testdatadir)
     testdatadirnifti = os.path.join(testdatadir, "nifti")
-    for pat in pats:
-        patdir = os.path.join(testdatadirnifti, pat)
+    if os.path.exists(testdatadirnifti):
+        print('Files have already been generated. If something is amiss, delete the nifti folder and start again!')
+        return
+    for f, pat in zip(belongs_to, pats):
+        patdir = os.path.join(os.path.join(testdatadirnifti, f), pat)
         if not os.path.exists(patdir):
             os.makedirs(patdir)
         gt_mask = np.zeros(shape)
@@ -51,12 +55,6 @@ def create_example_nifti_data():
                 rater_borders[1][0]: rater_borders[1][1],
                 rater_borders[2][0]: rater_borders[2][1]] = 1
                 nib.save(nib.Nifti1Image(dat, affine), myfile)
-
-    # Create markers
-    with open(os.path.join(testdatadirnifti, "markers_vox.txt"), "w") as f:
-        for pat in pats:
-            marker_coord = np.random.uniform(low=0, high=np.subtract(shape, 1))
-            f.write("{},{},{},{}\n".format(pat, *marker_coord))
 
 
 if __name__ == "__main__":
