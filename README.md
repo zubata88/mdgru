@@ -126,6 +126,9 @@ sudo pip3 install tensorflow
 
 sudo pip3 install nibabel numpy scipy matplotlib pynrrd scikit-image scikit-learn
 
+sudo pip3 install git+https://github.com/spezold/mvloader.git
+
+
 ```
 
 # Papers

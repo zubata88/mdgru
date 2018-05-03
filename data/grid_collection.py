@@ -9,6 +9,8 @@ from os.path import isfile, isdir, join, splitext
 from threading import Thread
 
 import nibabel as nib
+import mvloader.nifti as ni
+from mvloader.volume import Volume
 import nrrd
 import numpy as np
 import skimage.io as skio
@@ -19,7 +21,7 @@ from scipy.ndimage.interpolation import zoom
 
 from helper import argget, counter_generator
 from helper import deprecated
-from . import DataCollection, open_image, swap
+from . import DataCollection
 
 
 class GridDataCollection(DataCollection):
@@ -143,8 +145,8 @@ class GridDataCollection(DataCollection):
                 ending = splitext(file)[-1].lower()
                 if ending in ['.nii', '.hdr', '.nii.gz', '.gz']:
                     if self.correct_nifti_orientation:
-                        vol = open_image(file, verbose=False)
-                        self.affine = vol.get_aligned_matrix()
+                        vol = ni.open_image(file, verbose=False)
+                        self.affine = vol.get_aligned_transformation()
                         data = vol.aligned_volume
                     else:
                         f = nib.load(file)
@@ -183,34 +185,27 @@ class GridDataCollection(DataCollection):
 
         if ending in ['.nii', '.hdr', '.nii.gz', '.gz'] or len(data.squeeze().shape) > 2:
             if self.correct_nifti_orientation and tporigin is not None:
-                #we corrected the orientation and we have the information to undo our wrongs, lets go:
-                dst_affine = np.eye(4)
+                # we corrected the orientation and we have the information to undo our wrongs, lets go:
+                aligned_data = Volume(data, np.eye(4), "RAS")  # dummy initialisation if everything else fails
                 try:
-                    dst_affine = nib.load(os.path.join(tporigin, self.maskfiles[0])).affine
+                    tporigin_vol = ni.open_image(os.path.join(tporigin, self.maskfiles[0]))
                 except:
                     try:
-                        dst_affine = nib.load(os.path.join(tporigin, self.featurefiles[0])).affine
+                        tporigin_vol = ni.open_image(os.path.join(tporigin, self.featurefiles[0]))
                     except Exception as e:
                         logging.getLogger('data').warning('could not correct orientation for file {} from {}'
                                                           .format(filename, tporigin))
                         logging.getLogger('data').debug('because {}'.format(e))
                 try:
-                    ndim = data.ndim
-
-                    matrix = np.eye(ndim)
-                    if len(matrix) > len(dst_affine):
-                        #yes, elementwise. we only want to flip axes!!
-                        matrix[:len(dst_affine), :len(dst_affine)] *= dst_affine
-                    else:
-                        matrix *= dst_affine[:len(matrix), :len(matrix)]
-                    data = swap(data, matrix, ndim)
+                    aligned_vol = Volume(data, tporigin_vol.aligned_transformation, tporigin_vol.system)
+                    aligned_data = aligned_vol.copy_like(tporigin_vol)
                 except Exception as e:
-                    logging.getLogger('data').warning('could not correct orientation for file {} from {} using {}'
-                                                      .format(filename, tporigin, dst_affine))
+                    logging.getLogger('data').warning('could not correct orientation for file {} from {}'
+                                                      .format(filename, tporigin))
                     logging.getLogger('data').debug('because {}'.format(e))
 
                 finally:
-                    nib.save(nib.Nifti1Image(data, dst_affine), filename + ".nii.gz")
+                    ni.save_volume(filename + ".nii.gz", aligned_data, True)
             else:
                 if self.correct_nifti_orientation:
                     logging.getLogger('data').warning('could not correct orientation for file {} since tporigin is None: {}'
