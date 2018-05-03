@@ -24,19 +24,6 @@ def lazy_property(function):
     return wrapper
 
 
-def layer_norm(x, s=None, b=None, use_bias=False, eps=1e-8):
-    if s is None:
-        s = tf.get_variable('lnscale', initializer=tf.constant_initializer(1.0), shape=[1])
-    m, v = tf.nn.moments(x, [i for i in range(1, len(x.get_shape()))], keep_dims=True)
-    nx = (x - m) / tf.sqrt(v + eps)
-    nx *= s
-    if use_bias:
-        if b is None:
-            b = tf.get_variable('lnbias', initializer=tf.constant_initializer(0.0), shape=[1])
-        nx += b
-    return nx
-
-
 def batch_norm(x, name_scope, training, epsilon=1e-3, decay=0.999, bias=True, m=None):
     '''Assume 2d [batch, values] tensor'''
 
