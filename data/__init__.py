@@ -503,13 +503,13 @@ class DataCollection(object):
         self.randomstate = np.random.RandomState(argget(kw, "seed", 12345678))
         self.nclasses = argget(kw, 'nclasses', 2)
 
-    def setStates(self, states):
+    def set_states(self, states):
         if states is None:
             logging.getLogger('eval').warning('could not reproduce state, setting unreproducable random seed')
             self.randomstate.set_seed(np.random.randint(0, 1000000))
         self.randomstate.set_state(states)
 
-    def getStates(self):
+    def get_states(self):
         return self.randomstate.get_state()
 
     def reset_seed(self, seed=12345678):
@@ -550,58 +550,6 @@ class DataCollection(object):
         raise Exception("get_data_dims not implemented in {}"
                         .format(self.__class__))
 
-    def sample_all(self, **kw):
-        '''Returns all sequences without creating duplicates. Class depending 
-        attributes allow for some intervention.
-        
-        Args:
-            batch_size: Number of samples in  batch.
-            **kw: Optional set of arguments, depending on class. If max_size is 
-            available, the maximum number of samples that will be returned can 
-            be set. normalize (bool), if available, decides if the data should 
-            be normalized before it is returned. dataset, if available, lets the
-            user choose the dataset that is completely sampled.
-        
-        Returns:
-            A generator that iterates through given collection in batches of 
-            batch_size
-        
-        '''
-        raise Exception("sample_all not implemented in {}"
-                        .format(self.__class__))
-
-    def _one_hot_labels(self, indexlabels, nclasses=None, softlabels=False, zero_out_label=None):
-        if nclasses is None:
-            nclasses = self.nclasses
-        batch_size = indexlabels.shape[0]
-        if indexlabels.shape[1] > 1:
-            raise Exception('cant have more than one mask yet')
-        else:
-            indexlabels = indexlabels.reshape([batch_size]
-                                              + list(indexlabels.shape[2:]))
-        if softlabels:
-            # this cant be right. just as it is, it only works correctly for a 2 classes case.
-            l = np.zeros([np.prod(indexlabels.shape), nclasses], dtype=np.float32)
-            if nclasses == 2:
-                l[np.int32(np.arange(np.prod(indexlabels.shape))), 0] = 1 - indexlabels.flatten()
-                l[:, 0] = np.clip(l[:, 0], 0, 1)
-                l[:, 1] = 1 - l[:, 0]
-            else:
-                raise logging.getLogger('data').warning('this part of the code, we strongly discourage')
-                indexlabels = np.clip(indexlabels, 0, self.nclasses - 1)
-                hi = np.ceil(indexlabels) - indexlabels
-                lo = 1 - hi
-                l[np.int32(np.arange(np.prod(indexlabels.shape))), np.int32(
-                    np.floor(indexlabels)).flatten()] = hi.flatten()
-                l[np.int32(np.arange(np.prod(indexlabels.shape))), np.int32(
-                    np.ceil(indexlabels)).flatten()] = lo.flatten()
-        else:
-            indexlabels = np.int32(np.round(indexlabels))
-            l = np.zeros([np.prod(indexlabels.shape), nclasses], dtype=np.int32)
-            l[np.int32(np.arange(np.prod(indexlabels.shape))), indexlabels.flatten()] = 1
-        if zero_out_label is not None:
-            l[:, zero_out_label] = 0
-        return l.reshape(list(indexlabels.shape) + [nclasses])
 
     def _one_hot_vectorize(self, indexlabels, nclasses=None, zero_out_label=None):
         '''
@@ -627,6 +575,13 @@ class DataCollection(object):
 
     @staticmethod
     def get_all_tps(folder, featurefiles, maskfiles):
+        '''
+        computes list of all folders that are subfolders of folder and contain all provided featurefiles and maskfiles.
+        :param folder: location at which timepoints are searched
+        :param featurefiles: necessary featurefiles to be contained in a timepoint
+        :param maskfiles: necessary maskfiles to be contained in a timepoint
+        :return: sorted list of valid timepoints in string format
+        '''
         comm = "find '" + os.path.join(folder, '') + "' -type d -exec test -e {}/" + featurefiles[0]
         for i in featurefiles[1:]:
             comm += " -a -e {}/" + i

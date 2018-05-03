@@ -73,9 +73,9 @@ class Evaluation(object):
     def save(self, f):
         '''saves model to disk at location f'''
         self.saver.save(self.sess, f, global_step=self.model.global_step)
-        trdc = self.trdc.getStates()
-        tedc = self.tedc.getStates()
-        valdc = self.valdc.getStates()
+        trdc = self.trdc.get_states()
+        tedc = self.tedc.get_states()
+        valdc = self.valdc.get_states()
         states = {}
         if trdc:
             states['trdc'] = trdc
@@ -132,17 +132,17 @@ class Evaluation(object):
         except Exception as e:
             logging.getLogger('eval').warning('there was no randomstate pickle named {} around'.format(pickle_name))
         if "trdc" in states:
-            self.trdc.setStates(states['trdc'])
+            self.trdc.set_states(states['trdc'])
         else:
-            self.trdc.setStates(None)
+            self.trdc.set_states(None)
         if "tedc" in states:
-            self.tedc.setStates(states['tedc'])
+            self.tedc.set_states(states['tedc'])
         else:
-            self.tedc.setStates(None)
+            self.tedc.set_states(None)
         if "valdc" in states:
-            self.valdc.setStates(states['valdc'])
+            self.valdc.set_states(states['valdc'])
         else:
-            self.valdc.setStates(None)
+            self.valdc.set_states(None)
         if 'epoch' in states:
             self.current_epoch = states['epoch']
         else:

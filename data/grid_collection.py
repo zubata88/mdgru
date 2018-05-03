@@ -228,7 +228,7 @@ class GridDataCollection(DataCollection):
                 print('preloading {}'.format(file))
                 self.load(file, lazy=False)
 
-    def setStates(self, states):
+    def set_states(self, states):
         if states is None:
             logging.getLogger('eval').warning(
                 'could not reproduce state, setting unreproducable random seed for all random states')
@@ -244,7 +244,7 @@ class GridDataCollection(DataCollection):
                 self.deformrandomstate.set_state(states['deformrandomstate'])
             self.randomstate.set_state(states['randomstate'])
 
-    def getStates(self):
+    def get_states(self):
         states = {}
         if hasattr(self, 'random_mask_state'):
             states['random_mask_state'] = self.random_mask_state.get_state()
@@ -541,9 +541,6 @@ class GridDataCollection(DataCollection):
         if self.gaussiannoise > 0:
             tempdata *= (1 + (self.deformrandomstate.rand(*tempdata.shape) - 0.5) * self.gaussiannoise)
         return tempdata, templabels
-
-    def sample_all(self, data_set=None, batch_size=1, **kw):
-        raise Exception('implement this')
 
     def get_volume_batch_generators(self):
         # volgeninfo = []
