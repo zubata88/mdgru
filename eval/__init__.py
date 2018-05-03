@@ -18,7 +18,7 @@ except:
 
 
 class Evaluation(object):
-    estimatefilename = "estimate.nii"
+    estimatefilename = "estimate"
     '''Base class for all evaluation classes. Child classes implement various 
         test_* methods to test modeldependent aspects.
     
@@ -430,7 +430,8 @@ class LargeVolumeEvaluation(Evaluation):
             if return_results:
                 full_vols.append([name, file, res])
             else:
-                dc.save(res, os.path.join(file, self.estimatefilename), tporigin=file)
+                dc.save(res, os.path.join(file, self.estimatefilename + "-probdist"), tporigin=file)
+                dc.save(np.argmax(res, -1), os.path.join(file, self.estimatefilename + "-labels"), tporigin=file)
             logging.getLogger('eval').info('evaluation took {} seconds'.format(time.time() - lasttime))
             lasttime = time.time()
         if return_results:
