@@ -11,7 +11,7 @@ from helper import argget, convolution_helper_padding_same
 from helper import get_modified_xavier_method
 from model import batch_norm
 # CaffeMDGRU is not supported anymore, uncomment at own risk:
-from .caffe_mdgru import CaffeMDGRU
+# from .caffe_mdgru import CaffeMDGRU
 from .mdgru import MDGRU
 
 

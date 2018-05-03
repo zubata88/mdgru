@@ -143,7 +143,7 @@ class GridDataCollection(DataCollection):
                 if ending in ['.nii', '.hdr', '.nii.gz', '.gz']:
                     if self.correct_nifti_orientation:
                         vol = ni.open_image(file, verbose=False)
-                        self.affine = vol.get_aligned_transformation()
+                        self.affine = vol.get_aligned_transformation("RAS")
                         data = vol.aligned_volume
                     else:
                         f = nib.load(file)
