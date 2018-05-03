@@ -139,7 +139,7 @@ args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in args.gpu])
 # THIS is here so we are sure, we can set cuda visible devices beforehand.
 from data.grid_collection import GridDataCollection, ThreadedGridDataCollection
-from model.classification import MDGRUClassification
+from model.mdgru_classification import MDGRUClassification
 from eval.classification import LargeVolumeClassificationEvaluation
 from runner import Runner
 import tensorflow as tf
