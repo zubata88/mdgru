@@ -17,10 +17,8 @@ import skimage.io as skio
 from scipy.misc import imsave, imread
 from scipy.ndimage.filters import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
-from scipy.ndimage.interpolation import zoom
 
 from helper import argget, counter_generator
-from helper import deprecated
 from . import DataCollection
 
 

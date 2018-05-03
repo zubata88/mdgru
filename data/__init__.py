@@ -6,9 +6,7 @@ import logging
 import os
 import subprocess
 import sys
-import nibabel as nib
 import numpy as np
-from nibabel import quaternions
 from helper import argget
 
 class DataCollection(object):
