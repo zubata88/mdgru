@@ -72,7 +72,6 @@ class GridDataCollection(DataCollection):
         self.deformpadding = 2
         self.datainterpolation = argget(kw, 'datainterpolation', 3)
         self.dataextrapolation = argget(kw, 'dataextrapolation', 'constant')
-        self.dmdeform = argget(kw, 'deform_like_dm', True)
 
         self.scaling = np.float32(argget(kw, 'scaling', np.zeros(np.shape(w))))
         self.rotation = np.float32(argget(kw, 'rotation', 0))
@@ -465,10 +464,7 @@ class GridDataCollection(DataCollection):
             coords = self.transformAffine(coords)
             if np.sum(self.deform):
                 # create deformationfield:
-                if self.dmdeform:
-                    deform = self._get_deform_field_dm
-                else:
-                    deform = self._get_deform_field
+                deform = self._get_deform_field_dm
 
                 self.deformfield = deform()
                 coords += self.deformfield
@@ -559,30 +555,6 @@ class GridDataCollection(DataCollection):
                 yield [volgen, tp, shape, self.w, self.p]
 
         return volgeninfo(self.tps)
-
-    def _get_deform_field(self):
-        self.deformationStrength = self.deformrandomstate.rand()
-        deformshape = [3] + [(w - 1) // d + 2 + self.deformpadding for w, d in zip(self.w, self.deform)]
-        df = np.float32(self.deformrandomstate.normal(0, self.deformSigma,
-                                                      deformshape) * self.deformationStrength)  # we need 2 at least
-        df = zoom(df, [1] + [ww / (1.0 * (d - self.deformpadding)) for ww, d in zip(self.w, deformshape[1:])], order=2)
-        # center df from padding:
-        if self.deformpadding:
-            if len(self.w) == 2:
-                df = df[:,
-                     (df.shape[1] - self.w[0]) // 2:(df.shape[1] - self.w[0]) // 2 + self.w[0],
-                     (df.shape[2] - self.w[1]) // 2:(df.shape[2] - self.w[1]) // 2 + self.w[1],
-                     ]
-            elif len(self.w) == 3:
-                df = df[:,
-                     (df.shape[1] - self.w[0]) // 2:(df.shape[1] - self.w[0]) // 2 + self.w[0],
-                     (df.shape[2] - self.w[1]) // 2:(df.shape[2] - self.w[1]) // 2 + self.w[1],
-                     (df.shape[3] - self.w[2]) // 2:(df.shape[3] - self.w[2]) // 2 + self.w[2],
-                     ]
-            else:
-                raise Exception('this is only implemented for 2 and 3d case')
-
-        return df
 
     def _get_deform_field_dm(self):
         self.deformationStrength = self.deformrandomstate.rand()
