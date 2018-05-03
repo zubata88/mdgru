@@ -1,0 +1,2 @@
+python3 ../../RUN_mdgru.py --datapath `pwd`/nifti --locationtraining train --locationvalidation val --locationtesting test --optionname discardme --modelname discardme -w 40 100 100 -p 0 0 0 -f flair.nii.gz t2.nii.gz pd.nii.gz mprage.nii.gz -m mask1.nii.gz --iterations 100 --nclasses 3 --num_threads 4
+
