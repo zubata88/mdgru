@@ -45,20 +45,16 @@ class CGRUDerivate(GRUCell):
         if self.periodicconvolution_x:
             # do padding
             data = self._paddata(data, filterx.get_shape().as_list())
-            padding = "VALID"
-            return tf.nn.convolution(data, filterx, padding, strides=strides)
+            return tf.nn.convolution(data, filterx, "VALID", strides=strides)
         else:
-            padding = "SAME"
             return convolution_helper_padding_same(data, filterx, filter_shape, strides)
 
     def _convolution_h(self, data, filterh, filter_shape=None, strides=None):
         if self.periodicconvolution_h:
             # do padding
             data = self._paddata(data, filterh.get_shape().as_list())
-            padding = "VALID"
-            return tf.nn.convolution(data, filterh, padding, strides=strides)
+            return tf.nn.convolution(data, filterh, "VALID", strides=strides)
         else:
-            padding = "SAME"
             return convolution_helper_padding_same(data, filterh, filter_shape, strides)
 
     def _convlinear(self, args, output_size, bias, orig_shapes, bias_start=0.0, filter_size=[7, 7], scope=None,
