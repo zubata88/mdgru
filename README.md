@@ -3,7 +3,7 @@ This repository contains the code used to produce the results in the papers **Au
 This release is implemented using the tensorflow framework. The CAFFE code is not maintained anymore (there are probably breaking changes in CuDNN, not tested), but a snapshot of it is included in this release in the folder tensorflow_extra_ops as additional operation for tensorflow. 
 Since being published, the code has been improved on quite a bit, especially to facilitate handling training and testing runs. The reported results should still be reproducible though using this implementation.
 # How to Use
-The file *RUN_mdgru.py* is used for basically all segmentation tasks. For now, please refer to it's help message by calling *python3 RUN_mdgru.py* and the documentation in the code. Please make sure to always use the flag "--ignore-nifty-header", due to a known bug in our code, until it is fixed. 
+The file *RUN_mdgru.py* is used for basically all segmentation tasks. For now, please refer to it's help message by calling *python3 RUN_mdgru.py* and the documentation in the code. Please make sure to always use the flag "--ignore-nifti-header", due to a known bug in our code, until it is fixed.
 
 As the RUN_mdgru.py file contains a overly large number of parameters, a sample train+test, individual train, and individual test run are detailed in the following:
 
@@ -66,7 +66,7 @@ python3 RUN_mdgru.py --datapath path/to/samplestructure --locationtraining train
 --locationvalidation val_data --locationtesting test_data \
 --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
 -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
---nclasses 4 --ignore_nifty_header --num_threads 4
+--nclasses 4 --ignore_nifti_header --num_threads 4
 ```
 The above first four parameters tell the script, where our different data lie. Furthermore, it will create a folder experiments in "path/to/samplestructure". Inside this experiments folder, a folder for the current setting is created. The name of this folder can be determined with "--optionname". For each individual train/test/train+test run, a folder with logging data is created using the latest timestamp in seconds inside this settings folder. Any log data for the experiment can then in turn be found inside the cache subfolder. (e.g. /path/to/samplestructure/defaultsettings/1524126169/cache). Inside this cache folder, there will be a log file, logging all relevant information to the current run, all validation files will be saved here as well as the checkpoints and tensorboard data.
 
@@ -76,7 +76,7 @@ The following image shows the influence of the w and p parameters when sampling 
 
 ![Sampling subvolumes/patches](https://github.com/zubata88/mdgru/blob/master/sampling.png?raw=true)
 
-The remaining options given above are the --modelname, which is a optional, userspecified name for the model we are creating in the tensorflow graph. -f and -m specify feature and mask files to be used. --nclasses specifies how many classes are in the label files (e.g. 4 for background, white matter, grey matter and csf). --iterations specifies the maximum number of iterations to train. If we cancel the training process at any time, the current state is saved in a checkpoint called interrupt.ckpt. Finally, --ignore_nifty_header is required due to a bug in the nifti reorientation code and num_threads is a parameter which defines how many threads should be used to load data concurrently. This can initially be set to a low value such as 4. If during training, in the log file or stdout on the console, values larger than 0.1 seconds are used for "io", it might be advisable to increase this value, as valuable time is wasted on waiting for the data loading routine.     
+The remaining options given above are the --modelname, which is a optional, userspecified name for the model we are creating in the tensorflow graph. -f and -m specify feature and mask files to be used. --nclasses specifies how many classes are in the label files (e.g. 4 for background, white matter, grey matter and csf). --iterations specifies the maximum number of iterations to train. If we cancel the training process at any time, the current state is saved in a checkpoint called interrupt.ckpt. Finally, --ignore_nifti_header is required due to a bug in the nifti reorientation code and num_threads is a parameter which defines how many threads should be used to load data concurrently. This can initially be set to a low value such as 4. If during training, in the log file or stdout on the console, values larger than 0.1 seconds are used for "io", it might be advisable to increase this value, as valuable time is wasted on waiting for the data loading routine.
 
 ##### Only Train
 Usually, we want to use the validation set to determine, which state of the network works best for our data and then evaluate our testset on that data. We can do this by using the following command:
@@ -85,7 +85,7 @@ python3 RUN_mdgru.py --datapath path/to/samplestructure --locationtraining train
 --locationvalidation val_data \
 --optionname onlytrainrun --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
 -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
---nclasses 4 --ignore_nifty_header --num_threads 4 --onlytrain
+--nclasses 4 --ignore_nifti_header --num_threads 4 --onlytrain
 ```
 
 In this setup, we can omit the '--locationtesting' and append '--onlytrain' in its place, to specify, that we want to stop the procedure after the training process.
@@ -103,7 +103,7 @@ python3 RUN_mdgru.py --datapath path/to/samplestructure --locationtraining train
 --locationtesting test_data\
 --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
 -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz \
---nclasses 4 --ignore_nifty_header --onlytest --ckpt path/to/samplestructure/experiments/onlytrainrun/1524126169/cache/temp-0.ckpt-22500 --notestingmask
+--nclasses 4 --ignore_nifti_header --onlytest --ckpt path/to/samplestructure/experiments/onlytrainrun/1524126169/cache/temp-0.ckpt-22500 --notestingmask
 ```
 
 Usually, after conducting a training run, it is the best idea to simply copy the training parameters, remove the "onlytest", add the locationtesting and the checkpointfile with "--ckpt". Some other parameters can also be left out as shown above, since they do not have an impact on the testing process. The training process before, when completed, creates at the specified saving interval ckpt files, which are named temp-0.ckpt-$i, where $i is the iteration number. On the file system, the files also have appendices like ".data-00000-of-00001" or ".meta" or ".index", but these can be ignored and should not be specified when specifying a checkpoint. After the whole training procedure, a "final.ckpt" is created, which saves the final state of the network. If the training process is interrupted, a "interrupt.ckpt-$i" is created, where $i is again the iteration number. All of these three types of checkpoints can be used to evaluate the model. During testing, the optionname also defines the name of the probability maps that are saved in the test_data sample folders as results. Finally, --notestingmask has to be used, if for the testing samples, no mask files are available. Otherwise, it will not find testing samples, as it uses the mask file as a requirement for each folder to be accepted as valid sample. If there are labelmaps for the test samples, this flag can be omitted, leading to an automatic evaluation using predefined metrics during the evaluation. 

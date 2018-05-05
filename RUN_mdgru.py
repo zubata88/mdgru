@@ -44,7 +44,7 @@ gauss_sigma_group.add_argument('--gausssigma', type=float, nargs='+',
                              help="array of sigmas to use for gauss highpass filtering")
 data_parameters.add_argument('--nooriginal', action="store_true", help="no original files (added by default)")
 data_parameters.add_argument('--nclasses', type=int, help="set number of classes.", required=True)
-data_parameters.add_argument('--ignore_nifty_header', action="store_true", help="ignores header information about orientation of the data")
+data_parameters.add_argument('--ignore_nifti_header', action="store_true", help="ignores header information about orientation of the data")
 
 sampling_parameters = parser.add_argument_group('sampling parameters')
 sampling_parameters.add_argument('-w', '--windowsize', type=int, nargs='+', help='patch or subvolume size',
@@ -286,7 +286,7 @@ args_data = {
     "nooriginal": args.nooriginal,
     "nclasses": nclasses,
     "subtractGauss": 1 - args.nofsg,
-    "correct_nifti_orientation": 1 - args.ignore_nifty_header
+    "correct_nifti_orientation": 1 - args.ignore_nifti_header
 }
 if m is not None:
     args_data["choose_mask_at_random"] = len(m) > 1
