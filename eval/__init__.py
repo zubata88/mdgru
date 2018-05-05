@@ -408,12 +408,12 @@ class LargeVolumeEvaluation(Evaluation):
                                 :]
 
             # normalize again:
-            if self.evaluate_uncertainty_times > 1:
+            if self.evaluate_uncertainty_times > 1 and not return_results:
                 uncertres /= np.sum(res, -1).reshape(list(res.shape[:-1]) + [1])
-                dc.save(uncertres, os.path.join(file, "std-" + self.estimatefilename))
+                dc.save(uncertres, os.path.join(file, "std-" + self.estimatefilename), tporigin=file)
                 if self.evaluate_uncertainty_saveall:
                     for j in range(self.evaluate_uncertainty_times):
-                        dc.save(allres[j], os.path.join(file, "iter{}-".format(j) + self.estimatefilename))
+                        dc.save(allres[j], os.path.join(file, "iter{}-".format(j) + self.estimatefilename), tporigin=file)
             res /= np.sum(res, -1).reshape(list(res.shape[:-1]) + [1])
             # evaluate accuracy...
             name = os.path.split(file)
@@ -431,7 +431,7 @@ class LargeVolumeEvaluation(Evaluation):
                 full_vols.append([name, file, res])
             else:
                 dc.save(res, os.path.join(file, self.estimatefilename + "-probdist"), tporigin=file)
-                dc.save(np.argmax(res, -1), os.path.join(file, self.estimatefilename + "-labels"), tporigin=file)
+                dc.save(np.uint8(np.argmax(res, -1)), os.path.join(file, self.estimatefilename + "-labels"), tporigin=file)
             logging.getLogger('eval').info('evaluation took {} seconds'.format(time.time() - lasttime))
             lasttime = time.time()
         if return_results:
