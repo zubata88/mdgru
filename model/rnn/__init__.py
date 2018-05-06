@@ -16,7 +16,7 @@ from model import batch_norm
 class CRNNCell(LayerRNNCell):
     usemdgru = []
 
-    def __init__(self, myshape, num_units, activation=tf.nn.tanh, reuse=None, **kw):
+    def __init__(self, num_units, activation=tf.nn.tanh, reuse=None, **kw):
         super(CRNNCell, self).__init__(reuse=reuse)
         self._activation = activation
         self._num_units = num_units
