@@ -17,7 +17,7 @@ class CRNNCell(LayerRNNCell):
     usemdgru = []
 
     def __init__(self, num_units, activation=tf.nn.tanh, reuse=None, **kw):
-        super(CRNNCell, self).__init__(reuse=reuse)
+        super(CRNNCell, self).__init__(_reuse=reuse)
         self._activation = activation
         self._num_units = num_units
         self.gate = argget(kw, 'gate', sigmoid)
