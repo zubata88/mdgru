@@ -25,6 +25,7 @@ class CRNNCell(LayerRNNCell):
         self.periodicconvolution_x = argget(kw, 'periodicconvolution_x', False)
         self.periodicconvolution_h = argget(kw, 'periodicconvolution_h', False)
         self.filter_sizes = argget(kw, 'filter_sizes', [7, 7])
+        self.use_bernoulli = argget(kw, 'use_bernoulli', False)
 
     @property
     def state_size(self):
@@ -51,6 +52,15 @@ class CRNNCell(LayerRNNCell):
             size2[i + 1] = back
             data = tf.concat([tf.slice(data, begin1, size1), data, tf.slice(data, begin2, size2)], i + 1)
         return data
+
+    def _get_dropconnect(self, shape, rate, name):
+        if rate is None:
+            return None
+        if self.use_bernoulli:
+            dc = tf.random_uniform(shape, 0, 1, tf.float32, None, name) < rate
+            return tf.cast(dc, tf.float32) / rate
+        else:
+            return tf.random_normal(shape, 1, tf.sqrt((1 - rate) / rate), tf.float32, None, name)
 
     def _convolution_x(self, data, filterx, filter_shape=None, strides=None):
         if self.periodicconvolution_x:
@@ -182,7 +192,6 @@ class CGRUCell(CRNNCell):
         self.resgruh = argget(kw, "resgruh", False)
         self.strides = argget(kw, "strides", None)
         self.put_r_back = argget(kw, "put_r_back", False)
-        self.use_bernoulli = argget(kw, 'use_bernoulli', False)
         super(CGRUCell, self).__init__(*w, **kw)
         if myshape is None:
             raise Exception('myshape cant be None!')
@@ -196,47 +205,20 @@ class CGRUCell(CRNNCell):
                 raise Exception('stride shape should match myshapeout[1:-1]! strides: {}, myshape: {}'.format(self.strides,myshapeout))
             myshapeout[1:-1] = [int(np.round((myshapeout[1 + si]) / self.strides[si])) for si in range(len(myshapeout) - 2)]
         self.myshapes = (myshapein, myshapeout)
-        self.filterhshape = [self.filter_sizes[1] for _ in myshapeout[1:-1]] + [self._num_units] * 2
-        self.filterxshape = [self.filter_sizes[0] for _ in myshapeout[1:-1]] + [myshapein[-1], self._num_units]
 
-        self.dropconnecthmatrixgates = None
-        self.dropconnecthmatrixcandidate = None
-        if self.dropconnecth is not None:
-            if self.use_bernoulli:
-                self.dropconnecthmatrixcandidate = tf.random_uniform(self.filterhshape, 0, 1, tf.float32, None,
-                                                                     "mydropconnecthcandidate") < self.dropconnecth
-                self.dropconnecthmatrixcandidate = tf.cast(self.dropconnecthmatrixcandidate,
-                                                           tf.float32) / self.dropconnecth
-                self.filterhshape[-1] *= 2
-                self.dropconnecthmatrixgates = tf.random_uniform(self.filterhshape, 0, 1, tf.float32, None,
-                                                                 "mydropconnecthgates") < self.dropconnecth
-                self.dropconnecthmatrixgates = tf.cast(self.dropconnecthmatrixgates, tf.float32) / self.dropconnecth
-            else:
-                self.dropconnecthmatrixcandidate = tf.random_normal(self.filterhshape, 1, tf.sqrt(
-                    (1 - self.dropconnecth) / self.dropconnecth), tf.float32, None, "mydropconnecthcandidate")
-                self.filterhshape[-1] *= 2
-                self.dropconnecthmatrixgates = tf.random_normal(self.filterhshape, 1,
-                                                                tf.sqrt((1 - self.dropconnecth) / self.dropconnecth),
-                                                                tf.float32, None, "mydropconnecthgates")
-        self.dropconnectxmatrixgates = None
-        self.dropconnectxmatrixcandidate = None
-        if self.dropconnectx is not None:
-            if self.use_bernoulli:
-                self.dropconnectxmatrixcandidate = tf.random_uniform(self.filterxshape, 0, 1, tf.float32, None,
-                                                                     "mydropconnectxcandidate") < self.dropconnectx
-                self.dropconnectxmatrixcandidate = tf.cast(self.dropconnectxmatrixcandidate,
-                                                           tf.float32) / self.dropconnectx
-                self.filterxshape[-1] *= 2
-                self.dropconnectxmatrixgates = tf.random_uniform(self.filterxshape, 0, 1, tf.float32, None,
-                                                                 "mydropconnectxgates") < self.dropconnectx
-                self.dropconnectxmatrixgates = tf.cast(self.dropconnectxmatrixgates, tf.float32) / self.dropconnectx
-            else:
-                self.dropconnectxmatrixcandidate = tf.random_normal(self.filterxshape, 1, tf.sqrt(
-                    (1 - self.dropconnectx) / self.dropconnectx), tf.float32, None, "mydropconnectxcandidate")
-                self.filterxshape[-1] *= 2
-                self.dropconnectxmatrixgates = tf.random_normal(self.filterxshape, 1,
-                                                                tf.sqrt((1 - self.dropconnectx) / self.dropconnectx),
-                                                                tf.float32, None, "mydropconnectxgates")
+        filterhshapecandidate = [self.filter_sizes[1] for _ in myshapeout[1:-1]] + [self._num_units] * 2
+        filterhshapegates = deepcopy(filterhshapecandidate)
+        filterhshapegates[-1] *= 2
+
+        filterxshapecandidate = [self.filter_sizes[0] for _ in myshapeout[1:-1]] + [myshapein[-1], self._num_units]
+        filterxshapegates = deepcopy(filterxshapecandidate)
+        filterxshapegates[-1] *= 2
+
+        self.dropconnecthmatrixgates = self._get_dropconnect(filterhshapegates, self.dropconnecth, "mydropconnecthgates")
+        self.dropconnecthmatrixcandidate = self._get_dropconnect(filterhshapecandidate, self.dropconnecth, "mydropconnecthcandidate")
+
+        self.dropconnectxmatrixgates = self._get_dropconnect(filterxshapegates, self.dropconnectx, "mydropconnectxgates")
+        self.dropconnectxmatrixcandidate = self._get_dropconnect(filterxshapecandidate, self.dropconnectx, "mydropconnectxcandidate")
 
     def __call__(self, inputs, state, scope=None):
         """Gated recurrent unit (GRU) with nunits cells."""
