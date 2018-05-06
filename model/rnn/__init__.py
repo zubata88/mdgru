@@ -4,7 +4,7 @@ from copy import deepcopy
 import numpy as np
 import tensorflow as tf
 from tensorflow import sigmoid
-from tensorflow.contrib.rnn import GRUCell
+from tensorflow.contrib.rnn import LayerRNNCell
 from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import variable_scope as vs
 from tensorflow.python.util import nest
@@ -13,15 +13,26 @@ from helper import argget, convolution_helper_padding_same, get_modified_xavier_
 from model import batch_norm
 
 
-class CGRUDerivate(GRUCell):
+class CRNNCell(LayerRNNCell):
     usemdgru = []
 
-    def __init__(self, num_units, input_size=None, activation=tf.nn.tanh, reuse=None, **kw):
-        super(CGRUDerivate, self).__init__(num_units=num_units, activation=activation, reuse=reuse)
+    def __init__(self, myshape, num_units, activation=tf.nn.tanh, reuse=None, **kw):
+        super(CRNNCell, self).__init__(reuse=reuse)
+        self._activation = activation
+        self._num_units = num_units
         self.gate = argget(kw, 'gate', sigmoid)
         self.regularize_state = argget(kw, 'use_dropconnect_on_state', False)
         self.periodicconvolution_x = argget(kw, 'periodicconvolution_x', False)
         self.periodicconvolution_h = argget(kw, 'periodicconvolution_h', False)
+        self.filter_sizes = argget(kw, 'filter_sizes', [7, 7])
+
+    @property
+    def state_size(self):
+        return self._num_units
+
+    @property
+    def output_size(self):
+        return self._num_units
 
     def _paddata(self, data, fshape):
         shape = data.get_shape().as_list()
@@ -158,7 +169,7 @@ class CGRUDerivate(GRUCell):
                 name, filtershape, dtype=dtype, initializer=get_modified_xavier_method(numelem, uniform))
 
 
-class CGRU(CGRUDerivate):
+class CGRUCell(CRNNCell):
     def __init__(self, myshape, *w, **kw):
         self.bnx = argget(kw, "add_x_bn", False)
         self.bnh = argget(kw, "add_h_bn", False)
@@ -169,11 +180,10 @@ class CGRU(CGRUDerivate):
         self.istraining = argget(kw, 'istraining', tf.constant(True))
         self.resgrux = argget(kw, "resgrux", False)
         self.resgruh = argget(kw, "resgruh", False)
-        self.filter_sizes = argget(kw, 'filter_sizes', [7, 7])
         self.strides = argget(kw, "strides", None)
         self.put_r_back = argget(kw, "put_r_back", False)
         self.use_bernoulli = argget(kw, 'use_bernoulli', False)
-        super(CGRU, self).__init__(*w, **kw)
+        super(CGRUCell, self).__init__(*w, **kw)
         if myshape is None:
             raise Exception('myshape cant be None!')
         myshapein = deepcopy(myshape)
