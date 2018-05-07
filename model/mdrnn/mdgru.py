@@ -33,7 +33,8 @@ class MDGRU(object):
         self.m = argget(kw, "min_mini_batch", None)
         self.resgruh = argget(kw, "resgruh", False)
         self.resgrux = argget(kw, "resgrux", False)
-        self.filter_sizes = argget(kw, 'filter_sizes', [7, 7, 7])
+        self.filter_size_x = argget(kw, 'filter_size_x', [7, 7, 7])
+        self.filter_size_h = argget(kw, 'filter_size_h', [7, 7, 7])
         self.return_cgru_results = argget(kw, 'return_cgru_results', False)
         self.use_dropconnect_on_state = argget(kw, 'use_dropconnect_on_state', False)
         self.strides = argget(kw, "strides", None)
@@ -49,8 +50,10 @@ class MDGRU(object):
             outputs = []
             for d in self.dimensions:
                 with tf.variable_scope("dim{}".format(d)):
-                    fs = deepcopy(self.filter_sizes)
-                    fs.pop(d - 1)
+                    fsx = deepcopy(self.filter_size_x)
+                    fsh = deepcopy(self.filter_size_h)
+                    fsx.pop(d - 1)
+                    fsh.pop(d - 1)
                     if self.strides is not None:
                         st = deepcopy(self.strides)
                         stontime = st.pop(d - 1)
@@ -91,7 +94,7 @@ class MDGRU(object):
                                                    myshape,
                                                    tempshape,
                                                    dropout=self.dropout,
-                                                   m=self.m, fs=fs, strides=copy(st))
+                                                   m=self.m, fsx=fsx, fsh=fsh, strides=copy(st))
                         if self.strides is not None:
                             ksize = [1 for _ in self.inputarr.get_shape()]
                             ksize[-2] = stontime
@@ -106,7 +109,7 @@ class MDGRU(object):
                                                        myshape,
                                                        tempshape,
                                                        dropout=self.dropout,
-                                                       m=self.m, fs=fs, strides=copy(st))
+                                                       m=self.m, fsx=fsx, fsh=fsh, strides=copy(st))
                         if self.strides is not None:
                             ksize = [1 for _ in self.inputarr.get_shape()]
                             ksize[-2] = stontime
@@ -128,8 +131,7 @@ class MDGRU(object):
             else:
                 return tf.add_n(outs) / len(outs)
 
-    def add_cgru(self, minput, myshape, tempshape, dropout, m=None, fs=[7, 7],
-                 strides=None):
+    def add_cgru(self, minput, myshape, tempshape, dropout, m=None, fsx=[7, 7], fsh=[7, 7], strides=None):
         if self.use_dropconnecth:
             dropconnecth = dropout
         else:
@@ -141,7 +143,7 @@ class MDGRU(object):
         cgruclass = CGRUCell
         mycell = cgruclass(myshape, self.num_hidden, add_x_bn=self.add_x_bn, add_h_bn=self.add_h_bn, add_a_bn=self.add_a_bn,
                            istraining=self.istraining, m=m, dropconnectx=dropconnectx, dropconnecth=dropconnecth,
-                           resgrux=self.resgrux, resgruh=self.resgruh, filter_sizes=fs, strides=strides,
+                           resgrux=self.resgrux, resgruh=self.resgruh, filter_size_x=fsx, filter_size_h=fsh, strides=strides,
                            put_r_back=self.put_r_back, activation=self.cgru_activation, use_bernoulli=self.use_bernoulli,
                            use_dropconnect_on_state=self.use_dropconnect_on_state,
                            )

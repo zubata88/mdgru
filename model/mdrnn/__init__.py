@@ -33,7 +33,8 @@ class MDGRUNet(object):
         self.put_r_back = argget(kw, "put_r_back", False)
         self.use_static_rnn = argget(kw, 'use_static_rnn', False)
         self.no_avgpool = argget(kw, 'no_avgpool', True)
-        self.filter_sizes = argget(kw, 'filter_sizes', [7, 7, 7])
+        self.filter_size_x = argget(kw, 'filter_size_x', [7, 7, 7])
+        self.filter_size_h = argget(kw, 'filter_size_h', [7, 7, 7])
         self.cgru_activation = argget(kw, 'rnn_activation', tf.nn.tanh)
         self.activation = argget(kw, 'activation', tf.nn.tanh)
         self.use_caffe_impl = argget(kw, "use_caffe_impl", False)
@@ -69,7 +70,7 @@ class MDGRUNet(object):
                                  put_r_back=self.put_r_back,
                                  cgru_activation=cgru_activation, use_static_rnn=self.use_static_rnn,
                                  no_avgpool=self.no_avgpool,
-                                 filter_sizes=self.filter_sizes,
+                                 filter_size_x=self.filter_size_x, filter_size_h=self.filter_size_h,
                                  use_dropconnect_on_state=self.use_dropconnect_on_state,
                                  legacy_cgru_addition=self.legacy_cgru_addition,
                                  **kw)

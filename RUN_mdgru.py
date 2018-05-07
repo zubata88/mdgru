@@ -94,6 +94,8 @@ model_parameters.add_argument('--dontsumcgrus', action="store_true",
 model_parameters.add_argument('--putrback', action="store_true", help="use original gru formulation")
 model_parameters.add_argument('--model_seed', type=int, default=None, help='set a seed such that all models will create reproducible initializations')
 model_parameters.add_argument('--legacy_cgru_addition', action="store_true", help='allows to load old models despite new code. Only use when you know what you`re doing')
+model_parameters.add_argument('--filter_size_x', default=None, type=int, nargs="+", help='filter sizes for each dimension for the input')
+model_parameters.add_argument('--filter_size_h', default=None, type=int, nargs="+", help='filter sizes for each dimension for the previous output')
 
 execution_parameters = parser.add_argument_group('execution parameters')
 execution_parameters.add_argument('--nodropconnecth', action="store_true", help="dropconnect on prev output")
@@ -369,6 +371,21 @@ else:
     testdc = None
 # eval and model arguments
 
+def harmonize_filter_size(fs):
+    if len(fs) != len(w):
+        if len(fs) == 1:
+            fs = [fs[0] for _ in w]
+        elif fs is None:
+            fs = [7 for _ in w]
+        else:
+            print('Filter size and number of dimensions for subvolume do not match!')
+            exit(0)
+    return fs
+
+filter_size_x = harmonize_filter_size(args.filter_size_x)
+filter_size_h = harmonize_filter_size(args.filter_size_h)
+
+
 args_eval = {"batch_size": args.batchsize,
              "learning_rate": args.learningrate,
              "w": w,
@@ -386,7 +403,9 @@ args_eval = {"batch_size": args.batchsize,
              'swap_memory': args.swap_memory,
              'use_dropconnect_on_state': args.use_dropconnect_on_state,
              'legacy_cgru_addition': args.legacy_cgru_addition,
-             'only_save_labels': args.only_save_labels
+             'only_save_labels': args.only_save_labels,
+             'filter_size_x': filter_size_x,
+             'filter_size_h': filter_size_h,
              }
 
 if not args.dont_use_tensorboard and args.image_summaries_each is not None:

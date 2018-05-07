@@ -15,19 +15,31 @@ from model import batch_norm
 
 class CRNNCell(LayerRNNCell):
 
-    def __init__(self, num_units, activation=tf.nn.tanh, reuse=None, **kw):
+    def __init__(self, myshape, num_units, activation=tf.nn.tanh, reuse=None, **kw):
         super(CRNNCell, self).__init__(_reuse=reuse)
         self._activation = activation
         self._num_units = num_units
         self.gate = argget(kw, 'gate', sigmoid)
         self.periodicconvolution_x = argget(kw, 'periodicconvolution_x', False)
         self.periodicconvolution_h = argget(kw, 'periodicconvolution_h', False)
-        self.filter_sizes = argget(kw, 'filter_sizes', [7, 7])
+        self.filter_size_x = argget(kw, 'filter_size_x', [7, 7])
+        self.filter_size_h = argget(kw, 'filter_size_h', [7, 7])
         self.use_bernoulli = argget(kw, 'use_bernoulli', False)
         self.dropconnectx = argget(kw, "dropconnectx", None)
         self.dropconnecth = argget(kw, "dropconnecth", None)
         self.strides = argget(kw, "strides", None)
-
+        if myshape is None:
+            raise Exception('myshape cant be None!')
+        myshapein = deepcopy(myshape)
+        myshapein.pop(-2)
+        myshapeout = deepcopy(myshape)
+        myshapeout.pop(-2)
+        myshapeout[-1] = self._num_units
+        if self.strides is not None:
+            if len(myshapeout[1:-1]) != len(self.strides):
+                raise Exception('stride shape should match myshapeout[1:-1]! strides: {}, myshape: {}'.format(self.strides, myshapeout))
+            myshapeout[1:-1] = [int(np.round((myshapeout[1 + si]) / self.strides[si])) for si in range(len(myshapeout) - 2)]
+        self.myshapes = (myshapein, myshapeout)
     @property
     def output_size(self):
         return self._num_units
@@ -79,8 +91,8 @@ class CRNNCell(LayerRNNCell):
         else:
             return convolution_helper_padding_same(data, filterh, filter_shape, strides)
 
-    def _convlinear(self, args, output_size, bias, orig_shapes, bias_start=0.0, filter_size=[7, 7], scope=None,
-                    dropconnectx=None, dropconnecth=None, dropconnectxmatrix=None, dropconnecthmatrix=None,
+    def _convlinear(self, args, output_size, bias, bias_start=0.0,
+                    scope=None, dropconnectx=None, dropconnecth=None, dropconnectxmatrix=None, dropconnecthmatrix=None,
                     strides=None, orthogonal_init=True, **kw):  # dropconnect and dropout are keep probabilities
 
         if args is None or (nest.is_sequence(args) and not args):
@@ -96,7 +108,7 @@ class CRNNCell(LayerRNNCell):
         else:
             total_arg_size = shape[1]
 
-        if orig_shapes[1][-1] != total_arg_size:
+        if self.myshapes[1][-1] != total_arg_size:
             logging.getLogger('model').warning('orig_shape does not match.')
 
         dtype = args[0].dtype
@@ -104,32 +116,32 @@ class CRNNCell(LayerRNNCell):
         # Now the computation.
         with vs.variable_scope(scope or "ConvLinear"):
             # reshape to original shape:
-            inp = tf.reshape(args[0], orig_shapes[0])
-            stat = tf.reshape(args[1], orig_shapes[1])
+            inp = tf.reshape(args[0], self.myshapes[0])
+            stat = tf.reshape(args[1], self.myshapes[1])
             # input
-            filtershape = [filter_size[0] for _ in range(len(orig_shapes[0][1:-1]))]
+            filtershapex = deepcopy(self.filter_size_x)#[filter_size[0] for _ in range(len(orig_shapes[0][1:-1]))]
             #             strides = [1 for i in filtershape]
-            filtershape.append(orig_shapes[0][-1])
-            numelem = np.prod(filtershape)
-            filtershape.append(output_size)
-            filterinp = self._get_weights_x(filtershape, dtype, numelem, "FilterInp")
+            filtershapex.append(self.myshapes[0][-1])
+            numelem = np.prod(filtershapex)
+            filtershapex.append(output_size)
+            filterinp = self._get_weights_x(filtershapex, dtype, numelem, "FilterInp")
 
             if dropconnectx is not None:
                 filterinp *= dropconnectxmatrix
 
-            resinp = self._convolution_x(inp, filterinp, filter_shape=filtershape, strides=strides)
+            resinp = self._convolution_x(inp, filterinp, filter_shape=filtershapex, strides=strides)
             # state
-            filtershape = [filter_size[1] for _ in range(len(orig_shapes[1][1:-1]))]
-            filtershape.append(orig_shapes[1][-1])
-            numelem = np.prod(filtershape)
-            filtershape.append(output_size)
+            filtershapeh = deepcopy(self.filter_size_h)#[filter_size[1] for _ in range(len(orig_shapes[1][1:-1]))]
+            filtershapeh.append(self.myshapes[1][-1])
+            numelem = np.prod(filtershapeh)
+            filtershapeh.append(output_size)
 
-            filterstat = self._get_weights_h(filtershape, dtype, numelem, "FilterStat",
+            filterstat = self._get_weights_h(filtershapeh, dtype, numelem, "FilterStat",
                                              orthogonal_init=orthogonal_init)
             if dropconnecth is not None:
                 filterstat *= dropconnecthmatrix
 
-            resstat = self._convolution_h(stat, filterstat, filter_shape=filtershape)
+            resstat = self._convolution_h(stat, filterstat, filter_shape=filtershapeh)
 
         # back to orig shape
         resinp = tf.reshape(resinp, (-1, output_size))
@@ -181,7 +193,7 @@ class CRNNCell(LayerRNNCell):
 
 
 class CGRUCell(CRNNCell):
-    def __init__(self, myshape, *w, **kw):
+    def __init__(self, *w, **kw):
         self.bnx = argget(kw, "add_x_bn", False)
         self.bnh = argget(kw, "add_h_bn", False)
         self.bna = argget(kw, "add_a_bn", False)
@@ -193,24 +205,12 @@ class CGRUCell(CRNNCell):
         self.regularize_state = argget(kw, 'use_dropconnect_on_state', False)
 
         super(CGRUCell, self).__init__(*w, **kw)
-        if myshape is None:
-            raise Exception('myshape cant be None!')
-        myshapein = deepcopy(myshape)
-        myshapein.pop(-2)
-        myshapeout = deepcopy(myshape)
-        myshapeout.pop(-2)
-        myshapeout[-1] = self._num_units
-        if self.strides is not None:
-            if len(myshapeout[1:-1]) != len(self.strides):
-                raise Exception('stride shape should match myshapeout[1:-1]! strides: {}, myshape: {}'.format(self.strides, myshapeout))
-            myshapeout[1:-1] = [int(np.round((myshapeout[1 + si]) / self.strides[si])) for si in range(len(myshapeout) - 2)]
-        self.myshapes = (myshapein, myshapeout)
 
-        filterhshapecandidate = [self.filter_sizes[1] for _ in myshapeout[1:-1]] + [self._num_units] * 2
+        filterhshapecandidate = self.filter_size_h + [self._num_units] * 2
         filterhshapegates = deepcopy(filterhshapecandidate)
         filterhshapegates[-1] *= 2
 
-        filterxshapecandidate = [self.filter_sizes[0] for _ in myshapeout[1:-1]] + [myshapein[-1], self._num_units]
+        filterxshapecandidate = self.filter_size_x + [self.myshapes[0][-1], self._num_units]
         filterxshapegates = deepcopy(filterxshapecandidate)
         filterxshapegates[-1] *= 2
 
@@ -225,12 +225,11 @@ class CGRUCell(CRNNCell):
         with vs.variable_scope(scope or type(self).__name__):  # "GRUCell"
             with vs.variable_scope("Gates"):  # Reset gate and update gate.
                 # We start with bias of 1.0 to not reset and not update.
-                zrx, zrh, zrb = self._convlinear([inputs, state], self._num_units * 2, True, self.myshapes, 1.0,
+                zrx, zrh, zrb = self._convlinear([inputs, state], self._num_units * 2, True, 1.0,
                                                  dropconnectx=self.dropconnectx, dropconnecth=self.dropconnecth,
                                                  dropconnectxmatrix=self.dropconnectxmatrixgates,
                                                  dropconnecthmatrix=self.dropconnecthmatrixgates,
-                                                 filter_size=self.filter_sizes, strides=self.strides,
-                                                 orthogonal_init=False)
+                                                 strides=self.strides, orthogonal_init=False)
             if self.bnx:
                 zrx = batch_norm(zrx, "bnx", self.istraining, bias=None, m=self.m)
             if self.bnh:
@@ -254,7 +253,7 @@ class CGRUCell(CRNNCell):
                 usedx = self.dropconnectx if self.regularize_state else None
                 usedh = self.dropconnecth if self.regularize_state else None
                 htx, hth, htb = self._convlinear([inputs, state],
-                                                 self._num_units, True, self.myshapes, filter_size=self.filter_sizes,
+                                                 self._num_units, True,
                                                  dropconnectxmatrix=self.dropconnectxmatrixcandidate,
                                                  dropconnecthmatrix=self.dropconnecthmatrixcandidate,
                                                  dropconnectx=usedx, dropconnecth=usedh,
