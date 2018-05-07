@@ -32,6 +32,10 @@ class CRNNCell(LayerRNNCell):
     def output_size(self):
         return self._num_units
 
+    @property
+    def state_size(self):
+        return self._num_units
+
     def _paddata(self, data, fshape):
         shape = data.get_shape().as_list()
         # we assume we can drop the channel information from fshape as well as

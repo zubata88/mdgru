@@ -112,7 +112,7 @@ Usually, after conducting a training run, it is the best idea to simply copy the
 
 The code for the landmark localization task is also included in this release except for an appropriate *RUN*-file. Since it would need some code updates due to recent changes in the code, it has not been included. If you're anyhow interested in the localization code, please get in touch, and I could provide you with the (now outdated) *RUN*-files we used and information on what needs to be updated to make it work again. 
 ## Requirements
-Requirements (on ubuntu) can be installed using the following lines of code. On other systems, use the corresponding packages.
+Requirements (on ubuntu) can be installed using the following lines of code. On other systems, use the corresponding packages. Make sure to use tensorflow v 1.8.
 
 ```
 sudo apt-get install cmake python3-pip curl git python3-dicom
