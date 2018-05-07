@@ -194,7 +194,7 @@ class Runner(object):
         if self.notifyme is not None:
             if signal != 0:
                 notify_user(self.notifyme['chat_id'], self.notifyme['token'], message='Process was killed')
-        self.save(fname + '.ckpt')
+        self.save(fname)
         with open(os.path.join(self.cachefolder, 'trainloss.pickle'), 'wb') as f:
             pickle.dump(self.train_losses, f)
         with open(os.path.join(self.cachefolder, 'valloss.pickle'), 'wb') as f:
@@ -248,7 +248,7 @@ class Runner(object):
                                                                   difftime / divisor * self.its_per_epoch * self.epochs,
                                                                   difftime / divisor * self.its_per_epoch * self.epochs - difftime))
                 if it % self.save_each == self.save_each - 1:
-                    self.save('temp-{}.ckpt'.format(epoch))
+                    self.save('temp-epoch{}'.format(epoch) if self.epochs > 0 else 'temp')
 
             self.ev.current_iteration = 0
 
