@@ -120,9 +120,9 @@ sudo apt-get install cmake python3-pip curl git python3-dicom
 sudo pip3 install --upgrade pip
 
 # either with a gpu, and cuda + cudnn installed:
-sudo pip3 install tensorflow-gpu
+sudo pip3 install "tensorflow-gpu>=1.8"
 # or
-sudo pip3 install tensorflow
+sudo pip3 install "tensorflow>=1.8"
 
 sudo pip3 install nibabel numpy scipy matplotlib pynrrd scikit-image scikit-learn
 
