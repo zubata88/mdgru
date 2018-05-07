@@ -108,11 +108,17 @@ execution_parameters.add_argument('--onlytest', action="store_true",
 execution_parameters.add_argument('--onlytrain', action="store_true",
                                                  help="only perform training phase, "
                                                       + "inferred, when no testing location is present")
-execution_parameters.add_argument('--ckpt', default=None,
-                                  help='provide checkpointfile for this template. If no modelname is provided, we will infer one from this file')
+execution_parameters.add_argument('--ckpt', default=None, nargs="+",
+                                  help='provide checkpointfile for this template. If no modelname is provided, '
+                                       'we will infer one from this file. Multiple files are only allowed if '
+                                       'only_test is set. If the same number of optionnames are provided, they will '
+                                       'be used to name the different results. If only one optionname is provided, they '
+                                       'will be numbered in order and the checkpoint filename will be included in the '
+                                       'result file.')
 execution_parameters.add_argument('--learningrate', type=float, default=LEARNINGRATE_DEFAULT,
                                   help='learningrate (for adadelta)')
-execution_parameters.add_argument('--optionname', help='override optionname (used eg for saving results)')
+execution_parameters.add_argument('--optionname', nargs="+", help='override optionname (used eg for saving results). '
+                                                                  'Can be either 1, or n in the case of n ckpts ')
 
 execution_parameters.add_argument('--testfirst', action="store_true", help="validate first")
 execution_parameters.add_argument('--test_each', default=TEST_EACH_DEFAULT, type=int, help='validate each # iterations')
@@ -220,10 +226,10 @@ if args.modelname is not None:
 elif args.ckpt is not None:
     from tensorflow.python import pywrap_tensorflow
     try:
-        r = pywrap_tensorflow.NewCheckpointReader(args.ckpt)
+        r = pywrap_tensorflow.NewCheckpointReader(args.ckpt[0])
         modelname = r.get_variable_to_shape_map().popitem()[0].split('/')[0]
     except:
-        logging.getLogger('runfile').warning('could not load modelname from ckpt-file {}'.format(args.ckpt))
+        logging.getLogger('runfile').warning('could not load modelname from ckpt-file {}'.format(args.ckpt[0]))
 if modelname is None:
     modelname = "f{}m{}d{}-{}w{}p{}bn{}res{}lr{}r{}ns{}-de{}-{}se{}_all".format(int(1 - args.nofsg),
                                                                             "".join(m),
@@ -265,7 +271,7 @@ elif args.onlytrain or (args.locationtesting is None):
 if args.iterations is not None:
     args_runner['its_per_epoch'] = args.iterations
 if args.ckpt is not None:
-    args_runner['checkpointfile'] = args.ckpt
+    args_runner['checkpointfiles'] = args.ckpt
 if args.testbatchsize is not None:
     args_runner['test_size'] = args.testbatchsize
 if args.test_each is not None:
@@ -278,7 +284,7 @@ if args.testfirst:
     args_runner['test_first'] = args.testfirst
 if args.cpu is not None:
     args_runner['only_cpu'] = args.cpu
-
+args_runner['estimatefilenames'] = optionname
 # data arguments
 
 args_data = {
@@ -407,5 +413,10 @@ else:
 
 ev = LargeVolumeClassificationEvaluation(mclassification, datadict,
                                          **args_eval)
-ev.estimatefilename = optionname
-Runner(ev, experiments_postfix="_" + optionname, **args_runner).run()
+if isinstance(optionname, list):
+    pf = "-".join(optionname)
+    if len(pf) > 40:
+        pf = pf[:39] + "..."
+else:
+    pf = optionname
+Runner(ev, experiments_postfix="_" + pf, **args_runner).run()
