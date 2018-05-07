@@ -186,6 +186,7 @@ class SupervisedEvaluation(Evaluation):
         self.setupCollections(collectioninst)
         self.currit = 0
         self.namespace = argget(kw, "namespace", "default")
+        self.only_save_labels = argget(kw, "only_save_labels", False)
         with tf.variable_scope(self.namespace):
             self.training = tf.placeholder(dtype=tf.bool)
             self.dropout = tf.placeholder(dtype=tf.float32)
@@ -430,7 +431,8 @@ class LargeVolumeEvaluation(Evaluation):
             if return_results:
                 full_vols.append([name, file, res])
             else:
-                dc.save(res, os.path.join(file, self.estimatefilename + "-probdist"), tporigin=file)
+                if not self.only_save_labels:
+                    dc.save(res, os.path.join(file, self.estimatefilename + "-probdist"), tporigin=file)
                 dc.save(np.uint8(np.argmax(res, -1)), os.path.join(file, self.estimatefilename + "-labels"), tporigin=file)
             logging.getLogger('eval').info('evaluation took {} seconds'.format(time.time() - lasttime))
             lasttime = time.time()

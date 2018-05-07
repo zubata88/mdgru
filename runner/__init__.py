@@ -81,7 +81,24 @@ class Runner(object):
         self.epochs = argget(kw, 'epochs', 1)
         self.batch_size = argget(kw, 'batch_size', 1)
         self.its_per_epoch = argget(kw, 'its_per_epoch', self.ev.trdc.get_data_dims()[0] // self.batch_size)
-        self.checkpointfile = argget(kw, 'checkpointfile', None)
+        self.checkpointfiles = argget(kw, 'checkpointfiles', None)
+        self.estimatefilenames = argget(kw, 'estimatefilenames', None)
+        if isinstance(self.checkpointfiles, list):
+            if 'train' in self.episodes:
+                logging.getLogger('runner').error('Multiple checkpoints are only allowed if only testing is performed.')
+                exit(1)
+        else:
+            self.checkpointfiles = [self.checkpointfiles]
+        if not isinstance(self.estimatefilenames, list):
+           self.estimatefilenames = [self.estimatefilenames]
+        if len(self.checkpointfiles) != len(self.estimatefilenames):
+           if len(self.estimatefilenames) != 1:
+               logging.getLogger('runner').error('Optionnames must match number of checkpoint files or have length 1!')
+               exit(1)
+           else:
+               self.estimatefilenames = [self.estimatefilenames[0] + "-{}-{}".format(i, os.path.basename(c))
+                                         for i, c in enumerate(self.checkpointfiles)]
+
         self.plotfolder = os.path.join(self.experiments, 'plot')
         self.plot_scaling = argget(kw, 'plot_scaling', 1e-8)
         self.display_each = argget(kw, 'display_each', 100)
@@ -242,7 +259,7 @@ class Runner(object):
         globalstep = self.ev.sess.run(self.ev.model.global_step)
         abspath = os.path.join(self.cachefolder, filename)
         self.ev.save(abspath)
-        self.checkpointfile = abspath+'-{}'.format(globalstep)
+        self.checkpointfiles[0] = abspath + '-{}'.format(globalstep)
         logging.getLogger('runner').info('Saved checkpoint {}'.format(filename+'-{}'.format(globalstep)))
 
     def write_error_to_csv(self, errors, filename, minerrors, avgerrors, medianerrors, maxerrors):
@@ -252,7 +269,7 @@ class Runner(object):
 
                 globalstep = self.ev.sess.run(self.ev.model.global_step)
                 currenttime = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-                ckptfile = self.checkpointfile # if self.checkpointfile is a list -> adapt ckptfile
+                ckptfile = self.checkpointfiles[0] # if self.checkpointfile is a list -> adapt ckptfile
 
                 evaluationWriter = csv.writer(csvfile)
                 evaluationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['checkpoint', 'iteration', 'time-stamp','score','label','min','mean','median','max'])
@@ -275,7 +292,6 @@ class Runner(object):
                                                      str(medianerrors[key]), str(maxerrors[key])])
         except:
             logging.getLogger('runner').warning('could not write error to ' + filename)
-
 
     def calc_min_mean_median_max_errors(self, errors):
         avgerrors = {}
@@ -303,15 +319,12 @@ class Runner(object):
 
         return minerrors, avgerrors, medianerrors, maxerrors
 
-
     def test(self):
         self.ev.tedc.p = np.int32(self.ev.tedc.p)
         errors = self.ev.test_all_available(batch_size=1, testing=True)
         if self.results_to_csv and len(errors):
             minerrors, avgerrors, medianerrors, maxerrors = self.calc_min_mean_median_max_errors(errors)
             self.write_error_to_csv(errors, 'testing_scores.csv', minerrors, avgerrors, medianerrors, maxerrors)
-
-
 
     def run(self, **kw):
         # save this file as txt to cachefolder:
@@ -328,16 +341,18 @@ class Runner(object):
         if "train" in self.episodes:
             with tf.Session(config=config) as sess:
                 self.ev.set_session(sess, self.cachefolder)
-                if self.checkpointfile:
-                    self.ev.load(self.checkpointfile)
+                if self.checkpointfiles[0]:
+                    self.ev.load(self.checkpointfiles[0])
                 self.train()
 
         if "test" in self.episodes or "evaluate" in self.episodes:
             self.use_tensorboard = False # no need, since we evaluate everything anyways.
             with tf.Session(config=config, graph=self.ev.test_graph) as sess:
-                self.ev.set_session(sess, self.cachefolder)
-                if self.checkpointfile:
-                    self.ev.load(self.checkpointfile)
-                self.test()
+                for est, ckpt in zip(self.estimatefilenames, self.checkpointfiles):
+                    self.ev.set_session(sess, self.cachefolder)
+                    if ckpt:
+                        self.ev.load(ckpt)
+                    self.ev.estimatefilename = est
+                    self.test()
         if self.notifyme:
             notify_user(self.notifyme['chat_id'], self.notifyme['token'], message='{} has/have finished'.format(" and ".join(self.episodes)))
