@@ -14,22 +14,19 @@ from model import batch_norm
 
 
 class CRNNCell(LayerRNNCell):
-    usemdgru = []
 
     def __init__(self, num_units, activation=tf.nn.tanh, reuse=None, **kw):
         super(CRNNCell, self).__init__(_reuse=reuse)
         self._activation = activation
         self._num_units = num_units
         self.gate = argget(kw, 'gate', sigmoid)
-        self.regularize_state = argget(kw, 'use_dropconnect_on_state', False)
         self.periodicconvolution_x = argget(kw, 'periodicconvolution_x', False)
         self.periodicconvolution_h = argget(kw, 'periodicconvolution_h', False)
         self.filter_sizes = argget(kw, 'filter_sizes', [7, 7])
         self.use_bernoulli = argget(kw, 'use_bernoulli', False)
-
-    @property
-    def state_size(self):
-        return self._num_units
+        self.dropconnectx = argget(kw, "dropconnectx", None)
+        self.dropconnecth = argget(kw, "dropconnecth", None)
+        self.strides = argget(kw, "strides", None)
 
     @property
     def output_size(self):
@@ -184,14 +181,13 @@ class CGRUCell(CRNNCell):
         self.bnx = argget(kw, "add_x_bn", False)
         self.bnh = argget(kw, "add_h_bn", False)
         self.bna = argget(kw, "add_a_bn", False)
-        self.dropconnectx = argget(kw, "dropconnectx", None)
-        self.dropconnecth = argget(kw, "dropconnecth", None)
         self.m = argget(kw, "m", None)
         self.istraining = argget(kw, 'istraining', tf.constant(True))
         self.resgrux = argget(kw, "resgrux", False)
         self.resgruh = argget(kw, "resgruh", False)
-        self.strides = argget(kw, "strides", None)
         self.put_r_back = argget(kw, "put_r_back", False)
+        self.regularize_state = argget(kw, 'use_dropconnect_on_state', False)
+
         super(CGRUCell, self).__init__(*w, **kw)
         if myshape is None:
             raise Exception('myshape cant be None!')
@@ -202,7 +198,7 @@ class CGRUCell(CRNNCell):
         myshapeout[-1] = self._num_units
         if self.strides is not None:
             if len(myshapeout[1:-1]) != len(self.strides):
-                raise Exception('stride shape should match myshapeout[1:-1]! strides: {}, myshape: {}'.format(self.strides,myshapeout))
+                raise Exception('stride shape should match myshapeout[1:-1]! strides: {}, myshape: {}'.format(self.strides, myshapeout))
             myshapeout[1:-1] = [int(np.round((myshapeout[1 + si]) / self.strides[si])) for si in range(len(myshapeout) - 2)]
         self.myshapes = (myshapein, myshapeout)
 
