@@ -371,7 +371,9 @@ else:
     testdc = None
 # eval and model arguments
 
-def harmonize_filter_size(fs):
+def harmonize_filter_size(fs, w):
+    if fs is None:
+        return [7 for _ in w]
     if len(fs) != len(w):
         if len(fs) == 1:
             fs = [fs[0] for _ in w]
@@ -382,8 +384,8 @@ def harmonize_filter_size(fs):
             exit(0)
     return fs
 
-filter_size_x = harmonize_filter_size(args.filter_size_x)
-filter_size_h = harmonize_filter_size(args.filter_size_h)
+filter_size_x = harmonize_filter_size(args.filter_size_x, w)
+filter_size_h = harmonize_filter_size(args.filter_size_h, w)
 
 
 args_eval = {"batch_size": args.batchsize,

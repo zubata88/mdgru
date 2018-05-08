@@ -10,7 +10,6 @@ from tensorflow.python.ops import variable_scope as vs
 from tensorflow.python.util import nest
 
 from helper import argget, convolution_helper_padding_same, get_modified_xavier_method, get_orthogonal_block_circulant_initialization
-from .cgru import CGRUCell
 
 class CRNNCell(LayerRNNCell):
 
