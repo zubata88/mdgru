@@ -5,7 +5,7 @@ from copy import copy, deepcopy
 from helper import argget, convolution_helper_padding_same
 import tensorflow as tf
 import numpy as np
-from ..rnn import CGRUCell
+from ..crnn import CGRUCell
 
 class MDGRU(object):
     def __init__(self, inputarr, dropout,
