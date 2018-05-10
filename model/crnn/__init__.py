@@ -9,7 +9,7 @@ from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import variable_scope as vs
 from tensorflow.python.util import nest
 
-from helper import argget, convolution_helper_padding_same, get_modified_xavier_method, get_orthogonal_block_circulant_initialization
+from helper import argget, convolution_helper_padding_same, get_modified_xavier_method, get_pseudo_orthogonal_block_circulant_initialization
 
 class CRNNCell(LayerRNNCell):
 
@@ -175,7 +175,7 @@ class CRNNCell(LayerRNNCell):
         if len(filtershape) == 4 and orthogonal_init:
             return vs.get_variable(
                 name, filtershape, dtype=dtype,
-                initializer=get_orthogonal_block_circulant_initialization())  # initializer=get_modified_xavier_method(numelem,False))
+                initializer=get_pseudo_orthogonal_block_circulant_initialization())  # initializer=get_modified_xavier_method(numelem,False))
         else:
             fs = np.prod(filtershape[:-2])
             num_output = filtershape[-2]
