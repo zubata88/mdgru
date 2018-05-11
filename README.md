@@ -1,5 +1,5 @@
 # Multi-dimensional Gated Recurrent Units
-This repository contains the code used to produce the results in the papers **Automated Segmentation of Multiple Sclerosis Lesions using Multi-Dimensional Gated Recurrent Units** and **Multi-dimensional Gated Recurrent Units for Automated Anatomical Landmark Localization**. The code was written by Simon Andermatt except for the orientation correction of NIftI files which was provided by Simon Pezold. It was used to reach *1st place* in the ISBI 2015 longitudinal lesion segmentation challenge, *2nd place* in the white matter hyperintensities challenge of MICCAI 2017 and its previous implementation in CAFFE made *3rd place* in the MrBrainS13 Segmentation challenge. We also competed in BraTS 2017, where the information on the exact rank are still unknown. 
+This repository contains the code used to produce the results in the papers **Automated Segmentation of Multiple Sclerosis Lesions using Multi-Dimensional Gated Recurrent Units** and **Multi-dimensional Gated Recurrent Units for Automated Anatomical Landmark Localization**. It was used to reach *1st place* in the ISBI 2015 longitudinal lesion segmentation challenge, *2nd place* in the white matter hyperintensities challenge of MICCAI 2017 and its previous implementation in CAFFE made *3rd place* in the MrBrainS13 Segmentation challenge. We also competed in BraTS 2017, where the information on the exact rank are still unknown.
 This release is implemented using the tensorflow framework. The CAFFE code is not maintained anymore (there are probably breaking changes in CuDNN, not tested), but a snapshot of it is included in this release in the folder tensorflow_extra_ops as additional operation for tensorflow. 
 Since being published, the code has been improved on quite a bit, especially to facilitate handling training and testing runs. The reported results should still be reproducible though using this implementation.
 # How to Use
@@ -58,7 +58,7 @@ path/to/samplestructure
 ```
 The Labelfiles need to be consistent with increasing class numbers. Eg. if we model the background, white matter, gray matter and csf for instance, we have 4 classes and hence distribute them to the numbers 0, 1, 2 and 3. Furthermore, the labelfiles should also be encoded as integer files (e.g. nifti uint8), and the feature and label files need to have matching dimensions. 
 
-#####Train + Test
+##### Train + Test
 
 In the following, we show the case, where we train a model on the above data and also immediately evaluate our model on the last training state (rarely a good idea in general) to explain the individual parameters: 
 ```
