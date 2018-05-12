@@ -103,12 +103,14 @@ def convolution_helper_padding_same(inp, convolution_filter, filter_shape, strid
         output_shape = [ii if ii is not None else -1 for ii in inp.get_shape().as_list()]
         output_shape[1:-1] = np.int32(
             np.round([1 / s * o if s is not None else o for s, o in zip(strides, output_shape[1:-1])]))
-        output_shape[-1] = filter_shape[-1]
-        output_shape[0] = tf.shape(inp)[0]
+        output_shape[-1] = filter_shape[-1] # get number of output channel
+        output_shape[0] = tf.shape(inp)[0] # get batchsize
         filter_shape = copy.copy(filter_shape)
         n = len(filter_shape)
+        # switch last two dimensions of convolution filter and adjust filter_shape:
         convolution_filter = tf.transpose(convolution_filter, [i for i in range(n - 2)] + [n - 1, n - 2])
         filter_shape = filter_shape[:-2] + filter_shape[-2:][::-1]
+        # select up/transposed convolution operation
         if len(filter_shape) < 5:
             op = tf.nn.conv2d_transpose
         elif len(filter_shape) == 5:
@@ -116,10 +118,12 @@ def convolution_helper_padding_same(inp, convolution_filter, filter_shape, strid
         else:
             raise Exception('Transposed convolution is not implemented for the {}d case!'
                             .format(len(filter_shape) - 2))
+        # special preparation to use conv2d_transpose for 1d upconvolution:
         if len(filter_shape) == 3:
-            n_input_shape = [ii if ii is not None else -1 for ii in inp.get_shape().as_list()]
-            n_input_shape.insert(1, 1)
             old_output_shape = copy.copy(output_shape)
+            n_input_shape = [ii if ii is not None else -1 for ii in inp.get_shape().as_list()]
+            # add singleton dimension for each tensor
+            n_input_shape.insert(1, 1)
             output_shape.insert(1, 1)
             filter_shape.insert(0, 1)
             strides = copy.copy(strides)
