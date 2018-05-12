@@ -14,9 +14,17 @@ from helper import argget, convolution_helper_padding_same, get_modified_xavier_
 
 
 class CRNNCell(LayerRNNCell):
+    """Base convolutional RNN method, implements common functions and serves as abstract class.i
 
-    def __init__(self, myshape, num_units, activation=tf.nn.tanh, reuse=None, **kw):
-        super(CRNNCell, self).__init__(_reuse=reuse)
+    myshape contains shape information on the input tensor and num_units is used to define the number of
+    output channels of this cRNN. activation
+    :param myshape: Contains shape information on the input tensor.
+    :param num_units: Defines number of output channels.
+    :param activation: Can be used to override tanh as activation function.
+    """
+
+    def __init__(self, myshape, num_units, activation=tf.nn.tanh, **kw):
+        super(CRNNCell, self).__init__()
         self._activation = activation
         self._num_units = num_units
         self.gate = argget(kw, 'gate', sigmoid)
@@ -53,10 +61,8 @@ class CRNNCell(LayerRNNCell):
         return self._num_units
 
     def _paddata(self, data, fshape):
+        """Pads spatial dimensions of data, such that a convolution of size fshape results in a circular convolution"""
         shape = data.get_shape().as_list()
-        # we assume we can drop the channel information from fshape as well as
-        # data, thats why we use i+1 (first space reserved for batch) and 
-        # ignore last (channel) in data
         for i, j in enumerate(fshape[:-2]):
             begin1 = np.zeros(len(shape), dtype=np.int32)
             size1 = -np.ones(len(shape), dtype=np.int32)
@@ -70,87 +76,87 @@ class CRNNCell(LayerRNNCell):
             data = tf.concat([tf.slice(data, begin1, size1), data, tf.slice(data, begin2, size2)], i + 1)
         return data
 
-    def _get_dropconnect(self, shape, rate, name):
-        if rate is None:
+    def _get_dropconnect(self, shape, keep_rate, name):
+        """Creates factors to be applied to filters to achieve either Bernoulli or Gaussian dropconnect"""
+        if keep_rate is None:
             return None
         if self.use_bernoulli:
-            dc = tf.random_uniform(shape, 0, 1, tf.float32, None, name) < rate
-            return tf.cast(dc, tf.float32) / rate
+            dc = tf.random_uniform(shape, 0, 1, tf.float32, None, name) < keep_rate
+            return tf.cast(dc, tf.float32) / keep_rate
         else:
-            return tf.random_normal(shape, 1, tf.sqrt((1 - rate) / rate), tf.float32, None, name)
+            return tf.random_normal(shape, 1, tf.sqrt((1 - keep_rate) / keep_rate), tf.float32, None, name)
 
-    def _convolution_x(self, data, filterx, filter_shape=None, strides=None):
-        if self.periodicconvolution_x:
-            # do padding
-            data = self._paddata(data, filterx.get_shape().as_list())
-            return tf.nn.convolution(data, filterx, "VALID", strides=strides)
+    def _convolution(self, data, convolution_filter, filter_shape=None, strides=None, is_circular_convolution=False):
+        """Convolves data and convolution_filter, using circular convolution if required"""
+        if is_circular_convolution:
+            data = self._paddata(data, convolution_filter.get_shape().as_list())
+            return tf.nn.convolution(data, convolution_filter, "VALID", strides=strides)
         else:
-            return convolution_helper_padding_same(data, filterx, filter_shape, strides)
-
-    def _convolution_h(self, data, filterh, filter_shape=None, strides=None):
-        if self.periodicconvolution_h:
-            # do padding
-            data = self._paddata(data, filterh.get_shape().as_list())
-            return tf.nn.convolution(data, filterh, "VALID", strides=strides)
-        else:
-            return convolution_helper_padding_same(data, filterh, filter_shape, strides)
+            return convolution_helper_padding_same(data, convolution_filter, filter_shape, strides)
 
     def _convlinear(self, args, output_size, bias, bias_start=0.0,
                     scope=None, dropconnectx=None, dropconnecth=None, dropconnectxmatrix=None, dropconnecthmatrix=None,
-                    strides=None, orthogonal_init=True, **kw):  # dropconnect and dropout are keep probabilities
+                    strides=None, orthogonal_init=True):
+        """Computes the convolution of current input and previous output or state (args[0] and args[1]).
 
+        The two tensors contained in args are convolved with their respective filters. Due to the rnn library of
+        tensorflow, spatial dimensions are collapsed and have to be restored before convolution. Also,
+        dropconnectmatrices are applied to the weights. If specified, a bias is generated and returned as well.
+        :param args: Current input and last output in a list
+        :param output_size: Number of output channels (separate from myshapes[1][-1], as sometimes this value differs)
+        :param bias: Flag if bias should be used
+        :param bias_start: Flag for bias initialization
+        :param scope: Override standard "ConvLinear" scope
+        :param dropconnectx: Flag if dropconnect should be applied on input weights
+        :param dropconnecth: Flag if dropconnect should be applied on state weights
+        :param dropconnectxmatrix: Dropconnect matrix for input weights
+        :param dropconnecthmatrix: Dropconnect matrix for state weights
+        :param strides: Strides to be applied to the input convolution
+        :param orthogonal_init: Flag if orthogonal initialization should be performed for the state weights
+        :return: 2-tuple of results for state and input, 3-tuple additionally including a bias if requested
+        """
         if args is None or (nest.is_sequence(args) and not args):
             raise ValueError("`args` must be specified")
-
         # Calculate the total size of arguments on dimension 1.
-        total_arg_size = 0
         shape = args[1].get_shape().as_list()
         if len(shape) != 2:
             raise ValueError("ConvLinear is expecting 2D arguments: %s" % str(shape))
         if not shape[1]:
             raise ValueError("ConvLinear expects shape[1] of arguments: %s" % str(shape))
-        else:
-            total_arg_size = shape[1]
-
-        if self.myshapes[1][-1] != total_arg_size:
+        if self.myshapes[1][-1] != shape[1]:
             logging.getLogger('model').warning('orig_shape does not match.')
-
         dtype = args[0].dtype
-
         # Now the computation.
         with vs.variable_scope(scope or "ConvLinear"):
-            # reshape to original shape:
+            # Reshape to original shape:
             inp = tf.reshape(args[0], self.myshapes[0])
             stat = tf.reshape(args[1], self.myshapes[1])
-            # input
-            filtershapex = deepcopy(self.filter_size_x)  # [filter_size[0] for _ in range(len(orig_shapes[0][1:-1]))]
-            #             strides = [1 for i in filtershape]
+            # Prepare convolution filter for the input.
+            filtershapex = deepcopy(self.filter_size_x)
             filtershapex.append(self.myshapes[0][-1])
-            numelem = np.prod(filtershapex)
             filtershapex.append(output_size)
-            filterinp = self._get_weights_x(filtershapex, dtype, numelem, "FilterInp")
-
+            filterinp = self._get_weights_x(filtershapex, dtype, "FilterInp")
+            # Regularize input weights.
             if dropconnectx is not None:
                 filterinp *= dropconnectxmatrix
-
-            resinp = self._convolution_x(inp, filterinp, filter_shape=filtershapex, strides=strides)
-            # state
+            # Convolve input.
+            resinp = self._convolution(inp, filterinp, filter_shape=filtershapex, strides=strides,
+                                       is_circular_convolution=self.periodicconvolution_x)
+            # Prepare convolution filter for the state.
             filtershapeh = deepcopy(self.filter_size_h)  # [filter_size[1] for _ in range(len(orig_shapes[1][1:-1]))]
             filtershapeh.append(self.myshapes[1][-1])
-            numelem = np.prod(filtershapeh)
             filtershapeh.append(output_size)
-
-            filterstat = self._get_weights_h(filtershapeh, dtype, numelem, "FilterStat",
-                                             orthogonal_init=orthogonal_init)
+            filterstat = self._get_weights_h(filtershapeh, dtype, "FilterStat", orthogonal_init=orthogonal_init)
+            # Regularize state weights.
             if dropconnecth is not None:
                 filterstat *= dropconnecthmatrix
-
-            resstat = self._convolution_h(stat, filterstat, filter_shape=filtershapeh)
-
-        # back to orig shape
+            # Convolve state.
+            resstat = self._convolution(stat, filterstat, filter_shape=filtershapeh,
+                                        is_circular_convolution=self.periodicconvolution_h)
+        # Back to original shape.
         resinp = tf.reshape(resinp, (-1, output_size))
         resstat = tf.reshape(resstat, (-1, output_size))
-
+        # Add and return bias if flag is set, otherwise return above results only.
         if bias:
             bias_term = vs.get_variable(
                 "Bias", [output_size],
@@ -162,26 +168,26 @@ class CRNNCell(LayerRNNCell):
         else:
             return resinp, resstat
 
-    def _get_weights_x(self, filtershape, dtype, _numelem, name):
+    def _get_weights_x(self, filtershape, dtype, name):
+        """Return weights for input convolution"""
         fs = np.prod(filtershape[:-2])
         num_output = filtershape[-2]
         num_input = filtershape[-1]
-
         # depending on the activation function, we initialize our weights differently!
         numelem = (fs * num_output + fs * num_input) / 2
         uniform = False
         if self._activation in [tf.nn.elu, tf.nn.relu]:
             numelem = (fs * num_input) / 2
             uniform = False
-
         return vs.get_variable(
             name, filtershape, dtype=dtype, initializer=get_modified_xavier_method(numelem, uniform))
 
-    def _get_weights_h(self, filtershape, dtype, numelem, name, orthogonal_init=True):
+    def _get_weights_h(self, filtershape, dtype, name, orthogonal_init=True):
+        """Return weights for output convolution"""
         if len(filtershape) == 4 and orthogonal_init:
             return vs.get_variable(
                 name, filtershape, dtype=dtype,
-                initializer=get_pseudo_orthogonal_block_circulant_initialization())  # initializer=get_modified_xavier_method(numelem,False))
+                initializer=get_pseudo_orthogonal_block_circulant_initialization())
         else:
             fs = np.prod(filtershape[:-2])
             num_output = filtershape[-2]
@@ -191,6 +197,5 @@ class CRNNCell(LayerRNNCell):
             if self._activation in [tf.nn.elu, tf.nn.relu]:
                 numelem = (fs * num_input) / 2
                 uniform = False
-
             return vs.get_variable(
                 name, filtershape, dtype=dtype, initializer=get_modified_xavier_method(numelem, uniform))
