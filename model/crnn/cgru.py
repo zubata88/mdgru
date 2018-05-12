@@ -1,7 +1,9 @@
 import logging
 from copy import deepcopy
+
 import tensorflow as tf
 from tensorflow.python.ops import variable_scope as vs
+
 from helper import argget
 from model import batch_norm
 from model.crnn import CRNNCell
@@ -29,11 +31,15 @@ class CGRUCell(CRNNCell):
         filterxshapegates = deepcopy(filterxshapecandidate)
         filterxshapegates[-1] *= 2
 
-        self.dropconnecthmatrixgates = self._get_dropconnect(filterhshapegates, self.dropconnecth, "mydropconnecthgates")
-        self.dropconnecthmatrixcandidate = self._get_dropconnect(filterhshapecandidate, self.dropconnecth, "mydropconnecthcandidate")
+        self.dropconnecthmatrixgates = self._get_dropconnect(filterhshapegates, self.dropconnecth,
+                                                             "mydropconnecthgates")
+        self.dropconnecthmatrixcandidate = self._get_dropconnect(filterhshapecandidate, self.dropconnecth,
+                                                                 "mydropconnecthcandidate")
 
-        self.dropconnectxmatrixgates = self._get_dropconnect(filterxshapegates, self.dropconnectx, "mydropconnectxgates")
-        self.dropconnectxmatrixcandidate = self._get_dropconnect(filterxshapecandidate, self.dropconnectx, "mydropconnectxcandidate")
+        self.dropconnectxmatrixgates = self._get_dropconnect(filterxshapegates, self.dropconnectx,
+                                                             "mydropconnectxgates")
+        self.dropconnectxmatrixcandidate = self._get_dropconnect(filterxshapecandidate, self.dropconnectx,
+                                                                 "mydropconnectxcandidate")
 
     def __call__(self, inputs, state, scope=None):
         """Gated recurrent unit (GRU) with nunits cells.
@@ -57,7 +63,7 @@ class CGRUCell(CRNNCell):
                     if ntiles * inputs.get_shape().as_list()[-1] != self._num_units:
                         logging.getLogger('model').error(
                             'cant do resgrux here, since {}*{} is smaller than the actual number of outputs. (needs to be multiple){}'
-                            .format(ntiles, inputs.get_shape().as_list()[-1], self._num_units))
+                                .format(ntiles, inputs.get_shape().as_list()[-1], self._num_units))
                     else:
                         zrx = tf.tile(inputs, [1, ntiles * 2]) + zrx
                 if self.resgruh:

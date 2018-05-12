@@ -9,7 +9,9 @@ from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import variable_scope as vs
 from tensorflow.python.util import nest
 
-from helper import argget, convolution_helper_padding_same, get_modified_xavier_method, get_pseudo_orthogonal_block_circulant_initialization
+from helper import argget, convolution_helper_padding_same, get_modified_xavier_method, \
+    get_pseudo_orthogonal_block_circulant_initialization
+
 
 class CRNNCell(LayerRNNCell):
 
@@ -35,9 +37,13 @@ class CRNNCell(LayerRNNCell):
         myshapeout[-1] = self._num_units
         if self.strides is not None:
             if len(myshapeout[1:-1]) != len(self.strides):
-                raise Exception('stride shape should match myshapeout[1:-1]! strides: {}, myshape: {}'.format(self.strides, myshapeout))
-            myshapeout[1:-1] = [int(np.round((myshapeout[1 + si]) / self.strides[si])) for si in range(len(myshapeout) - 2)]
+                raise Exception(
+                    'stride shape should match myshapeout[1:-1]! strides: {}, myshape: {}'.format(self.strides,
+                                                                                                  myshapeout))
+            myshapeout[1:-1] = [int(np.round((myshapeout[1 + si]) / self.strides[si])) for si in
+                                range(len(myshapeout) - 2)]
         self.myshapes = (myshapein, myshapeout)
+
     @property
     def output_size(self):
         return self._num_units
@@ -117,7 +123,7 @@ class CRNNCell(LayerRNNCell):
             inp = tf.reshape(args[0], self.myshapes[0])
             stat = tf.reshape(args[1], self.myshapes[1])
             # input
-            filtershapex = deepcopy(self.filter_size_x)#[filter_size[0] for _ in range(len(orig_shapes[0][1:-1]))]
+            filtershapex = deepcopy(self.filter_size_x)  # [filter_size[0] for _ in range(len(orig_shapes[0][1:-1]))]
             #             strides = [1 for i in filtershape]
             filtershapex.append(self.myshapes[0][-1])
             numelem = np.prod(filtershapex)
@@ -129,7 +135,7 @@ class CRNNCell(LayerRNNCell):
 
             resinp = self._convolution_x(inp, filterinp, filter_shape=filtershapex, strides=strides)
             # state
-            filtershapeh = deepcopy(self.filter_size_h)#[filter_size[1] for _ in range(len(orig_shapes[1][1:-1]))]
+            filtershapeh = deepcopy(self.filter_size_h)  # [filter_size[1] for _ in range(len(orig_shapes[1][1:-1]))]
             filtershapeh.append(self.myshapes[1][-1])
             numelem = np.prod(filtershapeh)
             filtershapeh.append(output_size)
@@ -188,5 +194,3 @@ class CRNNCell(LayerRNNCell):
 
             return vs.get_variable(
                 name, filtershape, dtype=dtype, initializer=get_modified_xavier_method(numelem, uniform))
-
-
