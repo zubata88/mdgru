@@ -284,7 +284,7 @@ class SupervisedEvaluation(Evaluation):
             tar2 = np.zeros((np.prod(pred.shape[:-1]), pred.shape[-1]))
             tar2[np.arange(np.prod(pred.shape[:-1])), tar.flatten()] = 1
             tar = tar2.reshape(pred.shape)
-        res = self.model.scores_np(tar, pred)
+        res = self.model.compute_scores(tar, pred)
         return res
 
     def test_all_random(self, batch_size=None, dc=None, resample=True, summary_writer=None):

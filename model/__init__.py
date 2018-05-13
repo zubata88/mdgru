@@ -40,7 +40,7 @@ def batch_norm(x, name_scope, training, epsilon=1e-3, decay=0.999, bias=True, m=
         pop_var = tf.get_variable('pop_var', [size], initializer=tf.constant_initializer(1.0), trainable=False)
         batch_mean, batch_var = tf.nn.moments(x, [i for i in range(len(x.get_shape()) - 1)])
 
-        # The following simulates a mini-batch for scenarios where we dont have 
+        # The following simulates a mini-batch for scenarios where we don't have
         # a large enough mini-batch (THIS ONLY WORKS FOR BATCH SIZES OF 1)
         if m is not None:
             batch_mean_list = tf.get_variable('batch_mean_list', [m, size], initializer=tf.zeros_initializer(),
@@ -112,7 +112,7 @@ class Model(object):
                         'the child class')
 
     def costs(self):
-        '''lazy property to compute the costs per sample'''
+        '''lazy property to compute the costs per sample.'''
         raise Exception('this should never be called, but implemented by'
                         'the child class')
 
@@ -123,14 +123,6 @@ class Model(object):
         if self.use_tensorboard:
             tf.summary.scalar('loss', loss)
         return loss
-
-    def scores(self):
-        res = {}
-        if self.l2:
-            res['l2'] = tf.reduce_mean(tf.reduce_sum((self.ref - self.pred) ** 2, -1))
-            if self.use_tensorboard:
-                tf.summary.scalar('l2', res['l2'])
-        return res
 
 
 class ClassificationModel(Model):
@@ -156,35 +148,10 @@ class ClassificationModel(Model):
         self.eps = 1e-15
         fullscoreshape = [None for _ in self.target.get_shape()[:-1]] + [np.sum(self.nclasses)]
         fullscoreshape_minimum = [1 if s is None else s for s in fullscoreshape]
-        self.ref = tf.placeholder_with_default(np.zeros((fullscoreshape_minimum), dtype=np.float32), fullscoreshape)
-        self.pred = tf.placeholder_with_default(np.zeros((fullscoreshape_minimum), dtype=np.float32), fullscoreshape)
+        self.ref = tf.placeholder_with_default(np.zeros(fullscoreshape_minimum, dtype=np.float32), fullscoreshape)
+        self.pred = tf.placeholder_with_default(np.zeros(fullscoreshape_minimum, dtype=np.float32), fullscoreshape)
 
-    def scores(self):
-        with tf.device('/cpu:0'):
-            res = super(ClassificationModel, self).scores()
-            if self.binary_evaluation:
-                enc_ref = tf.arg_max(self.ref, -1)
-                enc_pred = self.nclasses * tf.arg_max(self.pred, -1)
-                enc_both = enc_ref + enc_pred
-                bins = tf.bincount(enc_both, minlength=self.nclasses ** 2, maxlength=self.nclasses ** 2).reshape(
-                    (self.nclasses, self.nclasses))
-            if self.dice:
-                res['dice'] = [bins[c, c] * 2 / (tf.reduce_sum(bins, -1)[c] + tf.reduce_sum(bins, -2)[c]) for c in
-                               range(self.nclasses)]
-                if self.use_tensorboard:
-                    [tf.summary.scalar('dice-{}'.format(c), res['dice'][c]) for c in range(self.nclasses)]
-            if self.f1:
-                res['f1'] = [bins[c, c] * 2 / (tf.reduce_sum(bins, -2)[c] + tf.reduce_sum(bins, -1)[c]) for c in
-                             range(self.nclasses)]
-                if self.use_tensorboard:
-                    [tf.summary.scalar('f1-{}'.format(c), res['f1'][c]) for c in range(self.nclasses)]
-            if self.cross_entropy:
-                res['cross_entropy'] = tf.reduce_mean(tf.reduce_sum(self.ref * tf.log(self.pred + self.eps), -1))
-                if self.use_tensorboard:
-                    tf.summary.scalar('cross-entropy', res['cross_entropy'])
-            return res
-
-    def scores_np(self, ref, pred):
+    def compute_scores(self, ref, pred):
         res = {}
         eps = 1e-8
         if self.binary_evaluation:
@@ -215,9 +182,7 @@ class ClassificationModel(Model):
 
 
 class RegressionModel(Model):
-    """Abstract model class.
-    """
-
+    """Abstract model class for regression tasks."""
     def __init__(self, data, target, dropout, **kw):
         super(RegressionModel, self).__init__(data, target, dropout, **kw)
         self.target = target
@@ -228,9 +193,7 @@ class RegressionModel(Model):
 
 
 class ReconstructionModel(Model):
-    """Abstract model class.
-    """
-
+    """Abstract model class for reconstruction tasks."""
     def __init__(self, data, dropout, **kw):
         super(ReconstructionModel, self).__init__(data, **kw)
         self.dropout = dropout
@@ -239,6 +202,7 @@ class ReconstructionModel(Model):
 
 
 class GANModel(Model):
+    """Abstract model class for GANs."""
     def __init__(self, data, dropout, **kw):
         super(GANModel, self).__init__(data, dropout, **kw)
         self.dropout = dropout
