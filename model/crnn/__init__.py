@@ -1,3 +1,6 @@
+__author__ = "Simon Andermatt"
+__copyright__ = "Copyright (C) 2017 Simon Andermatt"
+
 import logging
 from copy import deepcopy
 
@@ -15,8 +18,8 @@ from helper import argget, convolution_helper_padding_same, get_modified_xavier_
 class CRNNCell(LayerRNNCell):
     """Base convolutional RNN method, implements common functions and serves as abstract class.
 
-    Property defaults contains defaults for all properties of a CGRUCell that are the same for one MDGRU and is used
-    to filter valid arguments.
+    Property defaults contains default values for all properties of a CGRUCell that are the same for one MDGRU
+    and is used to filter valid arguments.
     :param myshape: Contains shape information on the input tensor.
     :param num_units: Defines number of output channels.
     :param activation: Can be used to override tanh as activation function.
@@ -24,7 +27,6 @@ class CRNNCell(LayerRNNCell):
     :param periodic_convolution_h: Enables circular convolution for the last output / state
     :param dropconnectx: Enables dropconnect regularization on weights connecting to input
     :param dropconnecth: Enables dropconnect regularization on weights connecting to previous state / output
-    :param gate: Defines activation function to be used for gates
     """
 
     _defaults = {
@@ -86,7 +88,7 @@ class CRNNCell(LayerRNNCell):
         return data
 
     def _get_dropconnect(self, shape, keep_rate, name):
-        """Creates factors to be applied to filters to achieve either Bernoulli or Gaussian dropconnect"""
+        """Creates factors to be applied to filters to achieve either Bernoulli or Gaussian dropconnect."""
         if keep_rate is None:
             return None
         if self.use_bernoulli:
@@ -96,7 +98,7 @@ class CRNNCell(LayerRNNCell):
             return tf.random_normal(shape, 1, tf.sqrt((1 - keep_rate) / keep_rate), tf.float32, None, name)
 
     def _convolution(self, data, convolution_filter, filter_shape=None, strides=None, is_circular_convolution=False):
-        """Convolves data and convolution_filter, using circular convolution if required"""
+        """Convolves data and convolution_filter, using circular convolution if required."""
         if is_circular_convolution:
             data = self._paddata(data, convolution_filter.get_shape().as_list())
             return tf.nn.convolution(data, convolution_filter, "VALID", strides=strides)
@@ -178,7 +180,7 @@ class CRNNCell(LayerRNNCell):
             return resinp, resstat
 
     def _get_weights_x(self, filtershape, dtype, name):
-        """Return weights for input convolution"""
+        """Return weights for input convolution."""
         fs = np.prod(filtershape[:-2])
         num_output = filtershape[-2]
         num_input = filtershape[-1]
@@ -192,7 +194,7 @@ class CRNNCell(LayerRNNCell):
             name, filtershape, dtype=dtype, initializer=get_modified_xavier_method(numelem, uniform))
 
     def _get_weights_h(self, filtershape, dtype, name, orthogonal_init=True):
-        """Return weights for output convolution"""
+        """Return weights for output convolution."""
         if len(filtershape) == 4 and orthogonal_init:
             return vs.get_variable(
                 name, filtershape, dtype=dtype,

@@ -1,10 +1,13 @@
+__author__ = "Simon Andermatt"
+__copyright__ = "Copyright (C) 2017 Simon Andermatt"
+
 import logging
 from copy import deepcopy
 
 import tensorflow as tf
 from tensorflow.python.ops import variable_scope as vs
 
-from helper import argget, check_if_kw_empty, compile_arguments
+from helper import compile_arguments
 from model import batch_norm
 from model.crnn import CRNNCell
 
@@ -15,14 +18,15 @@ class CGRUCell(CRNNCell):
     This class processes n-d data along the last dimension using a gated recurrent unit, which uses n-1 d convolutions
     on its path along that last dimension to gather context from input and last state to produce the new state.
     Property defaults contains defaults for all properties of a CGRUCell that are the same for one MDGRU.
-    param: add_x_bn: Enables batch normalization on inputs for gates
-    param: add_h_bn: Enables batch normalization on last state for gates
-    param: add_a_bn: Enables batch normalization for the candidate (both input and last state)
-    param: resgrux: Enables residual learning on weighted input
-    param: resgruh: Enables residual learning on weighted previous output / state
-    param: use_dropconnect_on_state: Should dropconnect be used also for the candidate computation?
-    param: put_r_back: Use reset gate r's position of original gru formulation, which complicates computation.
-    param: min_mini_batch: Emulation
+    :param add_x_bn: Enables batch normalization on inputs for gates
+    :param add_h_bn: Enables batch normalization on last state for gates
+    :param add_a_bn: Enables batch normalization for the candidate (both input and last state)
+    :param resgrux: Enables residual learning on weighted input
+    :param resgruh: Enables residual learning on weighted previous output / state
+    :param use_dropconnect_on_state: Should dropconnect be used also for the candidate computation?
+    :param put_r_back: Use reset gate r's position of original gru formulation, which complicates computation.
+    :param min_mini_batch: Emulation
+    :param gate: Defines activation function to be used for gates
     """
     _defaults = {
         "add_x_bn": False,

@@ -1,13 +1,10 @@
 __author__ = "Simon Andermatt"
 __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
-import copy
-from copy import deepcopy
-
 import numpy as np
 import tensorflow as tf
 
-from helper import argget, convolution_helper_padding_same
+from helper import argget
 from helper import get_modified_xavier_method, compile_arguments, check_if_kw_empty
 from model import batch_norm
 # CaffeMDGRU is not supported anymore, uncomment at own risk:
@@ -16,7 +13,7 @@ from .mdgru import MDRNN
 
 
 class MDGRUNet(object):
-
+    """Convenience class combining attributes to be used for multiple MDRNN and voxel-wise fully connected layers."""
     _defaults = {
         "add_e_bn": False,
         "resmdgru": False,
@@ -31,9 +28,21 @@ class MDGRUNet(object):
         self.mdrnn_kw, kw = compile_arguments(MDRNN, transitive=True, **kw)
         self.crnn_kw, kw = compile_arguments(self.mdrnn_kw['crnn_class'], transitive=True, **kw)
         check_if_kw_empty(self.__class__, kw, 'model')
+
     def mdgru_bb(self, inp, dropout, num_hidden, num_output, noactivation=False,
                  name=None, **kw):
+        """Convenience function to combine a MDRNN layer with a voxel-wise fully connected layer.
 
+        :param inp: input data
+        :param dropout: dropout rate
+        :param num_hidden: number of hidden units, output units of the MDRNN
+        :param num_output: number of output units of the voxel-wise fully connected layer
+                           (Can be None -> no voxel-wise fully connected layer)
+        :param noactivation: Flag to disable activation of voxel-wise fully connected layer
+        :param name: Name for this particular MDRNN + vw fully connected layer
+        :param kw: Arguments for MDRNN and the vw fully connected layer (can override this class' attributes)
+        :return: Output of the voxelwise fully connected layer and MDRNN mix
+        """
         dimensions = argget(kw, "dimensions", None)
         if dimensions is None:
             dimensions = [i + 1 for i, v in enumerate(inp.get_shape()[1:-1]) if v > 1]
@@ -86,5 +95,3 @@ class MDGRUNet(object):
                 return mdgru
             else:
                 return self.vwfc_activation(mdgru)
-
-
