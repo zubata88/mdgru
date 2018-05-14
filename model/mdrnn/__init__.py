@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 from helper import argget, convolution_helper_padding_same
-from helper import get_modified_xavier_method, compile_arguments
+from helper import get_modified_xavier_method, compile_arguments, check_if_kw_empty
 from model import batch_norm
 # CaffeMDGRU is not supported anymore, uncomment at own risk:
 # from .caffe_mdgru import CaffeMDGRU
@@ -30,7 +30,7 @@ class MDGRUNet(object):
             setattr(self, k, v)
         self.mdrnn_kw, kw = compile_arguments(MDRNN, transitive=True, **kw)
         self.crnn_kw, kw = compile_arguments(self.mdrnn_kw['crnn_class'], transitive=True, **kw)
-
+        check_if_kw_empty(self.__class__, kw, 'model')
     def mdgru_bb(self, inp, dropout, num_hidden, num_output, noactivation=False,
                  name=None, **kw):
 

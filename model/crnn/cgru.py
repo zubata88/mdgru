@@ -21,6 +21,8 @@ class CGRUCell(CRNNCell):
     param: resgrux: Enables residual learning on weighted input
     param: resgruh: Enables residual learning on weighted previous output / state
     param: use_dropconnect_on_state: Should dropconnect be used also for the candidate computation?
+    param: put_r_back: Use reset gate r's position of original gru formulation, which complicates computation.
+    param: min_mini_batch: Emulation
     """
     _defaults = {
         "add_x_bn": False,

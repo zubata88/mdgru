@@ -208,4 +208,3 @@ class CRNNCell(LayerRNNCell):
                 uniform = False
             return vs.get_variable(
                 name, filtershape, dtype=dtype, initializer=get_modified_xavier_method(numelem, uniform))
-
