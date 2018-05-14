@@ -2,22 +2,44 @@ __author__ = "Simon Andermatt"
 __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 from copy import copy, deepcopy
-from helper import argget, convolution_helper_padding_same
+from helper import argget, convolution_helper_padding_same, compile_arguments
 import tensorflow as tf
 import numpy as np
 from ..crnn.cgru import CGRUCell
 
-class MDGRU(object):
+
+class MDRNN(object):
+
+    _defaults = {
+        "use_dropconnect_x": True,
+        "use_dropconnect_h": True,
+        "swap_memory": True,
+        "return_cgru_results": False,
+        "use_static_rnn": False,
+        "no_avg_pool": True,
+        "filter_size_x": [7, 7, 7],
+        "filter_size_h": [7, 7, 7],
+        "crnn_activation": tf.nn.tanh,
+        "legacy_cgru_addition": False,
+        "crnn_class": CGRUCell,
+        "strides": None,
+
+    }
+
     def __init__(self, inputarr, dropout,
                  dimensions=None, layers=1,
                  num_hidden=100, name="mdgru", **kw):
+
         '''
         @param inputarr: needs to be in batch, spatialdim1...spatialdimn,channel form
         '''
+
+        mdgru_kw, kw = compile_arguments(self.__class__, transitive=False, **kw)
+        for k, v in mdgru_kw.items():
+            setattr(self, k, v)
+        self.crnn_kw, kw = compile_arguments(self.crnn_class, transitive=True, **kw)
+
         self.inputarr = inputarr
-        self.add_x_bn = argget(kw, "bnx", False)
-        self.add_h_bn = argget(kw, "bnh", False)
-        self.add_a_bn = argget(kw, "bna", False)
         self.istraining = argget(kw, 'istraining', tf.constant(True))
         if dimensions is None:
             self.dimensions = [x + 1 for x in range(len(inputarr.get_shape()[1:-1]))]
@@ -27,25 +49,8 @@ class MDGRU(object):
         self.num_hidden = num_hidden
         self.name = name
         self.dropout = dropout
-        self.use_dropconnectx = argget(kw, "use_dropconnectx", True)
-        self.use_dropconnecth = argget(kw, "use_dropconnecth", False)
-        self.use_bernoulli = argget(kw, 'use_bernoulli_dropconnect', False)
-        self.m = argget(kw, "min_mini_batch", None)
-        self.resgruh = argget(kw, "resgruh", False)
-        self.resgrux = argget(kw, "resgrux", False)
-        self.filter_size_x = argget(kw, 'filter_size_x', [7, 7, 7])
-        self.filter_size_h = argget(kw, 'filter_size_h', [7, 7, 7])
-        self.return_cgru_results = argget(kw, 'return_cgru_results', False)
-        self.use_dropconnect_on_state = argget(kw, 'use_dropconnect_on_state', False)
-        self.strides = argget(kw, "strides", None)
-        self.swap_memory = argget(kw, "swap_memory", True)
-        self.put_r_back = argget(kw, "put_r_back", False)
-        self.cgru_activation = argget(kw, 'cgru_activation', tf.nn.tanh)
-        self.use_static_rnn = argget(kw, 'use_static_rnn', False)
-        self.no_avgpool = argget(kw, 'no_avgpool', True)
-        self.legacy_cgru_addition = argget(kw, 'legacy_cgru_addition', False)
 
-    def get_all_cgru_outputs(self):
+    def __call__(self):
         with tf.variable_scope(self.name):
             outputs = []
             for d in self.dimensions:
@@ -90,11 +95,7 @@ class MDGRU(object):
                     dimorderback.insert(d, dimorderback.pop(-2))
                     # forward:
                     with tf.variable_scope('forward'):
-                        trans_resf = self.add_cgru(trans_input,
-                                                   myshape,
-                                                   tempshape,
-                                                   dropout=self.dropout,
-                                                   m=self.m, fsx=fsx, fsh=fsh, strides=copy(st))
+                        trans_resf = self.add_cgru(trans_input, myshape, tempshape, fsx=fsx, fsh=fsh, strides=copy(st))
                         if self.strides is not None:
                             ksize = [1 for _ in self.inputarr.get_shape()]
                             ksize[-2] = stontime
@@ -105,11 +106,8 @@ class MDGRU(object):
                     with tf.variable_scope('backward'):
                         rev_trans_input = tf.reverse(trans_input, axis=[len(dimorder) - 2])
                         # dimorder should now be 1 at location d;)
-                        rev_trans_resb = self.add_cgru(rev_trans_input,
-                                                       myshape,
-                                                       tempshape,
-                                                       dropout=self.dropout,
-                                                       m=self.m, fsx=fsx, fsh=fsh, strides=copy(st))
+                        rev_trans_resb = self.add_cgru(rev_trans_input, myshape, tempshape, fsx=fsx, fsh=fsh,
+                                                       strides=copy(st))
                         if self.strides is not None:
                             ksize = [1 for _ in self.inputarr.get_shape()]
                             ksize[-2] = stontime
@@ -117,38 +115,27 @@ class MDGRU(object):
                         trans_resb = tf.reverse(rev_trans_resb, axis=[len(dimorder) - 2])
                         resb = tf.transpose(trans_resb, dimorderback)
                         outputs.append(resb)
-                        # add both to output vec which will be summed
 
-            return outputs
-
-    def __call__(self):
         if self.return_cgru_results:
-            return tf.concat(self.get_all_cgru_outputs(), len(self.inputarr.get_shape()) - 1)
+            return tf.concat(outputs, len(self.inputarr.get_shape()) - 1)
         else:
-            outs = self.get_all_cgru_outputs()
             if self.legacy_cgru_addition:
-                return tf.add_n(outs)
+                return tf.add_n(outputs)
             else:
-                return tf.add_n(outs) / len(outs)
+                return tf.add_n(outputs) / len(outputs)
 
-    def add_cgru(self, minput, myshape, tempshape, dropout, m=None, fsx=[7, 7], fsh=[7, 7], strides=None):
-        if self.use_dropconnecth:
-            dropconnecth = dropout
+    def add_cgru(self, minput, myshape, tempshape, fsx=[7, 7], fsh=[7, 7], strides=None):
+        kw = copy(self.crnn_kw)
+        if self.use_dropconnect_h:
+            kw["dropconnecth"] = self.dropout
         else:
-            dropconnecth = None
-        if self.use_dropconnectx:
-            dropconnectx = dropout
+            kw["dropconnecth"] = None
+        if self.use_dropconnect_x:
+            kw["dropconnectx"] = self.dropout
         else:
-            dropconnectx = None
-        cgruclass = CGRUCell
-        mycell = cgruclass(myshape, self.num_hidden, add_x_bn=self.add_x_bn, add_h_bn=self.add_h_bn, add_a_bn=self.add_a_bn,
-                           istraining=self.istraining, m=m, dropconnectx=dropconnectx, dropconnecth=dropconnecth,
-                           resgrux=self.resgrux, resgruh=self.resgruh, filter_size_x=fsx, filter_size_h=fsh, strides=strides,
-                           put_r_back=self.put_r_back, activation=self.cgru_activation, use_bernoulli=self.use_bernoulli,
-                           use_dropconnect_on_state=self.use_dropconnect_on_state,
-                           )
+            kw["dropconnectx"] = None
+        mycell = self.crnn_class(myshape, self.num_hidden, filter_size_x=fsx, filter_size_h=fsh, strides=strides, **kw)
         trans_input_flattened = tf.reshape(minput, shape=tempshape)
-        padding = np.int32(tempshape[-2])
         output_shape = deepcopy(myshape)
         if strides is not None:
             if len(strides) != len(output_shape)-3:

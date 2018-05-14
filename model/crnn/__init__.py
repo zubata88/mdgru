@@ -3,38 +3,47 @@ from copy import deepcopy
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import sigmoid
 from tensorflow.contrib.rnn import LayerRNNCell
 from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import variable_scope as vs
 from tensorflow.python.util import nest
 
 from helper import argget, convolution_helper_padding_same, get_modified_xavier_method, \
-    get_pseudo_orthogonal_block_circulant_initialization
+    get_pseudo_orthogonal_block_circulant_initialization, compile_arguments
 
 
 class CRNNCell(LayerRNNCell):
-    """Base convolutional RNN method, implements common functions and serves as abstract class.i
+    """Base convolutional RNN method, implements common functions and serves as abstract class.
 
-    myshape contains shape information on the input tensor and num_units is used to define the number of
-    output channels of this cRNN. activation
+    Property defaults contains defaults for all properties of a CGRUCell that are the same for one MDGRU and is used
+    to filter valid arguments.
     :param myshape: Contains shape information on the input tensor.
     :param num_units: Defines number of output channels.
     :param activation: Can be used to override tanh as activation function.
+    :param periodic_convolution_x: Enables circular convolution for the input
+    :param periodic_convolution_h: Enables circular convolution for the last output / state
+    :param dropconnectx: Enables dropconnect regularization on weights connecting to input
+    :param dropconnecth: Enables dropconnect regularization on weights connecting to previous state / output
+    :param gate: Defines activation function to be used for gates
     """
 
-    def __init__(self, myshape, num_units, activation=tf.nn.tanh, **kw):
+    _defaults = {
+        "periodic_convolution_x": False,
+        "periodic_convolution_h": False,
+        "use_bernoulli": False,
+        "dropconnectx": None,
+        "dropconnecth": None,
+        "crnn_activation": tf.nn.tanh,
+    }
+
+    def __init__(self, myshape, num_units, **kw):
         super(CRNNCell, self).__init__()
-        self._activation = activation
+        crnn_kw, kw = compile_arguments(CRNNCell, transitive=False, **kw)
+        for k, v in crnn_kw.items():
+            setattr(self, k, v)
         self._num_units = num_units
-        self.gate = argget(kw, 'gate', sigmoid)
-        self.periodicconvolution_x = argget(kw, 'periodicconvolution_x', False)
-        self.periodicconvolution_h = argget(kw, 'periodicconvolution_h', False)
         self.filter_size_x = argget(kw, 'filter_size_x', [7, 7])
         self.filter_size_h = argget(kw, 'filter_size_h', [7, 7])
-        self.use_bernoulli = argget(kw, 'use_bernoulli', False)
-        self.dropconnectx = argget(kw, "dropconnectx", None)
-        self.dropconnecth = argget(kw, "dropconnecth", None)
         self.strides = argget(kw, "strides", None)
         if myshape is None:
             raise Exception('myshape cant be None!')
@@ -141,7 +150,7 @@ class CRNNCell(LayerRNNCell):
                 filterinp *= dropconnectxmatrix
             # Convolve input.
             resinp = self._convolution(inp, filterinp, filter_shape=filtershapex, strides=strides,
-                                       is_circular_convolution=self.periodicconvolution_x)
+                                       is_circular_convolution=self.periodic_convolution_x)
             # Prepare convolution filter for the state.
             filtershapeh = deepcopy(self.filter_size_h)  # [filter_size[1] for _ in range(len(orig_shapes[1][1:-1]))]
             filtershapeh.append(self.myshapes[1][-1])
@@ -152,7 +161,7 @@ class CRNNCell(LayerRNNCell):
                 filterstat *= dropconnecthmatrix
             # Convolve state.
             resstat = self._convolution(stat, filterstat, filter_shape=filtershapeh,
-                                        is_circular_convolution=self.periodicconvolution_h)
+                                        is_circular_convolution=self.periodic_convolution_h)
         # Back to original shape.
         resinp = tf.reshape(resinp, (-1, output_size))
         resstat = tf.reshape(resstat, (-1, output_size))
@@ -176,7 +185,7 @@ class CRNNCell(LayerRNNCell):
         # depending on the activation function, we initialize our weights differently!
         numelem = (fs * num_output + fs * num_input) / 2
         uniform = False
-        if self._activation in [tf.nn.elu, tf.nn.relu]:
+        if self.crnn_activation in [tf.nn.elu, tf.nn.relu]:
             numelem = (fs * num_input) / 2
             uniform = False
         return vs.get_variable(
@@ -194,8 +203,9 @@ class CRNNCell(LayerRNNCell):
             num_input = filtershape[-1]
             numelem = (fs * num_output + fs * num_input) / 2
             uniform = False
-            if self._activation in [tf.nn.elu, tf.nn.relu]:
+            if self.crnn_activation in [tf.nn.elu, tf.nn.relu]:
                 numelem = (fs * num_input) / 2
                 uniform = False
             return vs.get_variable(
                 name, filtershape, dtype=dtype, initializer=get_modified_xavier_method(numelem, uniform))
+

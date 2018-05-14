@@ -39,7 +39,6 @@ class MDGRUClassification(ClassificationModel, MDGRUNet):
             save_summary_for_nd_images('prediction', pred, collections=['images'])
         return pred
 
-
     @lazy_property
     def costs(self):
         if self.ignore_label is not None:

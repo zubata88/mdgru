@@ -176,6 +176,14 @@ def argget(dt, key, default=None, keep=False, ifset=None):
         return default
 
 
+def check_if_kw_empty(cls, kw, module_name):
+    """Prints standardised warning if an unsupported keyword argument is used for a given class"""
+    if len(kw):
+        logging.getLogger(module_name).warning(
+            'There were invalid keywords for {}: {}'.format(cls.__class__,
+                                                            ",".join(["{}:{}".format(k, v) for k, v in kw.items()])))
+
+
 def get_modified_xavier_method(num_elements, uniform_init=False):
     """ Modified Glorot initializer.
 
@@ -298,3 +306,18 @@ def counter_generator(maxim):
             yield copy.deepcopy(count)
     except ValueError:
         pass
+
+
+def compile_arguments(cls, transitive=False, **kw):
+    """Extracts valid keywords for cls from given keywords and returns the resulting two dicts.
+
+    :param cls: instance or class having property or attribute "_defaults", which is a dict of default parameters.
+    :param transitive: determines if parent classes should also be consulted
+    :param kw: the keyword dictionary to separate into valid arguments and rest
+    """
+    if transitive and hasattr(super(cls, cls), 'compile_arguments'):
+        crnn_kw, kw = super(cls, cls).compile_arguments(transitive=True, **kw)
+    else:
+        crnn_kw = {}
+    crnn_kw.update({k: argget(kw, k, v) for k, v in cls._defaults.items()})
+    return crnn_kw, kw

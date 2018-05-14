@@ -4,7 +4,7 @@ from copy import deepcopy
 import tensorflow as tf
 from tensorflow.python.ops import variable_scope as vs
 
-from helper import argget
+from helper import argget, check_if_kw_empty, compile_arguments
 from model import batch_norm
 from model.crnn import CRNNCell
 
@@ -14,19 +14,32 @@ class CGRUCell(CRNNCell):
 
     This class processes n-d data along the last dimension using a gated recurrent unit, which uses n-1 d convolutions
     on its path along that last dimension to gather context from input and last state to produce the new state.
+    Property defaults contains defaults for all properties of a CGRUCell that are the same for one MDGRU.
+    param: add_x_bn: Enables batch normalization on inputs for gates
+    param: add_h_bn: Enables batch normalization on last state for gates
+    param: add_a_bn: Enables batch normalization for the candidate (both input and last state)
+    param: resgrux: Enables residual learning on weighted input
+    param: resgruh: Enables residual learning on weighted previous output / state
+    param: use_dropconnect_on_state: Should dropconnect be used also for the candidate computation?
     """
+    _defaults = {
+        "add_x_bn": False,
+        "add_h_bn": False,
+        "add_a_bn": False,
+        "resgrux": False,
+        "resgruh": False,
+        "put_r_back": False,
+        "use_dropconnect_on_state": False,
+        "min_mini_batch": False,
+        "istraining": tf.constant(True),
+        "gate": tf.nn.sigmoid,
+    }
 
     def __init__(self, *w, **kw):
         super(CGRUCell, self).__init__(*w, **kw)
-        self.bnx = argget(kw, "add_x_bn", False)
-        self.bnh = argget(kw, "add_h_bn", False)
-        self.bna = argget(kw, "add_a_bn", False)
-        self.m = argget(kw, "m", None)
-        self.istraining = argget(kw, 'istraining', tf.constant(True))
-        self.resgrux = argget(kw, "resgrux", False)
-        self.resgruh = argget(kw, "resgruh", False)
-        self.put_r_back = argget(kw, "put_r_back", False)
-        self.regularize_state = argget(kw, 'use_dropconnect_on_state', False)
+        cgru_kw, kw = compile_arguments(CGRUCell, transitive=False, **kw)
+        for k, v in cgru_kw.items():
+            setattr(self, k, v)
 
         filter_shape_h_candidate = self.filter_size_h + [self._num_units] * 2
         filter_shape_h_gates = deepcopy(filter_shape_h_candidate)
@@ -61,10 +74,10 @@ class CGRUCell(CRNNCell):
                                                  dropconnecthmatrix=self.dc_h_factor_gates,
                                                  strides=self.strides, orthogonal_init=False)
             # Perform batch norm on x and/or h of the gates if needed.
-            if self.bnx:
-                zrx = batch_norm(zrx, "bnx", self.istraining, bias=None, m=self.m)
-            if self.bnh:
-                zrh = batch_norm(zrh, "bnh", self.istraining, bias=None, m=self.m)
+            if self.add_x_bn:
+                zrx = batch_norm(zrx, "bnx", self.istraining, bias=None, m=self.min_mini_batch)
+            if self.add_h_bn:
+                zrh = batch_norm(zrh, "bnh", self.istraining, bias=None, m=self.min_mini_batch)
             # Add skip connections for input x and/or state h of the gates if needed.
             with vs.variable_scope('resgru'):
                 if self.resgrux:
@@ -84,8 +97,8 @@ class CGRUCell(CRNNCell):
             with vs.variable_scope("Candidate"):  # Proposal or Candidate.
                 if self.put_r_back:
                     state *= r
-                usedx = self.dropconnectx if self.regularize_state else None
-                usedh = self.dropconnecth if self.regularize_state else None
+                usedx = self.dropconnectx if self.use_dropconnect_on_state else None
+                usedh = self.dropconnecth if self.use_dropconnect_on_state else None
                 htx, hth, htb = self._convlinear([inputs, state],
                                                  self._num_units, True,
                                                  dropconnectxmatrix=self.dc_x_factor_candidate,
@@ -97,8 +110,8 @@ class CGRUCell(CRNNCell):
                 else:
                     htwb = htx + r * hth
             # Perform batch norm on candidate if needed.
-            if self.bna:
-                htwb = batch_norm(htwb, "bna", self.istraining, bias=None, m=self.m)
+            if self.add_a_bn:
+                htwb = batch_norm(htwb, "bna", self.istraining, bias=None, m=self.min_mini_batch)
             # Update state/output.
-            new_h = z * state + (1 - z) * self._activation(htwb + htb)
+            new_h = z * state + (1 - z) * self.crnn_activation(htwb + htb)
         return new_h, new_h

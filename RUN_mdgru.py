@@ -371,6 +371,7 @@ else:
     testdc = None
 # eval and model arguments
 
+
 def harmonize_filter_size(fs, w):
     if fs is None:
         return [7 for _ in w]
@@ -384,9 +385,9 @@ def harmonize_filter_size(fs, w):
             exit(0)
     return fs
 
+
 filter_size_x = harmonize_filter_size(args.filter_size_x, w)
 filter_size_h = harmonize_filter_size(args.filter_size_h, w)
-
 
 args_eval = {"batch_size": args.batchsize,
              "learning_rate": args.learningrate,
@@ -398,8 +399,8 @@ args_eval = {"batch_size": args.batchsize,
              "use_dropconnectx": 1 - args.nodropconnectx,
              "namespace": modelname,
              "nclasses": nclasses,
-             'rnn_activation': rnn_activation,
-             'activation': activation,
+             'crnn_activation': rnn_activation,
+             'vwfc_activation': activation,
              'validate_same': True,
              'use_tensorboard': 1-args.dont_use_tensorboard,
              'swap_memory': args.swap_memory,
