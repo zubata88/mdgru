@@ -9,9 +9,7 @@ import copy
 
 
 def lazy_property(function):
-    ''' This function acts at its first call as a function, each further call to
-    the function just returns the computed return value as property.
-    '''
+    """ This function computes a property or simply returns it if already computed."""
     attribute = '_' + function.__name__
 
     @property
@@ -25,8 +23,7 @@ def lazy_property(function):
 
 
 def batch_norm(x, name_scope, training, epsilon=1e-3, decay=0.999, bias=True, m=None):
-    '''Assume 2d [batch, values] tensor'''
-
+    """Computes the batch_norm for x"""
     with tf.variable_scope(name_scope):
         size = x.get_shape().as_list()[-1]
 
@@ -77,7 +74,7 @@ def batch_norm(x, name_scope, training, epsilon=1e-3, decay=0.999, bias=True, m=
 
 
 class Model(object):
-    '''Abstract model class. '''
+    """Abstract Model class"""
 
     def __init__(self, data, target, dropout, kw):
         print("model")
@@ -97,15 +94,6 @@ class Model(object):
         pass
         self.dimensions = argget(kw, "dimensions", None)
 
-    #     def batch_norm(self,inp):
-    #         mean = tf.reduce_mean(inp)
-    #         self.running_num = self.running_num*0.999+1
-    #         self.running_mean = self.running_mean*0.999+mean
-    #         inp -= self.running_mean/self.running_num
-    #         var = tf.reduce_mean(inp*inp)
-    #         self.running_var = self.running_var*0.999+var
-    #         inp /= tf.sqrt(self.running_var/self.running_num+1e-20)
-    #         return inp
     def prediction(self):
         '''lazy property call to produce a prediction in tensorflow.'''
         raise Exception('this should never be called, but implemented by'
