@@ -4,19 +4,20 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 from . import ClassificationModel
 import tensorflow as tf
 from . import lazy_property
-from helper import argget, save_summary_for_nd_images
+from helper import argget, save_summary_for_nd_images, check_if_kw_empty
 from model.mdrnn import MDGRUNet
 import numpy as np
 
 
 class MDGRUClassification(ClassificationModel, MDGRUNet):
-    def __init__(self, data, target, dropout, **kw):
+    def __init__(self, data, target, dropout, kw):
         print("mdgruclassification")
-        super(MDGRUClassification, self).__init__(data, target, dropout, **kw)
+        super(MDGRUClassification, self).__init__(data, target, dropout, kw)
         self.ignore_label = argget(kw, 'ignore_label', None)
         self.fc_channels = argget(kw, 'fc_channels', [25, 45, self.nclasses])
         self.mdgru_channels = argget(kw, 'mdgru_channels', [16, 32, 64])
         self.strides = argget(kw, 'strides', [None for _ in self.mdgru_channels])
+
 
     @lazy_property
     def logits(self):

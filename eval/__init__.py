@@ -28,7 +28,7 @@ class Evaluation(object):
     
     '''
 
-    def __init__(self, collectioninst, **kw):
+    def __init__(self, collectioninst, kw):
         self.origargs = copy.deepcopy(kw)
         self.use_tensorboard = argget(kw, "use_tensorboard", True, keep=True)
         if self.use_tensorboard:
@@ -181,12 +181,14 @@ class Evaluation(object):
 
 
 class SupervisedEvaluation(Evaluation):
-    def __init__(self, model, collectioninst, **kw):
-        super(SupervisedEvaluation, self).__init__(collectioninst, **kw)
+    def __init__(self, model, collectioninst, kw):
+        super(SupervisedEvaluation, self).__init__(collectioninst, kw)
         self.setupCollections(collectioninst)
         self.currit = 0
         self.namespace = argget(kw, "namespace", "default")
         self.only_save_labels = argget(kw, "only_save_labels", False)
+        self.batch_size = argget(kw, 'batch_size', 1)
+        self.validate_same = argget(kw, 'validate_same', False)
         with tf.variable_scope(self.namespace):
             self.training = tf.placeholder(dtype=tf.bool)
             self.dropout = tf.placeholder(dtype=tf.float32)
@@ -198,7 +200,8 @@ class SupervisedEvaluation(Evaluation):
                 self.target = tf.placeholder(dtype=tf.float32,
                                              shape=self.trdc.get_target_shape()[:-1] + [self.nclasses])
             kw_copy = copy.deepcopy(kw)
-            self.model = model(self.data, self.target, self.dropout, training=self.training, **kw)
+            kw['training'] = self.training
+            self.model = model(self.data, self.target, self.dropout, kw)
             self.model.optimize
 # in the case we have a different testing set, we can construct 2 graphs, one for training and testing case
         if self.tedc.get_shape() != self.trdc.get_shape():
@@ -214,8 +217,8 @@ class SupervisedEvaluation(Evaluation):
                     else:
                         self.test_target = tf.placeholder(dtype=tf.float32,
                                                      shape=self.tedc.get_target_shape()[:-1] + [self.nclasses])
-                    self.test_model = model(self.test_data, self.test_target, self.test_dropout, training=self.test_training,
-                                            **kw_copy)
+                    kw_copy['test_training'] = self.test_training
+                    self.test_model = model(self.test_data, self.test_target, self.test_dropout, kw_copy)
                     self.test_model.prediction
                     self.test_model.cost
         else:
@@ -226,9 +229,7 @@ class SupervisedEvaluation(Evaluation):
             self.test_data = self.data
             self.test_target = self.target
 
-        self.batch_size = argget(kw, 'batch_size', 1)
-        self.validate_same = argget(kw, 'validate_same', False)
-        check_if_kw_empty(self.__class__, kw, 'eval')
+        check_if_kw_empty(self.__class__.__name__, kw, 'eval')
 
     def train(self, batch_size=None):
         start_time = time.time()
@@ -317,12 +318,12 @@ class SupervisedEvaluation(Evaluation):
 
 
 class LargeVolumeEvaluation(Evaluation):
-    def __init__(self, model, collectioninst, **kw):
+    def __init__(self, model, collectioninst, kw):
         self.evaluate_uncertainty_times = argget(kw, "evaluate_uncertainty_times", 1)
         self.evaluate_uncertainty_dropout = argget(kw, "evaluate_uncertainty_dropout",
                                                    1.0)  # these standard values ensure that we dont evaluate uncertainty if nothing was provided.
         self.evaluate_uncertainty_saveall = argget(kw, "evaluate_uncertainty_saveall", False)
-        super(LargeVolumeEvaluation, self).__init__(model, collectioninst, **kw)
+        super(LargeVolumeEvaluation, self).__init__(model, collectioninst, kw)
 
     def test_all_available(self, batch_size=None, dc=None, return_results=False, dropout=None, testing=False):
         if dc is None:

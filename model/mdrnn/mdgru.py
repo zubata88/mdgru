@@ -47,21 +47,21 @@ class MDRNN(object):
         "legacy_cgru_addition": False,
         "crnn_class": CGRUCell,
         "strides": None,
+        "name": "mdgru",
+        "num_hidden": 100,
     }
 
-    def __init__(self, inputarr, dropout, dimensions=None, num_hidden=100, name="mdgru", **kw):
-        mdgru_kw, kw = compile_arguments(self.__class__, transitive=False, **kw)
+    def __init__(self, inputarr, dropout, dimensions, kw):
+        mdgru_kw, kw = compile_arguments(self.__class__, kw, transitive=False)
         for k, v in mdgru_kw.items():
             setattr(self, k, v)
-        self.crnn_kw, kw = compile_arguments(self.crnn_class, transitive=True, **kw)
+        self.crnn_kw, kw = compile_arguments(self.crnn_class, kw, transitive=True)
 
         self.inputarr = inputarr
         if dimensions is None:
             self.dimensions = [x + 1 for x in range(len(inputarr.get_shape()[1:-1]))]
         else:
             self.dimensions = dimensions
-        self.num_hidden = num_hidden
-        self.name = name
         self.dropout = dropout
 
     def __call__(self):
@@ -152,7 +152,10 @@ class MDRNN(object):
             kw["dropconnectx"] = self.dropout
         else:
             kw["dropconnectx"] = None
-        mycell = self.crnn_class(myshape, self.num_hidden, filter_size_x=fsx, filter_size_h=fsh, strides=strides, **kw)
+        kw["filter_size_x"] = fsx
+        kw["filter_size_y"] = fsh
+        kw["strides"] = strides
+        mycell = self.crnn_class(myshape, self.num_hidden, kw)
         trans_input_flattened = tf.reshape(minput, shape=tempshape)
         output_shape = deepcopy(myshape)
         if strides is not None:

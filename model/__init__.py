@@ -79,16 +79,16 @@ def batch_norm(x, name_scope, training, epsilon=1e-3, decay=0.999, bias=True, m=
 class Model(object):
     '''Abstract model class. '''
 
-    def __init__(self, data, target=None, dropout=None, **kw):
+    def __init__(self, data, target, dropout, kw):
         print("model")
         self.origargs = copy.copy(kw)
         self.l2 = argget(kw, 'show_l2_loss', True)
 
         tf.set_random_seed(12345678)
-        super(Model, self).__init__(data, target, dropout, **kw)
+        super(Model, self).__init__(data, target, dropout, kw)
         self.training = argget(kw, "training", tf.constant(True))
         self.global_step = tf.Variable(0, name='global_step', trainable=False)
-        self.use_tensorboard = argget(kw, "use_tensorboard", True, keep=True)
+        self.use_tensorboard = argget(kw, "use_tensorboard", True)
 
         if argget(kw, 'whiten', False):
             self.data = batch_norm(data, "bn", self.training, m=32)
@@ -128,9 +128,9 @@ class Model(object):
 class ClassificationModel(Model):
     '''Abstract model class. '''
 
-    def __init__(self, data, target, dropout, **kw):
+    def __init__(self, data, target, dropout, kw):
         print("classificationmodel")
-        super(ClassificationModel, self).__init__(data, target, dropout, **kw)
+        super(ClassificationModel, self).__init__(data, target, dropout, kw)
         self.target = target
         self.dropout = dropout
         self.learning_rate = argget(kw, 'learning_rate', 0.001)
@@ -183,8 +183,8 @@ class ClassificationModel(Model):
 
 class RegressionModel(Model):
     """Abstract model class for regression tasks."""
-    def __init__(self, data, target, dropout, **kw):
-        super(RegressionModel, self).__init__(data, target, dropout, **kw)
+    def __init__(self, data, target, dropout, kw):
+        super(RegressionModel, self).__init__(data, target, dropout, kw)
         self.target = target
         self.dropout = dropout
         self.learning_rate = argget(kw, 'learning_rate', 0.001)
@@ -194,8 +194,8 @@ class RegressionModel(Model):
 
 class ReconstructionModel(Model):
     """Abstract model class for reconstruction tasks."""
-    def __init__(self, data, dropout, **kw):
-        super(ReconstructionModel, self).__init__(data, **kw)
+    def __init__(self, data, dropout, kw):
+        super(ReconstructionModel, self).__init__(data, dropout, None, kw)
         self.dropout = dropout
         self.learning_rate = argget(kw, 'learning_rate', 0.001)
         self.nclasses = argget(kw, 'nclasses', 2)
@@ -203,8 +203,8 @@ class ReconstructionModel(Model):
 
 class GANModel(Model):
     """Abstract model class for GANs."""
-    def __init__(self, data, dropout, **kw):
-        super(GANModel, self).__init__(data, dropout, **kw)
+    def __init__(self, data, dropout, kw):
+        super(GANModel, self).__init__(data, dropout, None, kw)
         self.dropout = dropout
         self.learning_rate = argget(kw, 'learning_rate', 0.001)
         self.momentum = argget(kw, 'momentum', 0.9)

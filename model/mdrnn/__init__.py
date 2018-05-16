@@ -20,13 +20,13 @@ class MDGRUNet(object):
         "vwfc_activation": tf.nn.tanh,
     }
 
-    def __init__(self, data, target, dropout, **kw):
+    def __init__(self, data, target, dropout, kw):
         super(MDGRUNet, self).__init__()
-        mdrnn_net_kw, kw = compile_arguments(self.__class__, transitive=False, **kw)
+        mdrnn_net_kw, kw = compile_arguments(self.__class__, kw, transitive=False)
         for k, v in mdrnn_net_kw.items():
             setattr(self, k, v)
-        self.mdrnn_kw, kw = compile_arguments(MDRNN, transitive=True, **kw)
-        self.crnn_kw, kw = compile_arguments(self.mdrnn_kw['crnn_class'], transitive=True, **kw)
+        self.mdrnn_kw, kw = compile_arguments(MDRNN, kw, transitive=True)
+        self.crnn_kw, kw = compile_arguments(self.mdrnn_kw['crnn_class'], kw, transitive=True)
 
     def mdgru_bb(self, inp, dropout, num_hidden, num_output, noactivation=False,
                  name=None, **kw):
@@ -52,8 +52,10 @@ class MDGRUNet(object):
 
         add_e_bn = argget(kw, "add_e_bn", self.add_e_bn)
         resmdgru = argget(kw, 'resmdgru', self.resmdgru)
+        mdrnn_kw['num_hidden'] = num_hidden
+        mdrnn_kw['name'] = "mdgru"
         with tf.variable_scope(name):
-            mdgruclass = MDRNN(inp, dropout, dimensions, num_hidden=num_hidden, name="mdgru", **mdrnn_kw)
+            mdgruclass = MDRNN(inp, dropout, dimensions, mdrnn_kw)
             mdgru = mdgruclass()
             if num_output is not None:
                 mdgruinnershape = mdgru.get_shape()[1:-1].as_list()

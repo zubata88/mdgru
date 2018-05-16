@@ -41,9 +41,9 @@ class CGRUCell(CRNNCell):
         "gate": tf.nn.sigmoid,
     }
 
-    def __init__(self, *w, **kw):
-        super(CGRUCell, self).__init__(*w, **kw)
-        cgru_kw, kw = compile_arguments(CGRUCell, transitive=False, **kw)
+    def __init__(self, myshape, num_units, kw):
+        super(CGRUCell, self).__init__(myshape, num_units, kw)
+        cgru_kw, kw = compile_arguments(CGRUCell, kw, transitive=False)
         for k, v in cgru_kw.items():
             setattr(self, k, v)
 

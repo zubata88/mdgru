@@ -38,9 +38,9 @@ class CRNNCell(LayerRNNCell):
         "crnn_activation": tf.nn.tanh,
     }
 
-    def __init__(self, myshape, num_units, **kw):
+    def __init__(self, myshape, num_units, kw):
         super(CRNNCell, self).__init__()
-        crnn_kw, kw = compile_arguments(CRNNCell, transitive=False, **kw)
+        crnn_kw, kw = compile_arguments(CRNNCell, kw, transitive=False)
         for k, v in crnn_kw.items():
             setattr(self, k, v)
         self._num_units = num_units

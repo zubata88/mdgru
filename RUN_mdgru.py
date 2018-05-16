@@ -391,7 +391,7 @@ filter_size_h = harmonize_filter_size(args.filter_size_h, w)
 
 args_eval = {"batch_size": args.batchsize,
              "learning_rate": args.learningrate,
-             "w": w,
+             # "w": w,
              "whiten": False,
              "min_mini_batch": minminibatch,
              "dropout_rate": d,
@@ -437,7 +437,7 @@ else:
     datadict = {"train": traindc, "validation": valdc, "test": testdc}
 
 ev = LargeVolumeClassificationEvaluation(mclassification, datadict,
-                                         **args_eval)
+                                         args_eval)
 if isinstance(optionname, list):
     pf = "-".join(optionname)
     if len(pf) > 40:

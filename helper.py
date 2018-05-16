@@ -176,11 +176,11 @@ def argget(dt, key, default=None, keep=False, ifset=None):
         return default
 
 
-def check_if_kw_empty(cls, kw, module_name):
+def check_if_kw_empty(class_name, kw, module_name):
     """Prints standardised warning if an unsupported keyword argument is used for a given class"""
     if len(kw):
         logging.getLogger(module_name).warning(
-            'There were invalid keywords for {}: {}'.format(cls.__class__,
+            'There were invalid keywords for {}: {}'.format(class_name,
                                                             ",".join(["{}:{}".format(k, v) for k, v in kw.items()])))
 
 
@@ -308,16 +308,18 @@ def counter_generator(maxim):
         pass
 
 
-def compile_arguments(cls, transitive=False, **kw):
+def compile_arguments(cls, kw, transitive=False):
     """Extracts valid keywords for cls from given keywords and returns the resulting two dicts.
 
     :param cls: instance or class having property or attribute "_defaults", which is a dict of default parameters.
     :param transitive: determines if parent classes should also be consulted
     :param kw: the keyword dictionary to separate into valid arguments and rest
     """
-    if transitive and hasattr(super(cls, cls), 'compile_arguments'):
-        crnn_kw, kw = super(cls, cls).compile_arguments(transitive=True, **kw)
-    else:
-        crnn_kw = {}
-    crnn_kw.update({k: argget(kw, k, v) for k, v in cls._defaults.items()})
-    return crnn_kw, kw
+    new_kw = {}
+    if transitive:
+        for b in cls.__bases__:
+            if hasattr(b, '_defaults'):
+                temp_kw, kw = compile_arguments(b, kw, transitive=True)
+                new_kw.update(temp_kw)
+    new_kw.update({k: argget(kw, k, v) for k, v in cls._defaults.items()})
+    return new_kw, kw
