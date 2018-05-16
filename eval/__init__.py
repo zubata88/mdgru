@@ -9,7 +9,7 @@ import time
 import numpy as np
 import tensorflow as tf
 from tensorflow.python import pywrap_tensorflow
-from helper import argget
+from helper import argget, check_if_kw_empty
 
 try:
     import cPickle as pickle
@@ -228,6 +228,7 @@ class SupervisedEvaluation(Evaluation):
 
         self.batch_size = argget(kw, 'batch_size', 1)
         self.validate_same = argget(kw, 'validate_same', False)
+        check_if_kw_empty(self.__class__, kw, 'eval')
 
     def train(self, batch_size=None):
         start_time = time.time()
