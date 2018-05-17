@@ -402,13 +402,11 @@ class LargeVolumeEvaluation(Evaluation):
                 res[slicesaa] += pred[slicesbb]
                 if self.evaluate_uncertainty_times > 1:
                     uncert *= certainty
-                    uncertres[mimin[0]:mimax[0], mimin[1]:mimax[1], mimin[2]:mimax[2], :] += \
-                        uncert[0, wrongmin[0]:wrongmax[0], wrongmin[1]:wrongmax[1], wrongmin[2]:wrongmax[2], :]
+                    uncertres[slicesaa] += \
+                        uncert[slicesbb]
                     if self.evaluate_uncertainty_saveall:
                         for j in range(self.evaluate_uncertainty_times):
-                            allres[j, mimin[0]:mimax[0], mimin[1]:mimax[1], mimin[2]:mimax[2], :] += \
-                                preds[i][0, wrongmin[0]:wrongmax[0], wrongmin[1]:wrongmax[1], wrongmin[2]:wrongmax[2],
-                                :]
+                            allres[j, slicesaa] += preds[i][slicesbb]
 
             # normalize again:
             if self.evaluate_uncertainty_times > 1 and not return_results:
