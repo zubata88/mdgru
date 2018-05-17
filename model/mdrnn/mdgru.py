@@ -153,7 +153,7 @@ class MDRNN(object):
         else:
             kw["dropconnectx"] = None
         kw["filter_size_x"] = fsx
-        kw["filter_size_y"] = fsh
+        kw["filter_size_h"] = fsh
         kw["strides"] = strides
         mycell = self.crnn_class(myshape, self.num_hidden, kw)
         trans_input_flattened = tf.reshape(minput, shape=tempshape)
