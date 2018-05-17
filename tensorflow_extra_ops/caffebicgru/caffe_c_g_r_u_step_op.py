@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""CaffeMDGRU op Python library."""
+"""caffe_mdgru.py op Python library."""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

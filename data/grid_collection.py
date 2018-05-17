@@ -9,17 +9,17 @@ from os.path import isfile, isdir, join, splitext
 from threading import Thread
 
 import nibabel as nib
+import mvloader.nifti as ni
+from mvloader.volume import Volume
 import nrrd
 import numpy as np
 import skimage.io as skio
 from scipy.misc import imsave, imread
 from scipy.ndimage.filters import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
-from scipy.ndimage.interpolation import zoom
 
 from helper import argget, counter_generator
-from helper import deprecated
-from . import DataCollection, open_image, swap
+from . import DataCollection
 
 
 class GridDataCollection(DataCollection):
@@ -70,7 +70,6 @@ class GridDataCollection(DataCollection):
         self.deformpadding = 2
         self.datainterpolation = argget(kw, 'datainterpolation', 3)
         self.dataextrapolation = argget(kw, 'dataextrapolation', 'constant')
-        self.dmdeform = argget(kw, 'deform_like_dm', True)
 
         self.scaling = np.float32(argget(kw, 'scaling', np.zeros(np.shape(w))))
         self.rotation = np.float32(argget(kw, 'rotation', 0))
@@ -143,8 +142,8 @@ class GridDataCollection(DataCollection):
                 ending = splitext(file)[-1].lower()
                 if ending in ['.nii', '.hdr', '.nii.gz', '.gz']:
                     if self.correct_nifti_orientation:
-                        vol = open_image(file, verbose=False)
-                        self.affine = vol.get_aligned_matrix()
+                        vol = ni.open_image(file, verbose=False)
+                        self.affine = vol.get_aligned_transformation("RAS")
                         data = vol.aligned_volume
                     else:
                         f = nib.load(file)
@@ -183,34 +182,27 @@ class GridDataCollection(DataCollection):
 
         if ending in ['.nii', '.hdr', '.nii.gz', '.gz'] or len(data.squeeze().shape) > 2:
             if self.correct_nifti_orientation and tporigin is not None:
-                #we corrected the orientation and we have the information to undo our wrongs, lets go:
-                dst_affine = np.eye(4)
+                # we corrected the orientation and we have the information to undo our wrongs, lets go:
+                aligned_data = Volume(data, np.eye(4), "RAS")  # dummy initialisation if everything else fails
                 try:
-                    dst_affine = nib.load(os.path.join(tporigin, self.maskfiles[0])).affine
+                    tporigin_vol = ni.open_image(os.path.join(tporigin, self.maskfiles[0]))
                 except:
                     try:
-                        dst_affine = nib.load(os.path.join(tporigin, self.featurefiles[0])).affine
+                        tporigin_vol = ni.open_image(os.path.join(tporigin, self.featurefiles[0]))
                     except Exception as e:
                         logging.getLogger('data').warning('could not correct orientation for file {} from {}'
                                                           .format(filename, tporigin))
                         logging.getLogger('data').debug('because {}'.format(e))
                 try:
-                    ndim = data.ndim
-
-                    matrix = np.eye(ndim)
-                    if len(matrix) > len(dst_affine):
-                        #yes, elementwise. we only want to flip axes!!
-                        matrix[:len(dst_affine), :len(dst_affine)] *= dst_affine
-                    else:
-                        matrix *= dst_affine[:len(matrix), :len(matrix)]
-                    data = swap(data, matrix, ndim)
+                    aligned_vol = Volume(data, tporigin_vol.aligned_transformation, tporigin_vol.system)
+                    aligned_data = aligned_vol.copy_like(tporigin_vol)
                 except Exception as e:
-                    logging.getLogger('data').warning('could not correct orientation for file {} from {} using {}'
-                                                      .format(filename, tporigin, dst_affine))
+                    logging.getLogger('data').warning('could not correct orientation for file {} from {}'
+                                                      .format(filename, tporigin))
                     logging.getLogger('data').debug('because {}'.format(e))
 
                 finally:
-                    nib.save(nib.Nifti1Image(data, dst_affine), filename + ".nii.gz")
+                    ni.save_volume(filename + ".nii.gz", aligned_data, True)
             else:
                 if self.correct_nifti_orientation:
                     logging.getLogger('data').warning('could not correct orientation for file {} since tporigin is None: {}'
@@ -228,7 +220,7 @@ class GridDataCollection(DataCollection):
                 print('preloading {}'.format(file))
                 self.load(file, lazy=False)
 
-    def setStates(self, states):
+    def set_states(self, states):
         if states is None:
             logging.getLogger('eval').warning(
                 'could not reproduce state, setting unreproducable random seed for all random states')
@@ -244,7 +236,7 @@ class GridDataCollection(DataCollection):
                 self.deformrandomstate.set_state(states['deformrandomstate'])
             self.randomstate.set_state(states['randomstate'])
 
-    def getStates(self):
+    def get_states(self):
         states = {}
         if hasattr(self, 'random_mask_state'):
             states['random_mask_state'] = self.random_mask_state.get_state()
@@ -456,33 +448,13 @@ class GridDataCollection(DataCollection):
             targetindex = [slice(None)] + [slice(np.int32(r[0]), np.int32(r[1])) for r in ranges]
             sourcesindex = [slice(np.int32(mi), np.int32(ma)) for mi, ma in zip(imin, imax)]
             tempdata[targetindex] = np.asarray([f[sourcesindex] for f in featuredata])
-            #             tempdata[:,ranges[0,0]:ranges[0,1],
-            #                  ranges[1,0]:ranges[1,1],
-            #                  ranges[2,0]:ranges[2,1]] = np.asarray(
-            #                      [f[imin[0]:imax[0],
-            #                         imin[1]:imax[1],
-            #                         imin[2]:imax[2]]
-            #             for f in featuredata])
-            # 
+
             if len(masks):
-                templabels = np.zeros([len(masks)] + self.w, dtype=np.int8)
-                templabels[targetindex] = np.asarray([f.squeeze()[sourcesindex] for f in masks])
+                templabels = np.zeros(self.w, dtype=np.int8)
+                templabels[targetindex[1:]] = np.asarray([f.squeeze()[sourcesindex] for f in masks])
                 if one_hot and not self.regression:
                     templabels = self._one_hot_vectorize(templabels, self.nclasses, zero_out_label=self.zero_out_label)
-                if len(masks) > 1:
-                    raise Exception(
-                        'this is not yet properly handled, since we"re supposed to get back only one map with labels. hm...')
-                else:
-                    templabels = templabels.transpose([i for i in range(1, len(templabels.shape))] + [0])
-                #                 templabels[:,ranges[0,0]:ranges[0,1],
-                #                         ranges[1,0]:ranges[1,1],
-                #                         ranges[2,0]:ranges[2,1]] = np.asarray(
-                #                             [f.squeeze()[imin[0]:imax[0],
-                #                                 imin[1]:imax[1],
-                #                                 imin[2]:imax[2]]
-                #                      for f in masks])
-                #                 if one_hot:
-                #                     templabels = self._one_hot_labels(np.asarray([templabels]), self.nclasses, zero_out_label=self.zero_out_label)[0]
+
 
         else:  # we need to interpolate
             coords = np.float64(np.mgrid[[slice(np.int32(imi), np.int32(ima)) for imi, ima in zip(imin, imax)]])
@@ -490,10 +462,7 @@ class GridDataCollection(DataCollection):
             coords = self.transformAffine(coords)
             if np.sum(self.deform):
                 # create deformationfield:
-                if self.dmdeform:
-                    deform = self._get_deform_field_dm
-                else:
-                    deform = self._get_deform_field
+                deform = self._get_deform_field_dm
 
                 self.deformfield = deform()
                 coords += self.deformfield
@@ -562,9 +531,6 @@ class GridDataCollection(DataCollection):
             tempdata *= (1 + (self.deformrandomstate.rand(*tempdata.shape) - 0.5) * self.gaussiannoise)
         return tempdata, templabels
 
-    def sample_all(self, data_set=None, batch_size=1, **kw):
-        raise Exception('implement this')
-
     def get_volume_batch_generators(self):
         # volgeninfo = []
         def create_volgen(shape, w, padding, features, masks):
@@ -587,30 +553,6 @@ class GridDataCollection(DataCollection):
                 yield [volgen, tp, shape, self.w, self.p]
 
         return volgeninfo(self.tps)
-
-    def _get_deform_field(self):
-        self.deformationStrength = self.deformrandomstate.rand()
-        deformshape = [3] + [(w - 1) // d + 2 + self.deformpadding for w, d in zip(self.w, self.deform)]
-        df = np.float32(self.deformrandomstate.normal(0, self.deformSigma,
-                                                      deformshape) * self.deformationStrength)  # we need 2 at least
-        df = zoom(df, [1] + [ww / (1.0 * (d - self.deformpadding)) for ww, d in zip(self.w, deformshape[1:])], order=2)
-        # center df from padding:
-        if self.deformpadding:
-            if len(self.w) == 2:
-                df = df[:,
-                     (df.shape[1] - self.w[0]) // 2:(df.shape[1] - self.w[0]) // 2 + self.w[0],
-                     (df.shape[2] - self.w[1]) // 2:(df.shape[2] - self.w[1]) // 2 + self.w[1],
-                     ]
-            elif len(self.w) == 3:
-                df = df[:,
-                     (df.shape[1] - self.w[0]) // 2:(df.shape[1] - self.w[0]) // 2 + self.w[0],
-                     (df.shape[2] - self.w[1]) // 2:(df.shape[2] - self.w[1]) // 2 + self.w[1],
-                     (df.shape[3] - self.w[2]) // 2:(df.shape[3] - self.w[2]) // 2 + self.w[2],
-                     ]
-            else:
-                raise Exception('this is only implemented for 2 and 3d case')
-
-        return df
 
     def _get_deform_field_dm(self):
         self.deformationStrength = self.deformrandomstate.rand()
@@ -657,36 +599,6 @@ class GridDataCollection(DataCollection):
 
         else:
             raise Exception('only implemented for 2d and 3d case. feel free to contribute')
-
-    @classmethod
-    def createDataCollections(cls, featurefiles, maskfiles, location=None, tps=None, training=0.8, testing=0.2,
-                              validation=0, **kw):
-        if not isinstance(featurefiles, list):
-            featurefiles = [featurefiles]
-        if not isinstance(maskfiles, list):
-            maskfiles = [maskfiles]
-        if (validation + training + testing != 1):
-            raise Exception('the proportions need to sum up to one!')
-        if tps is not None:
-            pass
-        elif location is not None:
-            tps = DataCollection.get_all_tps(location, featurefiles, maskfiles)
-        else:
-            raise Exception('either tps or location has to be set')
-        np.random.seed(argget(kw, "seed", 12345678))
-        np.random.shuffle(tps)
-        trnum = np.int32(len(tps) * training)
-        tenum = np.int32(len(tps) * testing)
-
-        teset = cls(featurefiles, maskfiles, tps=tps[:tenum], **kw)
-        if validation == 0 and trnum + tenum != len(tps):
-            trnum += len(tps) - trnum - tenum  # add lost tp to tr
-            valset = teset
-        else:
-            valset = cls(featurefiles, maskfiles, tps=tps[trnum + tenum:], **kw)
-        trset = cls(featurefiles, maskfiles, tps=tps[tenum:trnum], **kw)
-
-        return {'train': trset, 'validation': valset, 'test': teset}
 
 
 class ThreadedGridDataCollection(GridDataCollection):

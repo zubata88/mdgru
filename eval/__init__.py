@@ -9,7 +9,7 @@ import time
 import numpy as np
 import tensorflow as tf
 from tensorflow.python import pywrap_tensorflow
-from helper import argget
+from helper import argget, check_if_kw_empty
 
 try:
     import cPickle as pickle
@@ -18,7 +18,7 @@ except:
 
 
 class Evaluation(object):
-    estimatefilename = "estimate.nii"
+    estimatefilename = "estimate"
     '''Base class for all evaluation classes. Child classes implement various 
         test_* methods to test modeldependent aspects.
     
@@ -28,7 +28,7 @@ class Evaluation(object):
     
     '''
 
-    def __init__(self, collectioninst, **kw):
+    def __init__(self, collectioninst, kw):
         self.origargs = copy.deepcopy(kw)
         self.use_tensorboard = argget(kw, "use_tensorboard", True, keep=True)
         if self.use_tensorboard:
@@ -73,9 +73,9 @@ class Evaluation(object):
     def save(self, f):
         '''saves model to disk at location f'''
         self.saver.save(self.sess, f, global_step=self.model.global_step)
-        trdc = self.trdc.getStates()
-        tedc = self.tedc.getStates()
-        valdc = self.valdc.getStates()
+        trdc = self.trdc.get_states()
+        tedc = self.tedc.get_states()
+        valdc = self.valdc.get_states()
         states = {}
         if trdc:
             states['trdc'] = trdc
@@ -132,17 +132,17 @@ class Evaluation(object):
         except Exception as e:
             logging.getLogger('eval').warning('there was no randomstate pickle named {} around'.format(pickle_name))
         if "trdc" in states:
-            self.trdc.setStates(states['trdc'])
+            self.trdc.set_states(states['trdc'])
         else:
-            self.trdc.setStates(None)
+            self.trdc.set_states(None)
         if "tedc" in states:
-            self.tedc.setStates(states['tedc'])
+            self.tedc.set_states(states['tedc'])
         else:
-            self.tedc.setStates(None)
+            self.tedc.set_states(None)
         if "valdc" in states:
-            self.valdc.setStates(states['valdc'])
+            self.valdc.set_states(states['valdc'])
         else:
-            self.valdc.setStates(None)
+            self.valdc.set_states(None)
         if 'epoch' in states:
             self.current_epoch = states['epoch']
         else:
@@ -181,11 +181,14 @@ class Evaluation(object):
 
 
 class SupervisedEvaluation(Evaluation):
-    def __init__(self, model, collectioninst, **kw):
-        super(SupervisedEvaluation, self).__init__(collectioninst, **kw)
+    def __init__(self, model, collectioninst, kw):
+        super(SupervisedEvaluation, self).__init__(collectioninst, kw)
         self.setupCollections(collectioninst)
         self.currit = 0
         self.namespace = argget(kw, "namespace", "default")
+        self.only_save_labels = argget(kw, "only_save_labels", False)
+        self.batch_size = argget(kw, 'batch_size', 1)
+        self.validate_same = argget(kw, 'validate_same', False)
         with tf.variable_scope(self.namespace):
             self.training = tf.placeholder(dtype=tf.bool)
             self.dropout = tf.placeholder(dtype=tf.float32)
@@ -197,7 +200,8 @@ class SupervisedEvaluation(Evaluation):
                 self.target = tf.placeholder(dtype=tf.float32,
                                              shape=self.trdc.get_target_shape()[:-1] + [self.nclasses])
             kw_copy = copy.deepcopy(kw)
-            self.model = model(self.data, self.target, self.dropout, training=self.training, **kw)
+            kw['training'] = self.training
+            self.model = model(self.data, self.target, self.dropout, kw)
             self.model.optimize
 # in the case we have a different testing set, we can construct 2 graphs, one for training and testing case
         if self.tedc.get_shape() != self.trdc.get_shape():
@@ -213,8 +217,8 @@ class SupervisedEvaluation(Evaluation):
                     else:
                         self.test_target = tf.placeholder(dtype=tf.float32,
                                                      shape=self.tedc.get_target_shape()[:-1] + [self.nclasses])
-                    self.test_model = model(self.test_data, self.test_target, self.test_dropout, training=self.test_training,
-                                            **kw_copy)
+                    kw_copy['test_training'] = self.test_training
+                    self.test_model = model(self.test_data, self.test_target, self.test_dropout, kw_copy)
                     self.test_model.prediction
                     self.test_model.cost
         else:
@@ -225,8 +229,7 @@ class SupervisedEvaluation(Evaluation):
             self.test_data = self.data
             self.test_target = self.target
 
-        self.batch_size = argget(kw, 'batch_size', 1)
-        self.validate_same = argget(kw, 'validate_same', False)
+        check_if_kw_empty(self.__class__.__name__, kw, 'eval')
 
     def train(self, batch_size=None):
         start_time = time.time()
@@ -277,13 +280,13 @@ class SupervisedEvaluation(Evaluation):
                              {self.data: self.testbatch, self.dropout: 1, self.training: False})
 
     def test_scores(self, pred, tar):
-        tar = np.expand_dims(tar.squeeze(), 0)
+        tar = np.int32(np.expand_dims(tar.squeeze(), 0))
         pred = np.expand_dims(pred.squeeze(), 0)
         if pred.shape != tar.shape:
             tar2 = np.zeros((np.prod(pred.shape[:-1]), pred.shape[-1]))
             tar2[np.arange(np.prod(pred.shape[:-1])), tar.flatten()] = 1
             tar = tar2.reshape(pred.shape)
-        res = self.model.scores_np(tar, pred)
+        res = self.model.compute_scores(tar, pred)
         return res
 
     def test_all_random(self, batch_size=None, dc=None, resample=True, summary_writer=None):
@@ -315,12 +318,12 @@ class SupervisedEvaluation(Evaluation):
 
 
 class LargeVolumeEvaluation(Evaluation):
-    def __init__(self, model, collectioninst, **kw):
+    def __init__(self, model, collectioninst, kw):
         self.evaluate_uncertainty_times = argget(kw, "evaluate_uncertainty_times", 1)
         self.evaluate_uncertainty_dropout = argget(kw, "evaluate_uncertainty_dropout",
                                                    1.0)  # these standard values ensure that we dont evaluate uncertainty if nothing was provided.
         self.evaluate_uncertainty_saveall = argget(kw, "evaluate_uncertainty_saveall", False)
-        super(LargeVolumeEvaluation, self).__init__(model, collectioninst, **kw)
+        super(LargeVolumeEvaluation, self).__init__(model, collectioninst, kw)
 
     def test_all_available(self, batch_size=None, dc=None, return_results=False, dropout=None, testing=False):
         if dc is None:
@@ -406,12 +409,12 @@ class LargeVolumeEvaluation(Evaluation):
                             allres[j, slicesaa] += preds[i][slicesbb]
 
             # normalize again:
-            if self.evaluate_uncertainty_times > 1:
+            if self.evaluate_uncertainty_times > 1 and not return_results:
                 uncertres /= np.sum(res, -1).reshape(list(res.shape[:-1]) + [1])
-                dc.save(uncertres, os.path.join(file, "std-" + self.estimatefilename))
+                dc.save(uncertres, os.path.join(file, "std-" + self.estimatefilename), tporigin=file)
                 if self.evaluate_uncertainty_saveall:
                     for j in range(self.evaluate_uncertainty_times):
-                        dc.save(allres[j], os.path.join(file, "iter{}-".format(j) + self.estimatefilename))
+                        dc.save(allres[j], os.path.join(file, "iter{}-".format(j) + self.estimatefilename), tporigin=file)
             res /= np.sum(res, -1).reshape(list(res.shape[:-1]) + [1])
             # evaluate accuracy...
             name = os.path.split(file)
@@ -424,11 +427,13 @@ class LargeVolumeEvaluation(Evaluation):
                         errs.append([name, self.test_scores(res, mf)])
             except Exception as e:
                 logging.getLogger('eval').warning('was not able to save test scores, even though ground truth was available.')
-                logging.getLogger('eval').debug('{}'.format(e))
+                logging.getLogger('eval').warning('{}'.format(e))
             if return_results:
                 full_vols.append([name, file, res])
             else:
-                dc.save(res, os.path.join(file, self.estimatefilename), tporigin=file)
+                if not self.only_save_labels:
+                    dc.save(res, os.path.join(file, self.estimatefilename + "-probdist"), tporigin=file)
+                dc.save(np.uint8(np.argmax(res, -1)), os.path.join(file, self.estimatefilename + "-labels"), tporigin=file)
             logging.getLogger('eval').info('evaluation took {} seconds'.format(time.time() - lasttime))
             lasttime = time.time()
         if return_results:

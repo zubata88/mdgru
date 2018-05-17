@@ -44,7 +44,7 @@ gauss_sigma_group.add_argument('--gausssigma', type=float, nargs='+',
                              help="array of sigmas to use for gauss highpass filtering")
 data_parameters.add_argument('--nooriginal', action="store_true", help="no original files (added by default)")
 data_parameters.add_argument('--nclasses', type=int, help="set number of classes.", required=True)
-data_parameters.add_argument('--ignore_nifty_header', action="store_true", help="ignores header information about orientation of the data")
+data_parameters.add_argument('--ignore_nifti_header', action="store_true", help="ignores header information about orientation of the data")
 
 sampling_parameters = parser.add_argument_group('sampling parameters')
 sampling_parameters.add_argument('-w', '--windowsize', type=int, nargs='+', help='patch or subvolume size',
@@ -94,6 +94,8 @@ model_parameters.add_argument('--dontsumcgrus', action="store_true",
 model_parameters.add_argument('--putrback', action="store_true", help="use original gru formulation")
 model_parameters.add_argument('--model_seed', type=int, default=None, help='set a seed such that all models will create reproducible initializations')
 model_parameters.add_argument('--legacy_cgru_addition', action="store_true", help='allows to load old models despite new code. Only use when you know what you`re doing')
+model_parameters.add_argument('--filter_size_x', default=None, type=int, nargs="+", help='filter sizes for each dimension for the input')
+model_parameters.add_argument('--filter_size_h', default=None, type=int, nargs="+", help='filter sizes for each dimension for the previous output')
 
 execution_parameters = parser.add_argument_group('execution parameters')
 execution_parameters.add_argument('--nodropconnecth', action="store_true", help="dropconnect on prev output")
@@ -108,11 +110,17 @@ execution_parameters.add_argument('--onlytest', action="store_true",
 execution_parameters.add_argument('--onlytrain', action="store_true",
                                                  help="only perform training phase, "
                                                       + "inferred, when no testing location is present")
-execution_parameters.add_argument('--ckpt', default=None,
-                                  help='provide checkpointfile for this template. If no modelname is provided, we will infer one from this file')
+execution_parameters.add_argument('--ckpt', default=None, nargs="+",
+                                  help='provide checkpointfile for this template. If no modelname is provided, '
+                                       'we will infer one from this file. Multiple files are only allowed if '
+                                       'only_test is set. If the same number of optionnames are provided, they will '
+                                       'be used to name the different results. If only one optionname is provided, they '
+                                       'will be numbered in order and the checkpoint filename will be included in the '
+                                       'result file.')
 execution_parameters.add_argument('--learningrate', type=float, default=LEARNINGRATE_DEFAULT,
                                   help='learningrate (for adadelta)')
-execution_parameters.add_argument('--optionname', help='override optionname (used eg for saving results)')
+execution_parameters.add_argument('--optionname', nargs="+", help='override optionname (used eg for saving results). '
+                                                                  'Can be either 1, or n in the case of n ckpts ')
 
 execution_parameters.add_argument('--testfirst', action="store_true", help="validate first")
 execution_parameters.add_argument('--test_each', default=TEST_EACH_DEFAULT, type=int, help='validate each # iterations')
@@ -132,6 +140,8 @@ execution_parameters.add_argument('--notifyme', default=None, nargs='?', type=st
                                        + ' follows: {"chat_id": CHATID, "token": TOKEN}, where CHATID and TOKEN '
                                        + 'have to be created with Telegrams BotFather. The chatid from config can be '
                                        + 'overriden using a parameter together with this option.')
+execution_parameters.add_argument('--only_save_labels', action='store_true', help='Writes only labelmaps to disk, ignoring'
+                                                'probability maps and hence saving a lot of disk space.')
 execution_parameters.add_argument('--results_to_csv', action="store_true", help='Writes validation scores to validation_scores.csv')
 execution_parameters.add_argument('--number_of_evaluation_samples', type=int, default=1,
                                   help='Number times we want to evaluate one volume. This only makes sense '
@@ -149,7 +159,7 @@ args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in args.gpu])
 # THIS is here so we are sure, we can set cuda visible devices beforehand.
 from data.grid_collection import GridDataCollection, ThreadedGridDataCollection
-from model.classification import MDGRUClassification
+from model.mdgru_classification import MDGRUClassification
 from eval.classification import LargeVolumeClassificationEvaluation
 from runner import Runner
 import tensorflow as tf
@@ -230,10 +240,10 @@ if args.modelname is not None:
 elif args.ckpt is not None:
     from tensorflow.python import pywrap_tensorflow
     try:
-        r = pywrap_tensorflow.NewCheckpointReader(args.ckpt)
+        r = pywrap_tensorflow.NewCheckpointReader(args.ckpt[0])
         modelname = r.get_variable_to_shape_map().popitem()[0].split('/')[0]
     except:
-        logging.getLogger('runfile').warning('could not load modelname from ckpt-file {}'.format(args.ckpt))
+        logging.getLogger('runfile').warning('could not load modelname from ckpt-file {}'.format(args.ckpt[0]))
 if modelname is None:
     modelname = "f{}m{}d{}-{}w{}p{}bn{}res{}lr{}r{}ns{}-de{}-{}se{}_all".format(int(1 - args.nofsg),
                                                                             "".join(m),
@@ -275,7 +285,7 @@ elif args.onlytrain or (args.locationtesting is None):
 if args.iterations is not None:
     args_runner['its_per_epoch'] = args.iterations
 if args.ckpt is not None:
-    args_runner['checkpointfile'] = args.ckpt
+    args_runner['checkpointfiles'] = args.ckpt
 if args.testbatchsize is not None:
     args_runner['test_size'] = args.testbatchsize
 if args.test_each is not None:
@@ -288,7 +298,7 @@ if args.testfirst:
     args_runner['test_first'] = args.testfirst
 if args.cpu is not None:
     args_runner['only_cpu'] = args.cpu
-
+args_runner['estimatefilenames'] = optionname
 # data arguments
 
 args_data = {
@@ -296,7 +306,7 @@ args_data = {
     "nooriginal": args.nooriginal,
     "nclasses": nclasses,
     "subtractGauss": 1 - args.nofsg,
-    "correct_nifti_orientation": 1 - args.ignore_nifty_header
+    "correct_nifti_orientation": 1 - args.ignore_nifti_header
 }
 if m is not None:
     args_data["choose_mask_at_random"] = len(m) > 1
@@ -371,18 +381,36 @@ else:
     testdc = None
 # eval and model arguments
 
+
+def harmonize_filter_size(fs, w):
+    if fs is None:
+        return [7 for _ in w]
+    if len(fs) != len(w):
+        if len(fs) == 1:
+            fs = [fs[0] for _ in w]
+        elif fs is None:
+            fs = [7 for _ in w]
+        else:
+            print('Filter size and number of dimensions for subvolume do not match!')
+            exit(0)
+    return fs
+
+
+filter_size_x = harmonize_filter_size(args.filter_size_x, w)
+filter_size_h = harmonize_filter_size(args.filter_size_h, w)
+
 args_eval = {"batch_size": args.batchsize,
              "learning_rate": args.learningrate,
-             "w": w,
+             # "w": w,
              "whiten": False,
              "min_mini_batch": minminibatch,
              "dropout_rate": d,
-             "use_dropconnecth": 1 - args.nodropconnecth,
-             "use_dropconnectx": 1 - args.nodropconnectx,
+             "use_dropconnect_h": 1 - args.nodropconnecth,
+             "use_dropconnect_x": 1 - args.nodropconnectx,
              "namespace": modelname,
              "nclasses": nclasses,
-             'rnn_activation': rnn_activation,
-             'activation': activation,
+             'crnn_activation': rnn_activation,
+             'vwfc_activation': activation,
              'validate_same': True,
              'use_tensorboard': 1-args.dont_use_tensorboard,
              'swap_memory': args.swap_memory,
@@ -391,6 +419,9 @@ args_eval = {"batch_size": args.batchsize,
              'evaluate_uncertainty_times': args.number_of_evaluation_samples,
              'evaluate_uncertainty_dropout': args.dropout_during_evaluation,
              'evaluate_uncertainty_saveall': args.save_individual_evaluations,
+             'only_save_labels': args.only_save_labels,
+             'filter_size_x': filter_size_x,
+             'filter_size_h': filter_size_h,
              }
 
 if not args.dont_use_tensorboard and args.image_summaries_each is not None:
@@ -399,7 +430,7 @@ argvars = vars(args)
 arglookup = {
     'learning_rate': 'learningrate',
     'batch_size': 'batchsize',
-    'bnx': 'bnx', 'bnh': 'bnh', 'bne': 'bne', 'bna': 'bna',
+    'add_x_bn': 'bnx', 'add_h_bn': 'bnh', 'add_e_bn': 'bne', 'add_a_bn': 'bna',
     'resmdgru': 'mdgrures',
     'resgrux': 'resx',
     'resgruh': 'resh',
@@ -419,6 +450,11 @@ else:
     datadict = {"train": traindc, "validation": valdc, "test": testdc}
 
 ev = LargeVolumeClassificationEvaluation(mclassification, datadict,
-                                         **args_eval)
-ev.estimatefilename = optionname
-Runner(ev, experiments_postfix="_" + optionname, **args_runner).run()
+                                         args_eval)
+if isinstance(optionname, list):
+    pf = "-".join(optionname)
+    if len(pf) > 40:
+        pf = pf[:39] + "..."
+else:
+    pf = optionname
+Runner(ev, experiments_postfix="_" + pf, **args_runner).run()
