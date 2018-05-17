@@ -85,12 +85,12 @@ class CGRUCell(CRNNCell):
             if self.add_h_bn:
                 zrh = batch_norm(zrh, "bnh", self.istraining, bias=None, m=self.min_mini_batch)
             # Add skip connections for input x and/or state h of the gates if needed.
-            with vs.variable_scope('resgru'):
+            with vs.variable_scope("resgru"):
                 if self.resgrux:
                     ntiles = self._num_units // inputs.get_shape().as_list()[-1]
                     if ntiles * inputs.get_shape().as_list()[-1] != self._num_units:
-                        logging.getLogger('model').error(
-                            '{}*{} is smaller than the actual number of outputs. (needs to be multiple){}'
+                        logging.getLogger("model").error(
+                            "{}*{} is smaller than the actual number of outputs. (needs to be multiple){}"
                                 .format(ntiles, inputs.get_shape().as_list()[-1], self._num_units))
                     else:
                         zrx = tf.tile(inputs, [1, ntiles * 2]) + zrx

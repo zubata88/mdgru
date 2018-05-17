@@ -18,7 +18,7 @@ class CaffeMDGRU(object):
         self.add_h_bn = argget(kw, "bnh", False)
         self.add_a_bn = argget(kw, "bna", False)
         self.form = argget(kw, "form", "NDHWC")
-        self.istraining = argget(kw, 'istraining', tf.constant(True))
+        self.istraining = argget(kw, "istraining", tf.constant(True))
         if dimensions is None:
             self.dimensions = [x + 1 for x in range(len(inputarr.get_shape()[1:-1]))]
         else:
@@ -29,11 +29,11 @@ class CaffeMDGRU(object):
         self.dropout = dropout
         self.use_dropconnectx = argget(kw, "use_dropconnectx", True)
         self.use_dropconnecth = argget(kw, "use_dropconnecth", False)
-        self.use_bernoulli = argget(kw, 'use_bernoulli_dropconnect', False)
-        self.mask_padding = argget(kw, 'maskpadding', None)
+        self.use_bernoulli = argget(kw, "use_bernoulli_dropconnect", False)
+        self.mask_padding = argget(kw, "maskpadding", None)
         self.m = argget(kw, "min_mini_batch", None)
         self.favor_speed_over_memory = argget(kw, "favor_speed_over_memory", False)
-        self.filter_sizes = argget(kw, 'filter_sizes', [7, 7, 7])
+        self.filter_sizes = argget(kw, "filter_sizes", [7, 7, 7])
         if any([self.add_x_bn, self.add_h_bn, self.add_a_bn]):
             raise Exception("bn not allowed for caffemdgru")
 

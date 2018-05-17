@@ -27,10 +27,10 @@ class MDGRUClassification(ClassificationModel, MDGRUNet):
 
     def __init__(self, data, target, dropout, kw):
         super(MDGRUClassification, self).__init__(data, target, dropout, kw)
-        self.ignore_label = argget(kw, 'ignore_label', None)
-        self.fc_channels = argget(kw, 'fc_channels', [25, 45, self.nclasses])
-        self.mdgru_channels = argget(kw, 'mdgru_channels', [16, 32, 64])
-        self.strides = argget(kw, 'strides', [None for _ in self.mdgru_channels])
+        self.ignore_label = argget(kw, "ignore_label", None)
+        self.fc_channels = argget(kw, "fc_channels", [25, 45, self.nclasses])
+        self.mdgru_channels = argget(kw, "mdgru_channels", [16, 32, 64])
+        self.strides = argget(kw, "strides", [None for _ in self.mdgru_channels])
 
     @lazy_property
     def logits(self):
@@ -39,10 +39,10 @@ class MDGRUClassification(ClassificationModel, MDGRUNet):
         for it, (mdgruc, fcc, s) in enumerate(zip(self.mdgru_channels, self.fc_channels, self.strides)):
             kw = {}
             if it == len(self.mdgru_channels) - 1:
-                kw['bne'] = False
-                kw['noactivation'] = True
+                kw["bne"] = False
+                kw["noactivation"] = True
             if s is not None:
-                kw['strides'] = [s for _ in range(len(h.get_shape().as_list()) - 2)] if np.isscalar(s) else s
+                kw["strides"] = [s for _ in range(len(h.get_shape().as_list()) - 2)] if np.isscalar(s) else s
             h = self.mdgru_bb(h, self.dropout, mdgruc, fcc, name="{}".format(it + 1), istraining=self.training, **kw)
         return h
 
@@ -51,8 +51,8 @@ class MDGRUClassification(ClassificationModel, MDGRUNet):
         """Provides prediction in the form of a discrete probability distribution per voxel"""
         pred = tf.nn.softmax(self.logits)
         if self.use_tensorboard:
-            save_summary_for_nd_images('data', self.data, collections=['images'])
-            save_summary_for_nd_images('prediction', pred, collections=['images'])
+            save_summary_for_nd_images("data", self.data, collections=["images"])
+            save_summary_for_nd_images("prediction", pred, collections=["images"])
         return pred
 
     @lazy_property
@@ -71,8 +71,8 @@ class MDGRUClassification(ClassificationModel, MDGRUNet):
         if self.ignore_label is not None:
             loss *= tf.size(ignore) / tf.reduce_sum(1 - ignore)
         if self.use_tensorboard:
-            save_summary_for_nd_images('target', self.target, collections=['images'])
-            tf.summary.scalar('segloss', tf.reduce_mean(loss))
+            save_summary_for_nd_images("target", self.target, collections=["images"])
+            tf.summary.scalar("segloss", tf.reduce_mean(loss))
         return loss
 
     @lazy_property

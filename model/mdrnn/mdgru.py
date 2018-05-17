@@ -80,7 +80,7 @@ class MDRNN(object):
                         if self.no_avgpool:
                             def compress_time(data, fsize, stride, padding):
                                 fshape = fsize[1: -1] + [data.get_shape().as_list()[-1]] * 2
-                                filt = tf.get_variable('compressfilt', fshape)
+                                filt = tf.get_variable("compressfilt", fshape)
                                 return convolution_helper_padding_same(data, filt, fshape, stride[1: -1])
                         else:
                             if len(self.strides) == 3:
@@ -107,7 +107,7 @@ class MDRNN(object):
                     dimorderback.insert(d, dimorderback.pop(-2))
 
                     # forward direction:
-                    with tf.variable_scope('forward'):
+                    with tf.variable_scope("forward"):
                         trans_resf = self.add_cgru(trans_input, myshape, tempshape, fsx=fsx, fsh=fsh, strides=copy(st))
                         if self.strides is not None:
                             ksize = [1 for _ in self.inputarr.get_shape()]
@@ -118,7 +118,7 @@ class MDRNN(object):
                         resf = tf.transpose(trans_resf, dimorderback)
                         outputs.append(resf)
                     # backward direction
-                    with tf.variable_scope('backward'):
+                    with tf.variable_scope("backward"):
                         rev_trans_input = tf.reverse(trans_input, axis=[len(dimorder) - 2])
                         # dimorder should now be 1 at location d;)
                         rev_trans_resb = self.add_cgru(rev_trans_input, myshape, tempshape, fsx=fsx, fsh=fsh,
@@ -160,7 +160,7 @@ class MDRNN(object):
         output_shape = deepcopy(myshape)
         if strides is not None:
             if len(strides) != len(output_shape) - 3:
-                raise Exception('strides should match the current spatial dimensions')
+                raise Exception("strides should match the current spatial dimensions")
             output_shape[1: -2] = [int(np.ceil((myshape[1 + i]) / strides[i])) for i in range(len(strides))]
         output_shape[-1] = mycell.output_size
 

@@ -51,9 +51,9 @@ class MDGRUNet(object):
         mdrnn_kw.update(kw)
 
         add_e_bn = argget(kw, "add_e_bn", self.add_e_bn)
-        resmdgru = argget(kw, 'resmdgru', self.resmdgru)
-        mdrnn_kw['num_hidden'] = num_hidden
-        mdrnn_kw['name'] = "mdgru"
+        resmdgru = argget(kw, "resmdgru", self.resmdgru)
+        mdrnn_kw["num_hidden"] = num_hidden
+        mdrnn_kw["name"] = "mdgru"
         with tf.variable_scope(name):
             mdgruclass = MDRNN(inp, dropout, dimensions, mdrnn_kw)
             mdgru = mdgruclass()
@@ -74,7 +74,7 @@ class MDGRUNet(object):
                     uniform = False
                 W = tf.get_variable(
                     "W", filtershape, dtype=tf.float32, initializer=get_modified_xavier_method(numelem, uniform))
-                b = tf.get_variable('b', [num_output], initializer=tf.constant_initializer(0))
+                b = tf.get_variable("b", [num_output], initializer=tf.constant_initializer(0))
 
                 mdgru = tf.nn.convolution(mdgru, W, padding="SAME")
 
@@ -82,7 +82,7 @@ class MDGRUNet(object):
                     if doreshape:
                         inp = tf.reshape(inp,
                                          [-1, np.prod(inp.get_shape()[1:-1].as_list()), inp.get_shape().as_list()[-1]])
-                    resW = tf.get_variable('resW',
+                    resW = tf.get_variable("resW",
                                            [1 for _ in inp.get_shape().as_list()[1:-1]] + [
                                                inp.get_shape().as_list()[-1], num_output],
                                            dtype=tf.float32, initializer=get_modified_xavier_method(num_output, False))

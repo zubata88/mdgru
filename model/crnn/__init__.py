@@ -44,11 +44,11 @@ class CRNNCell(LayerRNNCell):
         for k, v in crnn_kw.items():
             setattr(self, k, v)
         self._num_units = num_units
-        self.filter_size_x = argget(kw, 'filter_size_x', [7, 7])
-        self.filter_size_h = argget(kw, 'filter_size_h', [7, 7])
+        self.filter_size_x = argget(kw, "filter_size_x", [7, 7])
+        self.filter_size_h = argget(kw, "filter_size_h", [7, 7])
         self.strides = argget(kw, "strides", None)
         if myshape is None:
-            raise Exception('myshape cant be None!')
+            raise Exception("myshape cant be None!")
         myshapein = deepcopy(myshape)
         myshapein.pop(-2)
         myshapeout = deepcopy(myshape)
@@ -57,7 +57,7 @@ class CRNNCell(LayerRNNCell):
         if self.strides is not None:
             if len(myshapeout[1:-1]) != len(self.strides):
                 raise Exception(
-                    'stride shape should match myshapeout[1:-1]! strides: {}, myshape: {}'.format(self.strides,
+                    "stride shape should match myshapeout[1:-1]! strides: {}, myshape: {}".format(self.strides,
                                                                                                   myshapeout))
             myshapeout[1:-1] = [int(np.round((myshapeout[1 + si]) / self.strides[si])) for si in
                                 range(len(myshapeout) - 2)]
@@ -135,7 +135,7 @@ class CRNNCell(LayerRNNCell):
         if not shape[1]:
             raise ValueError("ConvLinear expects shape[1] of arguments: %s" % str(shape))
         if self.myshapes[1][-1] != shape[1]:
-            logging.getLogger('model').warning('orig_shape does not match.')
+            logging.getLogger("model").warning("orig_shape does not match.")
         dtype = args[0].dtype
         # Now the computation.
         with vs.variable_scope(scope or "ConvLinear"):
