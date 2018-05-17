@@ -133,6 +133,16 @@ execution_parameters.add_argument('--notifyme', default=None, nargs='?', type=st
                                        + 'have to be created with Telegrams BotFather. The chatid from config can be '
                                        + 'overriden using a parameter together with this option.')
 execution_parameters.add_argument('--results_to_csv', action="store_true", help='Writes validation scores to validation_scores.csv')
+execution_parameters.add_argument('--number_of_evaluation_samples', type=int, default=1,
+                                  help='Number times we want to evaluate one volume. This only makes sense '
+                                       'using a keep rate of less than 1 during evaluation (dropout_during_evaluation '
+                                       'less than 1)')
+execution_parameters.add_argument('--dropout_during_evaluation', type=float, default=1.0,
+                                  help='Keeprate of weights during evaluation. Useful to visualize uncertainty '
+                                       'in conjunction with a number of samples per volume')
+execution_parameters.add_argument('--save_individual_evaluations', action='store_true',
+                                  help='Save each evaluation sample per volume. Without this flag, only the '
+                                       'standard deviation and mean over all samples is kept.')
 
 args = parser.parse_args()
 
@@ -378,6 +388,9 @@ args_eval = {"batch_size": args.batchsize,
              'swap_memory': args.swap_memory,
              'use_dropconnect_on_state': args.use_dropconnect_on_state,
              'legacy_cgru_addition': args.legacy_cgru_addition,
+             'evaluate_uncertainty_times': args.number_of_evaluation_samples,
+             'evaluate_uncertainty_dropout': args.dropout_during_evaluation,
+             'evaluate_uncertainty_saveall': args.save_individual_evaluations,
              }
 
 if not args.dont_use_tensorboard and args.image_summaries_each is not None:
