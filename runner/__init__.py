@@ -108,8 +108,7 @@ class Runner(object):
         self.test_size = argget(kw, 'test_size', 1)  # batch_size for tests
         self.test_iters = argget(kw, 'test_iters', 1)
         self._test_pick_iteration = argget(kw, 'test_first', ifset=0, default=self.test_each - 1)
-        self.perform_n_times_full_validation = argget(kw, 'perform_n_times_full_validation', 0)
-        self.perform_n_times_full_validation_dropout = argget(kw, 'perform_n_times_full_validation_dropout', 0.5)
+        self.perform_full_image_validation = argget(kw, 'perform_full_image_validation', 1)
         self.show_testing_results = argget(kw, 'show_testing_results', False)
         force_symlink(self.experiments, os.path.join(experiments_nots, "latest"))
         os.makedirs(self.plotfolder)
@@ -134,10 +133,9 @@ class Runner(object):
             testbatches = []
             testlabs = []
             errors = []
-            if self.perform_n_times_full_validation:
+            if self.perform_full_image_validation:
                 res, error = self.ev.test_all_available(batch_size=self.test_size, dc=self.ev.valdc,
-                                                        return_results=True,
-                                                        dropout=self.perform_n_times_full_validation_dropout)
+                                                        return_results=True)
                 allres.extend(res)
                 errors.append(error)
             else:

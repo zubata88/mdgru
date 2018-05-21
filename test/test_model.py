@@ -13,3 +13,4 @@ def create_dummy_model_tensors_3d(w=[16, 16, 16], nclasses=2, nfeatures=3):
 
 def test_mdgruclassification_instantiation():
     a = MDGRUClassification(*create_dummy_model_tensors_3d(), kw={})
+

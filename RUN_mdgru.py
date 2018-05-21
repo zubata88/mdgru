@@ -206,8 +206,6 @@ args_runner = {
     "test_size": 1,
     "test_iters": 1,
     "show_testing_results": True,
-    "perform_n_times_full_validation": 1,
-    "perform_n_times_full_validation_dropout": 1,
     "experimentloc": os.path.join(args.datapath, 'experiments'),
     "fullparameters": fullparameters,
 }
