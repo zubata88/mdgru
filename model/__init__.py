@@ -6,7 +6,8 @@ import numpy as np
 from helper import argget
 import functools
 import copy
-
+from tensorflow.python import pywrap_tensorflow
+import logging
 
 def lazy_property(function):
     """This function computes a property or simply returns it if already computed."""
@@ -80,8 +81,8 @@ class Model(object):
         print("model")
         self.origargs = copy.copy(kw)
         self.l2 = argget(kw, "show_l2_loss", True)
-
-        tf.set_random_seed(12345678)
+        self.model_seed = argget(kw, 'model_seed', 12345678)
+        tf.set_random_seed(self.model_seed)
         super(Model, self).__init__(data, target, dropout, kw)
         self.training = argget(kw, "training", tf.constant(True))
         self.global_step = tf.Variable(0, name="global_step", trainable=False)
@@ -112,7 +113,20 @@ class Model(object):
             tf.summary.scalar("loss", loss)
         return loss
 
+    @staticmethod
+    def get_model_name_from_ckpt(ckpt):
+        """returns root node name of tensorflow graph stored in checkpoint ckpt"""
+        try:
+            r = pywrap_tensorflow.NewCheckpointReader(ckpt)
+            modelname = r.get_variable_to_shape_map().popitem()[0].split('/')[0]
+        except:
+            logging.getLogger('runfile').warning('could not load modelname from ckpt-file {}'.format(ckpt))
+            modelname = None
+        return modelname
 
+    @staticmethod
+    def set_allowed_gpu_memory_fraction(gpuboundfraction):
+        tf.GPUOptions(per_process_gpu_memory_fraction=gpuboundfraction)
 class ClassificationModel(Model):
     """Abstract model class. """
 
