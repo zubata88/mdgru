@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Running pre-commit hook"
+echo "Running pre-push hook"
 
 pytest
 
