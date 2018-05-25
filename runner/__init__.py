@@ -315,7 +315,7 @@ class Runner(object):
                         summary.value.add(tag='validation-mean-{}-{}'.format(k, c), simple_value=vv)
                         self.ev.train_writer.add_summary(summary)
                     except Exception as e:
-                        logging.getLogger('runner').warning('could not save {} as scalar value'.format(vv))
+                        logging.getLogger('runner').warning('could not save {} as scalar summary value'.format(vv))
 
         return minerrors, avgerrors, medianerrors, maxerrors
 

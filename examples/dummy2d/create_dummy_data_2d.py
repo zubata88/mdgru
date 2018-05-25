@@ -1,27 +1,31 @@
 #!/usr/bin/python
 
 import nibabel as nib
-import nrrd
+import shutil
 import os.path
 import numpy as np
+from helper import argget
 
 
-def create_example_nifti_data_2d():
-    shape = (256, 256)
-    border_edges = [[64, 192], [64, 192]]
-    edge_variation = (25, 25)
-    rater_variation = (5, 5)
-    pats = ["ruedi", "hans", "eva", "micha", "joerg", "maya", "frieda", "anna", "chelsea", "flynn"]
-    belongs_to = ['train', 'train', 'train', 'train', 'train', 'val', 'val', 'test', 'test', 'test']
+def create_example_nifti_data_2d(**kw):
+    shape = argget(kw, "shape", (256, 256))
+    border_edges = argget(kw, "border_edges", [[64, 192], [64, 192]])
+    edge_variation = argget(kw, "edge_variation", (25, 25))
+    rater_variation = argget(kw, "rater_variation", (5, 5))
+    patients = argget(kw, "patients",
+                      ["ruedi", "hans", "eva", "micha", "joerg", "maya", "frieda", "anna", "chelsea", "flynn"])
+    patient_belongs_to = argget(kw, "patient_belongs_to",
+                                ["train", "train", "train", "train", "train", "val", "val", "test", "test", "test"])
+    testdatadir = argget(kw, "testdatadir", ".")
     affine = np.eye(4)
-    testdatadir = '.'
-    print(testdatadir)
-    testdatadirnifti = os.path.join(testdatadir, "nifti")
-    if os.path.exists(testdatadirnifti):
-        print('Files have already been generated. If something is amiss, delete the nifti folder and start again!')
+    print("creating new testdata at ", testdatadir)
+    datafolder = argget(kw, "datafolder", "nifti")
+    testdatadir = os.path.join(testdatadir, datafolder)
+    if os.path.exists(testdatadir):
+        print("Files have already been generated. If something is amiss, delete the nifti folder and start again!")
         return
-    for f, pat in zip(belongs_to, pats):
-        patdir = os.path.join(os.path.join(testdatadirnifti, f), pat)
+    for f, pat in zip(patient_belongs_to, patients):
+        patdir = os.path.join(os.path.join(testdatadir, f), pat)
         if not os.path.exists(patdir):
             os.makedirs(patdir)
         gt_mask = np.zeros(shape)
@@ -44,11 +48,17 @@ def create_example_nifti_data_2d():
             if not os.path.exists(os.path.join(patdir, file + ".nii.gz")):
                 dat = np.zeros(shape, dtype=np.uint8)
                 rater_borders = [[x[0] + (np.random.random() * 2 - 1) * e,
-                       x[1] + (np.random.random() * 2 - 1) * e] for x, e in zip(gt_borders, rater_variation)]
+                                  x[1] + (np.random.random() * 2 - 1) * e] for x, e in zip(gt_borders, rater_variation)]
                 rater_borders = np.uint32(rater_borders)
                 dat[rater_borders[0][0]: rater_borders[0][1],
-                    rater_borders[1][0]: rater_borders[1][1]] = 1
+                rater_borders[1][0]: rater_borders[1][1]] = 1
                 nib.save(nib.Nifti1Image(dat, affine), myfile)
+
+
+def remove_example_nifti_data_2d(**kw):
+    testdatadir = argget(kw, "testdatadir", ".")
+    datafolder = argget(kw, "datafolder", "nifti")
+    shutil.rmtree(os.path.join(testdatadir, datafolder))
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 
 echo "Running pre-commit hook"
 
-#pytest test/test_basics.py
+pytest
 
 if [ $? -ne 0 ]; then
 	echo "Tests must pass before commit!"
