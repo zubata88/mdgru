@@ -8,6 +8,7 @@ import time
 
 import numpy as np
 from helper import argget
+import pickle
 
 class SupervisedEvaluation(object):
     def __init__(self, model, collectioninst, kw):
@@ -212,5 +213,66 @@ class SupervisedEvaluation(object):
         else:
             return errs
 
+    def load(self, f):
+        '''loads model at location f from disk'''
+        self._load(f)
+
+        states = {}
+        try:
+            pickle_name = f.rsplit('-', 1)[0] + ".pickle"
+            states = pickle.load(open(pickle_name, "rb"))
+        except Exception as e:
+            logging.getLogger('eval').warning('there was no randomstate pickle named {} around'.format(pickle_name))
+        if "trdc" in states:
+            self.trdc.set_states(states['trdc'])
+        else:
+            self.trdc.set_states(None)
+        if "tedc" in states:
+            self.tedc.set_states(states['tedc'])
+        else:
+            self.tedc.set_states(None)
+        if "valdc" in states:
+            self.valdc.set_states(states['valdc'])
+        else:
+            self.valdc.set_states(None)
+        if 'epoch' in states:
+            self.current_epoch = states['epoch']
+        else:
+            self.current_epoch = 0
+        if 'iteration' in states:
+            self.current_iteration = states['iteration']
+        else:
+            self.current_iteration = 0
+        self.current_iteration = self.current_iteration
+
+    def save(self, f):
+        '''saves model to disk at location f'''
+        self._save(f)
+        trdc = self.trdc.get_states()
+        tedc = self.tedc.get_states()
+        valdc = self.valdc.get_states()
+        states = {}
+        if trdc:
+            states['trdc'] = trdc
+        if tedc:
+            states['tedc'] = tedc
+        if valdc:
+            states['valdc'] = valdc
+        states['epoch'] = self.current_epoch
+        states['iteration'] = self.current_iteration
+        pickle.dump(states, open(f + ".pickle", "wb"))
+
     def add_summary_simple_value(self, text, value):
         raise NotImplementedError('this needs to be implemented and only works with tensorflow backend.')
+
+    def get_train_session(self):
+        return self
+
+    def get_test_session(self):
+        return self
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self):
+        pass

@@ -80,12 +80,12 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
 
     def get_train_session(self, cachefolder):
         sess = tf.Session(config=self.session_config)
-        self.set_session(sess, cachefolder)
+        self._set_session(sess, cachefolder)
         return sess
 
     def get_test_session(self, cachefolder):
         sess = tf.Session(config=self.session_config, graph=self.test_graph)
-        self.set_session(sess, cachefolder)
+        self._set_session(sess, cachefolder)
         return sess
 
     def _train(self, batch, batchlabs):
@@ -129,7 +129,7 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
             dropoutph = self.dropout
         return self.sess.run(model.prediction, {data: batch, dropoutph: dropout, trainingph: False})
 
-    def set_session(self, sess, cachefolder):
+    def _set_session(self, sess, cachefolder):
         self.sess = sess
         sess.run(tf.global_variables_initializer())
         if self.use_tensorboard:
@@ -147,24 +147,10 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
         logging.getLogger('eval').info('initialized all variables')
         self.saver = tf.train.Saver(max_to_keep=None)
 
-    def save(self, f):
-        '''saves model to disk at location f'''
+    def _save(self, f):
         self.saver.save(self.sess, f, global_step=self.model.global_step)
-        trdc = self.trdc.get_states()
-        tedc = self.tedc.get_states()
-        valdc = self.valdc.get_states()
-        states = {}
-        if trdc:
-            states['trdc'] = trdc
-        if tedc:
-            states['tedc'] = tedc
-        if valdc:
-            states['valdc'] = valdc
-        states['epoch'] = self.current_epoch
-        states['iteration'] = self.current_iteration
-        pickle.dump(states, open(f + ".pickle", "wb"))
 
-    def optimistic_restore(self, session, save_file):
+    def _optimistic_restore(self, session, save_file):
         reader = tf.train.NewCheckpointReader(save_file)
         saved_shapes = reader.get_variable_to_shape_map()
         var_names = sorted([(var.name, var.name.split(':')[0]) for var in tf.global_variables()
@@ -180,10 +166,9 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
         saver = tf.train.Saver(restore_vars)
         saver.restore(session, save_file)
 
-    def load(self, f):
-        '''loads model at location f from disk'''
+    def _load(self, f):
         if self.restore_optimistically:
-            self.optimistic_restore(self.sess, f)
+            self._optimistic_restore(self.sess, f)
         else:
             try:
                 self.saver.restore(self.sess, f)
@@ -201,34 +186,6 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
                             .format(f, ",".join(tensor_names)))
                 finally:
                     raise e
-
-        states = {}
-        try:
-            pickle_name = f.rsplit('-', 1)[0] + ".pickle"
-            states = pickle.load(open(pickle_name, "rb"))
-        except Exception as e:
-            logging.getLogger('eval').warning('there was no randomstate pickle named {} around'.format(pickle_name))
-        if "trdc" in states:
-            self.trdc.set_states(states['trdc'])
-        else:
-            self.trdc.set_states(None)
-        if "tedc" in states:
-            self.tedc.set_states(states['tedc'])
-        else:
-            self.tedc.set_states(None)
-        if "valdc" in states:
-            self.valdc.set_states(states['valdc'])
-        else:
-            self.valdc.set_states(None)
-        if 'epoch' in states:
-            self.current_epoch = states['epoch']
-        else:
-            self.current_epoch = 0
-        if 'iteration' in states:
-            self.current_iteration = states['iteration']
-        else:
-            self.current_iteration = 0
-        self.current_iteration = self.current_iteration
 
     def add_summary_simple_value(self, text, value):
         summary = tf.Summary()
