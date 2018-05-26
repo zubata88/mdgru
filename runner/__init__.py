@@ -14,9 +14,7 @@ import datetime
 import csv
 from threading import Thread
 
-import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
 
 from helper import argget, force_symlink, notify_user
 
@@ -53,7 +51,6 @@ class Runner(object):
         fh.setLevel(argget(kw, 'logfileloglvl', logging.DEBUG))
         fh.setFormatter(formatter)
 
-        self.only_cpu = argget(kw, 'only_cpu', False)
 
         ch = logging.StreamHandler()
         ch.setFormatter(formatter)
@@ -79,8 +76,7 @@ class Runner(object):
 
         self.episodes = argget(kw, 'episodes', ['train', 'evaluate'])
         self.epochs = argget(kw, 'epochs', 1)
-        self.batch_size = argget(kw, 'batch_size', 1)
-        self.its_per_epoch = argget(kw, 'its_per_epoch', self.ev.trdc.get_data_dims()[0] // self.batch_size)
+        self.its_per_epoch = argget(kw, 'its_per_epoch', self.ev.trdc.get_data_dims()[0] // self.ev.batch_size)
         self.checkpointfiles = argget(kw, 'checkpointfiles', None)
         self.estimatefilenames = argget(kw, 'estimatefilenames', None)
         if isinstance(self.checkpointfiles, list):
@@ -113,7 +109,6 @@ class Runner(object):
         force_symlink(self.experiments, os.path.join(experiments_nots, "latest"))
         os.makedirs(self.plotfolder)
         self.printIt = argget(kw, "print_testing_results", True)
-        self.gpubound = argget(kw, 'gpubound', 1)
         self.notifyme = argget(kw, 'notifyme', None)
         self.results_to_csv = argget(kw, 'results_to_csv', False)
 
@@ -225,11 +220,11 @@ class Runner(object):
             self.ev.current_epoch = epoch
             logging.getLogger('runner').info(
                 "epoch {}/{}: running for {} batches of {}:".format(epoch, self.epochs, self.its_per_epoch,
-                                                                    self.batch_size))
+                                                                    self.ev.batch_size))
             for it in range(self.ev.current_iteration, self.its_per_epoch):
                 self.ev.current_iteration = it
                 a = time.time()
-                loss = self.ev.train(batch_size=self.batch_size)
+                loss = self.ev.train()
                 #logging.getLogger('runner').info(
                 #    "with img loading: {} {}".format(time.time() - a, np.asarray(loss).flatten()))
                 self.train_losses.append([epoch, it, loss])
@@ -309,9 +304,8 @@ class Runner(object):
                     v = [v]
                 for c, vv in enumerate(v):
                     try:
-                        summary = tf.Summary()
-                        summary.value.add(tag='validation-mean-{}-{}'.format(k, c), simple_value=vv)
-                        self.ev.train_writer.add_summary(summary)
+                        self.ev.add_summary_simple_value('validation-mean-{}-{}'.format(k, c), vv)
+
                     except Exception as e:
                         logging.getLogger('runner').warning('could not save {} as scalar summary value'.format(vv))
 
@@ -326,28 +320,20 @@ class Runner(object):
 
     def run(self, **kw):
         # save this file as txt to cachefolder:
-        if self.only_cpu:
-            config = tf.ConfigProto(device_count={'GPU': 0})
-        else:
-            if self.gpubound < 1:
-                config = tf.ConfigProto(gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=self.gpubound))
-            else:
-                config = tf.ConfigProto()
+
 
         shutil.copyfile(self.runfile, os.path.join(self.cachefolder, 'runfile.py'))
 
         if "train" in self.episodes:
-            with tf.Session(config=config) as sess:
-                self.ev.set_session(sess, self.cachefolder)
+            with self.ev.get_train_session(self.cachefolder):
                 if self.checkpointfiles[0]:
                     self.ev.load(self.checkpointfiles[0])
                 self.train()
 
         if "test" in self.episodes or "evaluate" in self.episodes:
             self.use_tensorboard = False # no need, since we evaluate everything anyways.
-            with tf.Session(config=config, graph=self.ev.test_graph) as sess:
+            with self.ev.get_test_session(self.cachefolder):
                 for est, ckpt in zip(self.estimatefilenames, self.checkpointfiles):
-                    self.ev.set_session(sess, self.cachefolder)
                     if ckpt:
                         self.ev.load(ckpt)
                     self.ev.estimatefilename = est

@@ -311,6 +311,10 @@ def clean_eval_args(args):
     for k, v in arglookup.items():
         if v in argvars.keys():
             args_eval[k] = argvars[v]
+    if args.cpu is not None:
+        args_eval['only_cpu'] = args.cpu
+    if args.gpuboundfraction is not None:
+        args_eval['gpubound'] = args.gpuboundfraction
     return args_eval
 
 
@@ -354,10 +358,7 @@ def clean_runner_args(args):
         args_runner['test_each'] = args.test_each
     if args.save_each is not None:
         args_runner['save_each'] = args.save_each
-    if args.gpuboundfraction is not None:
-        args_runner['gpubound'] = args.gpuboundfraction
     if args.testfirst:
         args_runner['test_first'] = args.testfirst
-    if args.cpu is not None:
-        args_runner['only_cpu'] = args.cpu
+
     return args_runner

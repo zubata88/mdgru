@@ -9,6 +9,7 @@ import sys
 from options import get_args
 from data.grid_collection import GridDataCollection, ThreadedGridDataCollection
 from options.parser import clean_datacollection_args, clean_eval_args, clean_runner_args
+from runner import Runner
 
 
 def run_mdgru(args=None):
@@ -21,8 +22,7 @@ def run_mdgru(args=None):
     # Set environment flag(s) and finally import the classes that depend upon them
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in args.gpu])
     from model.mdgru_classification import MDGRUClassification
-    from eval.classification import LargeVolumeClassificationEvaluation
-    from runner import Runner
+    from eval.tf import SupervisedEvaluationTensorflow
 
     # Set the necessary classes
     dc = GridDataCollection
@@ -83,7 +83,7 @@ def run_mdgru(args=None):
     else:
         datadict = {"train": traindc, "validation": valdc, "test": testdc}
 
-    ev = LargeVolumeClassificationEvaluation(mclassification, datadict,
+    ev = SupervisedEvaluationTensorflow(mclassification, datadict,
                                              args_eval)
 
     # Set up runner
