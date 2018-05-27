@@ -79,7 +79,7 @@ class Runner(object):
         self.its_per_epoch = argget(kw, 'its_per_epoch', self.ev.trdc.get_data_dims()[0] // self.ev.batch_size)
         self.checkpointfiles = argget(kw, 'checkpointfiles', None)
         self.estimatefilenames = argget(kw, 'estimatefilenames', None)
-        if isinstance(self.checkpointfiles, list):
+        if isinstance(self.checkpointfiles, list) and len(self.checkpointfiles) > 1:
             if 'train' in self.episodes:
                 logging.getLogger('runner').error('Multiple checkpoints are only allowed if only testing is performed.')
                 exit(1)
