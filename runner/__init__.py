@@ -325,14 +325,16 @@ class Runner(object):
         shutil.copyfile(self.runfile, os.path.join(self.cachefolder, 'runfile.py'))
 
         if "train" in self.episodes:
-            with self.ev.get_train_session(self.cachefolder):
+            with self.ev.get_train_session(self.cachefolder) as sess:
+                self.ev.set_session(sess, self.cachefolder, train=True)
                 if self.checkpointfiles[0]:
                     self.ev.load(self.checkpointfiles[0])
                 self.train()
 
         if "test" in self.episodes or "evaluate" in self.episodes:
             self.use_tensorboard = False # no need, since we evaluate everything anyways.
-            with self.ev.get_test_session(self.cachefolder):
+            with self.ev.get_test_session(self.cachefolder) as sess:
+                self.ev.set_session(sess, self.cachefolder)
                 for est, ckpt in zip(self.estimatefilenames, self.checkpointfiles):
                     if ckpt:
                         self.ev.load(ckpt)

@@ -52,6 +52,9 @@ def test_basic_3d_run():
           "--test_each", "2",
           "--nclasses", "2",
           "--num_threads", "2",
+          "--dont_use_tensorboard"
           ]
-    run_mdgru(arg_list)
-    remove_example_nifti_data(testdatadir=testdirectory, datafolder="nifti3d")
+    try:
+        run_mdgru(arg_list)
+    finally:
+        remove_example_nifti_data(testdatadir=testdirectory, datafolder="nifti3d")

@@ -1,39 +1,37 @@
 from eval import SupervisedEvaluation
-import tensorflow as tf
+import torch as t
 import logging
 import os
-import pickle
-from tensorflow.python import pywrap_tensorflow
 from helper import argget, check_if_kw_empty
 import numpy as np
 import copy
 
-class SupervisedEvaluationTensorflow(SupervisedEvaluation):
+class SupervisedEvaluationTorch(SupervisedEvaluation):
     '''Base class for all evaluation classes. Child classes implement various
         test_* methods to test modeldependent aspects.
-    
+
     Attributes:
-        sess: tensorflow session. contains all the model data. 
+        sess: tensorflow session. contains all the model data.
         saver: tensorflow saver to save or load the model data.
-    
+
     '''
     def __init__(self, model, collectioninst, kw):
-        super(SupervisedEvaluationTensorflow, self).__init__(model, collectioninst, kw)
-        self.use_tensorboard = argget(kw, "use_tensorboard", True, keep=True)
-        if self.use_tensorboard:
-            self.image_summaries_each = argget(kw, 'image_summaries_each', 100)
+        super(SupervisedEvaluationTorch, self).__init__(model, collectioninst, kw)
+        # self.use_tensorboard = argget(kw, "use_tensorboard", True, keep=True)
+        # if self.use_tensorboard:
+        #     self.image_summaries_each = argget(kw, 'image_summaries_each', 100)
 
-        self.restore_optimistically = argget(kw, 'restore_optimistically', False)
+        # self.restore_optimistically = argget(kw, 'restore_optimistically', False)
 
         self.only_cpu = argget(kw, 'only_cpu', False)
-        self.gpubound = argget(kw, 'gpubound', 1)
-        if self.only_cpu:
-            self.session_config = tf.ConfigProto(device_count={'GPU': 0})
-        else:
-            if self.gpubound < 1:
-                self.session_config = tf.ConfigProto(gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=self.gpubound))
-            else:
-                self.session_config = tf.ConfigProto()
+        # self.gpubound = argget(kw, 'gpubound', 1)
+        # if self.only_cpu:
+        #     self.session_config = tf.ConfigProto(device_count={'GPU': 0})
+        # else:
+        #     if self.gpubound < 1:
+        #         self.session_config = tf.ConfigProto(gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=self.gpubound))
+        #     else:
+        #         self.session_config = tf.ConfigProto()
 
         with tf.variable_scope(self.namespace):
             self.training = tf.placeholder(dtype=tf.bool)
@@ -49,7 +47,6 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
             kw['training'] = self.training
             self.model = model(self.data, self.target, self.dropout, kw)
             self.model.optimize
-        self.saver = tf.train.Saver(max_to_keep=None)
         # in the case we have a different testing set, we can construct 2 graphs, one for training and testing case
         if self.tedc.get_shape() != self.trdc.get_shape():
             self.test_graph = tf.Graph()
@@ -68,7 +65,6 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
                     self.test_model = model(self.test_data, self.test_target, self.test_dropout, kw_copy)
                     self.test_model.prediction
                     self.test_model.cost
-                self.test_saver = tf.train.Saver(max_to_keep=None)
         else:
             self.test_graph = tf.get_default_graph()
             self.test_model = self.model
@@ -76,18 +72,17 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
             self.test_dropout = self.dropout
             self.test_data = self.data
             self.test_target = self.target
-            self.test_saver = self.saver
 
         check_if_kw_empty(self.__class__.__name__, kw, 'eval')
 
     def get_train_session(self, cachefolder):
         sess = tf.Session(config=self.session_config)
-
+        self._set_session(sess, cachefolder)
         return sess
 
     def get_test_session(self, cachefolder):
         sess = tf.Session(config=self.session_config, graph=self.test_graph)
-
+        self._set_session(sess, cachefolder)
         return sess
 
     def _train(self, batch, batchlabs):
@@ -131,7 +126,7 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
             dropoutph = self.dropout
         return self.sess.run(model.prediction, {data: batch, dropoutph: dropout, trainingph: False})
 
-    def set_session(self, sess, cachefolder, train=False):
+    def _set_session(self, sess, cachefolder):
         self.sess = sess
         sess.run(tf.global_variables_initializer())
         if self.use_tensorboard:
@@ -147,7 +142,7 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
             self.evaluate_merged = False
 
         logging.getLogger('eval').info('initialized all variables')
-
+        self.saver = tf.train.Saver(max_to_keep=None)
 
     def _save(self, f):
         self.saver.save(self.sess, f, global_step=self.model.global_step)
@@ -175,8 +170,6 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
             try:
                 self.saver.restore(self.sess, f)
             except Exception as e:
-                import traceback
-                traceback.print_exc()
                 try:
                     reader = pywrap_tensorflow.NewCheckpointReader(f)
                     var_to_shape_map = reader.get_variable_to_shape_map()

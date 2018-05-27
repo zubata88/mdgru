@@ -4,11 +4,14 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 import copy
 import logging
 import os
+import pickle
 import time
+from abc import abstractmethod
 
 import numpy as np
+
 from helper import argget
-import pickle
+
 
 class SupervisedEvaluation(object):
     def __init__(self, model, collectioninst, kw):
@@ -16,15 +19,15 @@ class SupervisedEvaluation(object):
         self.dropout_rate = argget(kw, "dropout_rate", 0.5)
         self.current_epoch = 0
         self.current_iteration = 0
-        self.trdc = collectioninst['train']
-        self.tedc = collectioninst['test']
-        self.valdc = collectioninst['validation']
-        self.nclasses = argget(kw, 'nclasses', 2, keep=True)
+        self.trdc = collectioninst["train"]
+        self.tedc = collectioninst["test"]
+        self.valdc = collectioninst["validation"]
+        self.nclasses = argget(kw, "nclasses", 2, keep=True)
         self.currit = 0
         self.namespace = argget(kw, "namespace", "default")
         self.only_save_labels = argget(kw, "only_save_labels", False)
-        self.batch_size = argget(kw, 'batch_size', 1)
-        self.validate_same = argget(kw, 'validate_same', False)
+        self.batch_size = argget(kw, "batch_size", 1)
+        self.validate_same = argget(kw, "validate_same", False)
         self.evaluate_uncertainty_times = argget(kw, "evaluate_uncertainty_times", 1)
         self.evaluate_uncertainty_dropout = argget(kw, "evaluate_uncertainty_dropout",
                                                    1.0)  # these standard values ensure that we dont evaluate uncertainty if nothing was provided.
@@ -37,10 +40,32 @@ class SupervisedEvaluation(object):
         self.dice = argget(kw, "show_dice", not self.f1)
         self.cross_entropy = argget(kw, "show_cross_entropy_loss", True)
         self.binary_evaluation = self.dice or self.f1 or self.f05 or self.f2
+        self.estimatefilename = argget(kw, "estimatefilename", "estimate")
 
+    @abstractmethod
     def _train(self):
         """ Performs one training iteration in respective framework and returns loss(es)"""
         raise Exception("This needs to be implemented depending on the framework")
+
+    @abstractmethod
+    def _predict(self, batch, dropout, testing):
+        pass
+
+    @abstractmethod
+    def _predict_with_loss(self, batch, batchlabs):
+        pass
+
+    @abstractmethod
+    def _set_session(self, sess, cachefolder):
+        pass
+
+    @abstractmethod
+    def _save(self, f):
+        pass
+
+    @abstractmethod
+    def _load(self, f):
+        pass
 
     def train(self):
         """ Measures and logs time for data sampling and training iteration."""
@@ -50,11 +75,11 @@ class SupervisedEvaluation(object):
         loss = self._train(batch, batchlabs)
         self.currit += 1
         end_time = time.time()
-        logging.getLogger('eval').info("it: {}, time: [i/o: {}, processing: {}, all: {}], loss: {}"
+        logging.getLogger("eval").info("it: {}, time: [i/o: {}, processing: {}, all: {}], loss: {}"
                                        .format(self.currit,
                                                np.round(time_after_loading - start_time, 6),
                                                np.round(end_time - time_after_loading, 6),
-                                               np.round(end_time - start_time,6),
+                                               np.round(end_time - start_time, 6),
                                                loss))
         return loss
 
@@ -186,7 +211,8 @@ class SupervisedEvaluation(object):
                 dc.save(uncertres, os.path.join(file, "std-" + self.estimatefilename), tporigin=file)
                 if self.evaluate_uncertainty_saveall:
                     for j in range(self.evaluate_uncertainty_times):
-                        dc.save(allres[j], os.path.join(file, "iter{}-".format(j) + self.estimatefilename), tporigin=file)
+                        dc.save(allres[j], os.path.join(file, "iter{}-".format(j) + self.estimatefilename),
+                                tporigin=file)
             res /= np.sum(res, -1).reshape(list(res.shape[:-1]) + [1])
             # evaluate accuracy...
             name = os.path.split(file)
@@ -198,14 +224,16 @@ class SupervisedEvaluation(object):
                         mf = np.expand_dims(dc.load(mfile).squeeze(), 0)
                         errs.append([name, self.test_scores(res, mf)])
             except Exception as e:
-                logging.getLogger('eval').warning('was not able to save test scores, even though ground truth was available.')
+                logging.getLogger('eval').warning(
+                    'was not able to save test scores, even though ground truth was available.')
                 logging.getLogger('eval').warning('{}'.format(e))
             if return_results:
                 full_vols.append([name, file, res])
             else:
                 if not self.only_save_labels:
                     dc.save(res, os.path.join(file, self.estimatefilename + "-probdist"), tporigin=file)
-                dc.save(np.uint8(np.argmax(res, -1)), os.path.join(file, self.estimatefilename + "-labels"), tporigin=file)
+                dc.save(np.uint8(np.argmax(res, -1)), os.path.join(file, self.estimatefilename + "-labels"),
+                        tporigin=file)
             logging.getLogger('eval').info('evaluation took {} seconds'.format(time.time() - lasttime))
             lasttime = time.time()
         if return_results:
@@ -263,13 +291,16 @@ class SupervisedEvaluation(object):
         pickle.dump(states, open(f + ".pickle", "wb"))
 
     def add_summary_simple_value(self, text, value):
-        raise NotImplementedError('this needs to be implemented and only works with tensorflow backend.')
+        raise NotImplementedError("this needs to be implemented and only works with tensorflow backend.")
 
     def get_train_session(self):
         return self
 
     def get_test_session(self):
         return self
+
+    def set_session(self, sess, cachefolder, train=False):
+        return None
 
     def __enter__(self):
         pass
