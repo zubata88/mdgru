@@ -71,6 +71,7 @@ sampling_parameters.add_argument('--nonthreaded', action="store_true",
 sampling_parameters.add_argument('--nonlazy', action="store_true", help="throw everything into memory")
 sampling_parameters.add_argument('--rotate', help="random rotate by")
 sampling_parameters.add_argument('--scale', nargs="+", help='random scale by')
+sampling_parameters.add_argument('--mirror', nargs="+", help='array: mirror boolean for each image dim')
 sampling_parameters.add_argument('--datainterpolation', type=int,
                                  help='interpolation order. default is spline interpolation, 2 is quadratic, 1 is linear and 0 is NN')
 sampling_parameters.add_argument('--num_threads', default=1, type=int,
@@ -338,6 +339,8 @@ if not args.onlytest:
         args_tr['rotation'] = args.rotate
     if args.scale is not None:
         args_tr['scaling'] = args.scale
+    if args.mirror is not None:
+        args_tr['mirror'] = args.mirror
     if args.datainterpolation is not None:
         args_tr['datainterpolation'] = args.datainterpolation
     if args.num_threads is not None:
