@@ -4,292 +4,123 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 import copy
 import logging
 import os
+import pickle
 import time
+from abc import abstractmethod
 
 import numpy as np
-import tensorflow as tf
-from tensorflow.python import pywrap_tensorflow
-from helper import argget, check_if_kw_empty
 
-try:
-    import cPickle as pickle
-except:
-    import pickle
+from helper import argget
 
 
-class Evaluation(object):
-    estimatefilename = "estimate"
-    '''Base class for all evaluation classes. Child classes implement various 
-        test_* methods to test modeldependent aspects.
-    
-    Attributes:
-        sess: tensorflow session. contains all the model data. 
-        saver: tensorflow saver to save or load the model data.
-    
-    '''
-
-    def __init__(self, collectioninst, kw):
+class SupervisedEvaluation(object):
+    def __init__(self, model, collectioninst, kw):
         self.origargs = copy.deepcopy(kw)
-        self.use_tensorboard = argget(kw, "use_tensorboard", True, keep=True)
-        if self.use_tensorboard:
-            self.image_summaries_each = argget(kw, 'image_summaries_each', 100)
         self.dropout_rate = argget(kw, "dropout_rate", 0.5)
         self.current_epoch = 0
         self.current_iteration = 0
-        self.restore_optimistically = argget(kw, 'restore_optimistically', False)
-        # init tf in runner, but set sell.sess as session!
-
-    def set_session(self, sess, cachefolder):
-        self.sess = sess
-        sess.run(tf.global_variables_initializer())
-        if self.use_tensorboard:
-            self.train_writer = tf.summary.FileWriter(os.path.join(cachefolder, 'train'), sess.graph)
-            self.train_image_writer = tf.summary.FileWriter(os.path.join(cachefolder, 'train_imgs'), sess.graph)
-            self.validation_writer = tf.summary.FileWriter(os.path.join(cachefolder, 'validation'), sess.graph)
-            self.test_writer = tf.summary.FileWriter(os.path.join(cachefolder, 'test'))
-            self.evaluate_merged = True
-            self.merged_only_images = tf.summary.merge_all(key='images')
-            self.merged_basic = tf.summary.merge_all()
-            self.merged_images = tf.summary.merge([self.merged_basic, self.merged_only_images])
-        else:
-            self.evaluate_merged = False
-
-        logging.getLogger('eval').info('initialized all variables')
-        self.saver = tf.train.Saver(max_to_keep=None)
-
-    def train(self, batch_size):
-        '''Method to evaluate batch_size number of samples and adjust weights 
-            once.
-        
-        Args:
-            batch_size (int): number of samples to evaluate before adjusting 
-                the gradient.
-                
-        Returns:
-            The evaluated model loss.
-        '''
-        raise Exception('abstract method')
-
-    def save(self, f):
-        '''saves model to disk at location f'''
-        self.saver.save(self.sess, f, global_step=self.model.global_step)
-        trdc = self.trdc.get_states()
-        tedc = self.tedc.get_states()
-        valdc = self.valdc.get_states()
-        states = {}
-        if trdc:
-            states['trdc'] = trdc
-        if tedc:
-            states['tedc'] = tedc
-        if valdc:
-            states['valdc'] = valdc
-        states['epoch'] = self.current_epoch
-        states['iteration'] = self.current_iteration
-        pickle.dump(states, open(f + ".pickle", "wb"))
-
-    def optimistic_restore(self, session, save_file):
-        reader = tf.train.NewCheckpointReader(save_file)
-        saved_shapes = reader.get_variable_to_shape_map()
-        var_names = sorted([(var.name, var.name.split(':')[0]) for var in tf.global_variables()
-                            if var.name.split(':')[0] in saved_shapes])
-        restore_vars = []
-        name2var = dict(zip(map(lambda x: x.name.split(':')[0], tf.global_variables()), tf.global_variables()))
-        with tf.variable_scope('', reuse=True):
-            for var_name, saved_var_name in var_names:
-                curr_var = name2var[saved_var_name]
-                var_shape = curr_var.get_shape().as_list()
-                if var_shape == saved_shapes[saved_var_name]:
-                    restore_vars.append(curr_var)
-        saver = tf.train.Saver(restore_vars)
-        saver.restore(session, save_file)
-
-    def load(self, f):
-        '''loads model at location f from disk'''
-        if self.restore_optimistically:
-            self.optimistic_restore(self.sess, f)
-        else:
-            try:
-                self.saver.restore(self.sess, f)
-            except Exception as e:
-                try:
-                    reader = pywrap_tensorflow.NewCheckpointReader(f)
-                    var_to_shape_map = reader.get_variable_to_shape_map()
-                    tensor_names = []
-                    for i, key in enumerate(sorted(var_to_shape_map)):
-                        tensor_names.append(key)
-                        if i == 10:
-                            break
-                    logging.getLogger('eval').warning(
-                            'the following are the first tensor_names in checkpoint file {}: {}'
-                            .format(f, ",".join(tensor_names)))
-                finally:
-                    raise e
-
-        states = {}
-        try:
-            pickle_name = f.rsplit('-', 1)[0] + ".pickle"
-            states = pickle.load(open(pickle_name, "rb"))
-        except Exception as e:
-            logging.getLogger('eval').warning('there was no randomstate pickle named {} around'.format(pickle_name))
-        if "trdc" in states:
-            self.trdc.set_states(states['trdc'])
-        else:
-            self.trdc.set_states(None)
-        if "tedc" in states:
-            self.tedc.set_states(states['tedc'])
-        else:
-            self.tedc.set_states(None)
-        if "valdc" in states:
-            self.valdc.set_states(states['valdc'])
-        else:
-            self.valdc.set_states(None)
-        if 'epoch' in states:
-            self.current_epoch = states['epoch']
-        else:
-            self.current_epoch = 0
-        if 'iteration' in states:
-            self.current_iteration = states['iteration']
-        else:
-            self.current_iteration = 0
-        self.current_iteration = self.current_iteration
-
-    def test_all_random(self, **kw):
-        '''Method to test, depends on target of course'''
-        raise Exception('abstract method')
-
-    def test_scores(self, pred=None, tar=None):
-        res = None
-        raise Exception('this has to be implemented separately!')
-        return res
-
-    def setupCollections(self, collectioninst):
-        if isinstance(collectioninst, dict):
-            self.trdc = collectioninst['train']
-            self.tedc = collectioninst['test']
-            self.dcs = collectioninst
-            if "validation" in collectioninst:
-                self.valdc = collectioninst['validation']
-                logging.getLogger('eval').debug('using validation valdc')
-            else:
-                self.valdc = self.tedc
-
-        else:
-            self.trdc = collectioninst
-            self.dcs = {'train': collectioninst}
-            self.tedc = collectioninst
-            self.valdc = collectioninst
-
-
-class SupervisedEvaluation(Evaluation):
-    def __init__(self, model, collectioninst, kw):
-        super(SupervisedEvaluation, self).__init__(collectioninst, kw)
-        self.setupCollections(collectioninst)
+        self.trdc = collectioninst["train"]
+        self.tedc = collectioninst["test"]
+        self.valdc = collectioninst["validation"]
+        self.nclasses = argget(kw, "nclasses", 2, keep=True)
         self.currit = 0
         self.namespace = argget(kw, "namespace", "default")
         self.only_save_labels = argget(kw, "only_save_labels", False)
-        self.batch_size = argget(kw, 'batch_size', 1)
-        self.validate_same = argget(kw, 'validate_same', False)
-        with tf.variable_scope(self.namespace):
-            self.training = tf.placeholder(dtype=tf.bool)
-            self.dropout = tf.placeholder(dtype=tf.float32)
-            self.data = tf.placeholder(dtype=tf.float32, shape=self.trdc.get_shape())
-            if type(self.nclasses) == list:  # for location classification
-                self.target = tf.placeholder(dtype=tf.float32,
-                                             shape=self.trdc.get_target_shape()[:-1] + [np.sum(self.nclasses)])
-            else:
-                self.target = tf.placeholder(dtype=tf.float32,
-                                             shape=self.trdc.get_target_shape()[:-1] + [self.nclasses])
-            kw_copy = copy.deepcopy(kw)
-            kw['training'] = self.training
-            self.model = model(self.data, self.target, self.dropout, kw)
-            self.model.optimize
-# in the case we have a different testing set, we can construct 2 graphs, one for training and testing case
-        if self.tedc.get_shape() != self.trdc.get_shape():
-            self.test_graph = tf.Graph()
-            with self.test_graph.as_default():
-                with tf.variable_scope(self.namespace):
-                    self.test_training = tf.placeholder(dtype=tf.bool)
-                    self.test_dropout = tf.placeholder(dtype=tf.float32)
-                    self.test_data = tf.placeholder(dtype=tf.float32, shape=self.tedc.get_shape())
-                    if type(self.nclasses) == list:  # for location classification
-                        self.test_target = tf.placeholder(dtype=tf.float32,
-                                                     shape=self.tedc.get_target_shape()[:-1] + [np.sum(self.nclasses)])
-                    else:
-                        self.test_target = tf.placeholder(dtype=tf.float32,
-                                                     shape=self.tedc.get_target_shape()[:-1] + [self.nclasses])
-                    kw_copy['test_training'] = self.test_training
-                    self.test_model = model(self.test_data, self.test_target, self.test_dropout, kw_copy)
-                    self.test_model.prediction
-                    self.test_model.cost
-        else:
-            self.test_graph = tf.get_default_graph()
-            self.test_model = self.model
-            self.test_training = self.training
-            self.test_dropout = self.dropout
-            self.test_data = self.data
-            self.test_target = self.target
+        self.batch_size = argget(kw, "batch_size", 1)
+        self.validate_same = argget(kw, "validate_same", False)
+        self.evaluate_uncertainty_times = argget(kw, "evaluate_uncertainty_times", 1)
+        self.evaluate_uncertainty_dropout = argget(kw, "evaluate_uncertainty_dropout",
+                                                   1.0)  # these standard values ensure that we dont evaluate uncertainty if nothing was provided.
+        self.evaluate_uncertainty_saveall = argget(kw, "evaluate_uncertainty_saveall", False)
 
-        check_if_kw_empty(self.__class__.__name__, kw, 'eval')
+        self.f05 = argget(kw, "show_f05", True)
+        self.f1 = argget(kw, "show_f1", True)
+        self.f2 = argget(kw, "show_f2", True)
+        self.l2 = argget(kw, "show_l2_loss", True)
+        self.dice = argget(kw, "show_dice", not self.f1)
+        self.cross_entropy = argget(kw, "show_cross_entropy_loss", True)
+        self.binary_evaluation = self.dice or self.f1 or self.f05 or self.f2
+        self.estimatefilename = argget(kw, "estimatefilename", "estimate")
 
-    def train(self, batch_size=None):
+    @abstractmethod
+    def _train(self):
+        """ Performs one training iteration in respective framework and returns loss(es)"""
+        raise Exception("This needs to be implemented depending on the framework")
+
+    @abstractmethod
+    def _predict(self, batch, dropout, testing):
+        pass
+
+    @abstractmethod
+    def _predict_with_loss(self, batch, batchlabs):
+        pass
+
+    @abstractmethod
+    def _set_session(self, sess, cachefolder):
+        pass
+
+    @abstractmethod
+    def _save(self, f):
+        pass
+
+    @abstractmethod
+    def _load(self, f):
+        pass
+
+    def train(self):
+        """ Measures and logs time for data sampling and training iteration."""
         start_time = time.time()
-        if batch_size is None:
-            batch_size = self.batch_size
         batch, batchlabs = self.trdc.random_sample(batch_size=self.batch_size)
         time_after_loading = time.time()
-        tasks = [self.model.optimize, self.model.cost]
-        ph = {self.data: batch, self.target: batchlabs, self.dropout: self.dropout_rate, self.training: True}
-        if self.evaluate_merged:
-            if self.currit % self.image_summaries_each == 0:
-                tasks.append(self.merged_images)
-            else:
-                tasks.append(self.merged_basic)
-            _, loss, summary = self.sess.run(tasks, ph)
-            self.train_writer.add_summary(summary, tf.train.get_global_step())
-        else:
-            _, loss = self.sess.run(tasks, ph)
+        loss = self._train(batch, batchlabs)
         self.currit += 1
         end_time = time.time()
-        logging.getLogger('eval').info("it: {}, time: [i/o: {}, processing: {}, all: {}], loss: {}"
+        logging.getLogger("eval").info("it: {}, time: [i/o: {}, processing: {}, all: {}], loss: {}"
                                        .format(self.currit,
                                                np.round(time_after_loading - start_time, 6),
                                                np.round(end_time - time_after_loading, 6),
-                                               np.round(end_time - start_time,6),
+                                               np.round(end_time - start_time, 6),
                                                loss))
         return loss
 
-    def test_loss_random(self, batch_size=None, dc=None, resample=True):
-        if dc is None:
-            dc = self.valdc
-        if batch_size is None:
-            batch_size = self.batch_size
-        if resample:
-            self.testbatch, self.testbatchlabs = dc.random_sample(batch_size=self.batch_size)
-        return self.sess.run(self.model.costs,
-                             {self.data: self.testbatch, self.target: self.testbatchlabs, self.dropout: 1,
-                              self.training: False})
-
-    def test_pred_random(self, batch_size=None, dc=None, resample=True):
-        if dc is None:
-            dc = self.valdc
-        if batch_size is None:
-            batch_size = self.batch_size
-        if resample:
-            self.testbatch, self.testbatchlabs = dc.random_sample(batch_size=self.batch_size)
-        return self.sess.run(self.model.prediction,
-                             {self.data: self.testbatch, self.dropout: 1, self.training: False})
-
-    def test_scores(self, pred, tar):
-        tar = np.int32(np.expand_dims(tar.squeeze(), 0))
+    def test_scores(self, pred, ref):
+        """ Evaluates all activated scores between ref and pred."""
+        ref = np.int32(np.expand_dims(ref.squeeze(), 0))
         pred = np.expand_dims(pred.squeeze(), 0)
-        if pred.shape != tar.shape:
+        if pred.shape != ref.shape:
             tar2 = np.zeros((np.prod(pred.shape[:-1]), pred.shape[-1]))
-            tar2[np.arange(np.prod(pred.shape[:-1])), tar.flatten()] = 1
-            tar = tar2.reshape(pred.shape)
-        res = self.model.compute_scores(tar, pred)
+            tar2[np.arange(np.prod(pred.shape[:-1])), ref.flatten()] = 1
+            ref = tar2.reshape(pred.shape)
+
+        res = {}
+        eps = 1e-8
+        if self.binary_evaluation:
+            enc_ref = np.argmax(ref, -1)
+            enc_pred = self.nclasses * np.argmax(pred, -1)
+            enc_both = enc_ref + enc_pred
+            bins = np.bincount(enc_both.flatten(), minlength=self.nclasses ** 2).reshape((self.nclasses, self.nclasses))
+        if self.dice:
+            res["dice"] = [bins[c, c] * 2 / (np.sum(bins, -1)[c] + np.sum(bins, -2)[c] + eps) for c in
+                           range(self.nclasses)]
+        if self.f05 or self.f2:
+            precision = np.array([bins[c, c] / (np.sum(bins, -1)[c] + eps) for c in range(self.nclasses)])
+            recall = np.array([bins[c, c] / (np.sum(bins, -2)[c] + eps) for c in range(self.nclasses)])
+        if self.f05:
+            beta2 = 0.5 ** 2
+            res["f05"] = (1 + beta2) * precision * recall / ((beta2 * precision) + recall + eps)
+        if self.f1:
+            res["f1"] = [bins[c, c] * 2 / (np.sum(bins, -2)[c] + np.sum(bins, -1)[c] + eps) for c in
+                         range(self.nclasses)]
+        if self.f2:
+            beta2 = 2 ** 2
+            res["f2"] = (1 + beta2) * precision * recall / (beta2 * precision + recall + eps)
+        if self.cross_entropy:
+            res["cross_entropy"] = np.mean(np.sum(ref * np.log(pred + eps), -1))
+        if self.l2:
+            res["l2"] = np.mean(np.sum((ref - pred) ** 2, -1))
         return res
 
-    def test_all_random(self, batch_size=None, dc=None, resample=True, summary_writer=None):
+    def test_all_random(self, batch_size=None, dc=None, resample=True):
         if dc is None:
             dc = self.valdc
         if batch_size is None:
@@ -298,46 +129,14 @@ class SupervisedEvaluation(Evaluation):
             dc.randomstate.seed(12345677)
         if resample:
             self.testbatch, self.testbatchlabs = dc.random_sample(batch_size=batch_size)
-        tasks = [self.model.costs, self.model.prediction]
-        placeholders = {self.data: self.testbatch, self.target: self.testbatchlabs, self.dropout: 1,
-                        self.training: False}
-        if self.evaluate_merged:
-            if summary_writer is None:
-                summary_writer = self.test_writer
-            tasks.append(self.merged_basic)
-            b, c, summary = self.sess.run(tasks, placeholders)
-            summary_writer.add_summary(summary)
-        else:
-            b, c = self.sess.run(tasks, placeholders)
-        return b, c
+        loss, prediction = self._predict_with_loss(self.testbatch, self.testbatchlabs)
 
-    def test_all_available(self, batch_size=None, dc=None):
-        if dc is None:
-            dc = self.tedc
-        raise Exception('this should be implemented')
-
-
-class LargeVolumeEvaluation(Evaluation):
-    def __init__(self, model, collectioninst, kw):
-        self.evaluate_uncertainty_times = argget(kw, "evaluate_uncertainty_times", 1)
-        self.evaluate_uncertainty_dropout = argget(kw, "evaluate_uncertainty_dropout",
-                                                   1.0)  # these standard values ensure that we dont evaluate uncertainty if nothing was provided.
-        self.evaluate_uncertainty_saveall = argget(kw, "evaluate_uncertainty_saveall", False)
-        super(LargeVolumeEvaluation, self).__init__(model, collectioninst, kw)
+        return loss, prediction
 
     def test_all_available(self, batch_size=None, dc=None, return_results=False, dropout=None, testing=False):
         if dc is None:
             dc = self.tedc
-        if testing:
-            model = self.test_model
-            data = self.test_data
-            dropoutph = self.test_dropout
-            trainingph = self.test_training
-        else:
-            model = self.model
-            data = self.data
-            trainingph = self.training
-            dropoutph = self.dropout
+
         if batch_size > 1:
             logging.getLogger('eval').error('not supported yet to have more than batchsize 1')
         volgens = dc.get_volume_batch_generators()
@@ -375,16 +174,14 @@ class LargeVolumeEvaluation(Evaluation):
                 if self.evaluate_uncertainty_times > 1:
                     preds = []
                     for i in range(self.evaluate_uncertainty_times):
-                        preds.append(self.sess.run(model.prediction,
-                                                   {data: subvol, dropoutph: dropout, trainingph: False}))
+                        preds.append(self._predict(subvol, dropout, testing))
                         logging.getLogger('eval').debug(
                             'evaluated run {} of subvolume from {} to {}'.format(i, imin, imax))
                     pred = np.mean(np.asarray(preds), 0)
                     uncert = np.std(np.asarray(preds), 0)
                     preds = [x * certainty for x in preds]
                 else:
-                    pred = self.sess.run(model.prediction,
-                                         {data: subvol, dropoutph: dropout, trainingph: False})
+                    pred = self._predict(subvol, dropout, testing)
                     logging.getLogger('eval').debug('evaluated subvolume from {} to {}'.format(imin, imax))
 
                 pred *= certainty
@@ -414,7 +211,8 @@ class LargeVolumeEvaluation(Evaluation):
                 dc.save(uncertres, os.path.join(file, "std-" + self.estimatefilename), tporigin=file)
                 if self.evaluate_uncertainty_saveall:
                     for j in range(self.evaluate_uncertainty_times):
-                        dc.save(allres[j], os.path.join(file, "iter{}-".format(j) + self.estimatefilename), tporigin=file)
+                        dc.save(allres[j], os.path.join(file, "iter{}-".format(j) + self.estimatefilename),
+                                tporigin=file)
             res /= np.sum(res, -1).reshape(list(res.shape[:-1]) + [1])
             # evaluate accuracy...
             name = os.path.split(file)
@@ -426,17 +224,86 @@ class LargeVolumeEvaluation(Evaluation):
                         mf = np.expand_dims(dc.load(mfile).squeeze(), 0)
                         errs.append([name, self.test_scores(res, mf)])
             except Exception as e:
-                logging.getLogger('eval').warning('was not able to save test scores, even though ground truth was available.')
+                logging.getLogger('eval').warning(
+                    'was not able to save test scores, even though ground truth was available.')
                 logging.getLogger('eval').warning('{}'.format(e))
             if return_results:
                 full_vols.append([name, file, res])
             else:
                 if not self.only_save_labels:
                     dc.save(res, os.path.join(file, self.estimatefilename + "-probdist"), tporigin=file)
-                dc.save(np.uint8(np.argmax(res, -1)), os.path.join(file, self.estimatefilename + "-labels"), tporigin=file)
+                dc.save(np.uint8(np.argmax(res, -1)), os.path.join(file, self.estimatefilename + "-labels"),
+                        tporigin=file)
             logging.getLogger('eval').info('evaluation took {} seconds'.format(time.time() - lasttime))
             lasttime = time.time()
         if return_results:
             return full_vols, errs
         else:
             return errs
+
+    def load(self, f):
+        '''loads model at location f from disk'''
+        self._load(f)
+
+        states = {}
+        try:
+            pickle_name = f.rsplit('-', 1)[0] + ".pickle"
+            states = pickle.load(open(pickle_name, "rb"))
+        except Exception as e:
+            logging.getLogger('eval').warning('there was no randomstate pickle named {} around'.format(pickle_name))
+        if "trdc" in states:
+            self.trdc.set_states(states['trdc'])
+        else:
+            self.trdc.set_states(None)
+        if "tedc" in states:
+            self.tedc.set_states(states['tedc'])
+        else:
+            self.tedc.set_states(None)
+        if "valdc" in states:
+            self.valdc.set_states(states['valdc'])
+        else:
+            self.valdc.set_states(None)
+        if 'epoch' in states:
+            self.current_epoch = states['epoch']
+        else:
+            self.current_epoch = 0
+        if 'iteration' in states:
+            self.current_iteration = states['iteration']
+        else:
+            self.current_iteration = 0
+        self.current_iteration = self.current_iteration
+
+    def save(self, f):
+        '''saves model to disk at location f'''
+        self._save(f)
+        trdc = self.trdc.get_states()
+        tedc = self.tedc.get_states()
+        valdc = self.valdc.get_states()
+        states = {}
+        if trdc:
+            states['trdc'] = trdc
+        if tedc:
+            states['tedc'] = tedc
+        if valdc:
+            states['valdc'] = valdc
+        states['epoch'] = self.current_epoch
+        states['iteration'] = self.current_iteration
+        pickle.dump(states, open(f + ".pickle", "wb"))
+
+    def add_summary_simple_value(self, text, value):
+        raise NotImplementedError("this needs to be implemented and only works with tensorflow backend.")
+
+    def get_train_session(self):
+        return self
+
+    def get_test_session(self):
+        return self
+
+    def set_session(self, sess, cachefolder, train=False):
+        return None
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self):
+        pass

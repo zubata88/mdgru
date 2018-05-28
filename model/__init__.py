@@ -6,7 +6,8 @@ import numpy as np
 from helper import argget
 import functools
 import copy
-
+from tensorflow.python import pywrap_tensorflow
+import logging
 
 def lazy_property(function):
     """This function computes a property or simply returns it if already computed."""
@@ -79,9 +80,8 @@ class Model(object):
     def __init__(self, data, target, dropout, kw):
         print("model")
         self.origargs = copy.copy(kw)
-        self.l2 = argget(kw, "show_l2_loss", True)
-
-        tf.set_random_seed(12345678)
+        self.model_seed = argget(kw, 'model_seed', 12345678)
+        tf.set_random_seed(self.model_seed)
         super(Model, self).__init__(data, target, dropout, kw)
         self.training = argget(kw, "training", tf.constant(True))
         self.global_step = tf.Variable(0, name="global_step", trainable=False)
@@ -112,6 +112,20 @@ class Model(object):
             tf.summary.scalar("loss", loss)
         return loss
 
+    @staticmethod
+    def get_model_name_from_ckpt(ckpt):
+        """returns root node name of tensorflow graph stored in checkpoint ckpt"""
+        try:
+            r = pywrap_tensorflow.NewCheckpointReader(ckpt)
+            modelname = r.get_variable_to_shape_map().popitem()[0].split('/')[0]
+        except:
+            logging.getLogger('runfile').warning('could not load modelname from ckpt-file {}'.format(ckpt))
+            modelname = None
+        return modelname
+
+    @staticmethod
+    def set_allowed_gpu_memory_fraction(gpuboundfraction):
+        tf.GPUOptions(per_process_gpu_memory_fraction=gpuboundfraction)
 
 class ClassificationModel(Model):
     """Abstract model class. """
@@ -125,48 +139,7 @@ class ClassificationModel(Model):
         self.momentum = argget(kw, "momentum", 0.9)
         self.nclasses = argget(kw, "nclasses", 2)
 
-        self.f05 = argget(kw, "show_f05", True)
-        self.f1 = argget(kw, "show_f1", True)
-        self.f2 = argget(kw, "show_f2", True)
 
-        self.dice = argget(kw, "show_dice", not self.f1)
-
-        self.cross_entropy = argget(kw, "show_cross_entropy_loss", True)
-        self.binary_evaluation = self.dice or self.f1 or self.f05 or self.f2
-        self.eps = 1e-15
-        fullscoreshape = [None for _ in self.target.get_shape()[:-1]] + [np.sum(self.nclasses)]
-        fullscoreshape_minimum = [1 if s is None else s for s in fullscoreshape]
-        self.ref = tf.placeholder_with_default(np.zeros(fullscoreshape_minimum, dtype=np.float32), fullscoreshape)
-        self.pred = tf.placeholder_with_default(np.zeros(fullscoreshape_minimum, dtype=np.float32), fullscoreshape)
-
-    def compute_scores(self, ref, pred):
-        res = {}
-        eps = 1e-8
-        if self.binary_evaluation:
-            enc_ref = np.argmax(ref, -1)
-            enc_pred = self.nclasses * np.argmax(pred, -1)
-            enc_both = enc_ref + enc_pred
-            bins = np.bincount(enc_both.flatten(), minlength=self.nclasses ** 2).reshape((self.nclasses, self.nclasses))
-        if self.dice:
-            res["dice"] = [bins[c, c] * 2 / (np.sum(bins, -1)[c] + np.sum(bins, -2)[c] + eps) for c in
-                           range(self.nclasses)]
-        if self.f05 or self.f2:
-            precision = np.array([bins[c, c] / (np.sum(bins, -1)[c] + eps) for c in range(self.nclasses)])
-            recall = np.array([bins[c, c] / (np.sum(bins, -2)[c] + eps) for c in range(self.nclasses)])
-        if self.f05:
-            beta2 = 0.5 ** 2
-            res["f05"] = (1 + beta2) * precision * recall / ((beta2 * precision) + recall + eps)
-        if self.f1:
-            res["f1"] = [bins[c, c] * 2 / (np.sum(bins, -2)[c] + np.sum(bins, -1)[c] + eps) for c in
-                         range(self.nclasses)]
-        if self.f2:
-            beta2 = 2 ** 2
-            res["f2"] = (1 + beta2) * precision * recall / (beta2 * precision + recall + eps)
-        if self.cross_entropy:
-            res["cross_entropy"] = np.mean(np.sum(ref * np.log(pred + self.eps), -1))
-        if self.l2:
-            res["l2"] = np.mean(np.sum((ref - pred) ** 2, -1))
-        return res
 
 
 class RegressionModel(Model):
