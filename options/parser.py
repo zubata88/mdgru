@@ -59,6 +59,8 @@ def get_parser():
     sampling_parameters.add_argument('--deformation', type=int, nargs='+', help="deformation array")
     sampling_parameters.add_argument('--deformSigma', type=float, nargs='+',
                                      help="standard deformation of low resolution deformation grid.")
+    sampling_parameters.add_argument('--truncated_deform', action="store_true", help="deformations with displacements of maximum 3 times gausssigma in each spatial direction")
+
     sampling_parameters.add_argument('--nonthreaded', action="store_true",
                                      help="disallow threading during training to preload data before the processing")
     sampling_parameters.add_argument('--nonlazy', action="store_true", help="throw everything into memory")
@@ -212,6 +214,8 @@ def clean_datacollection_args(args):
             args_tr['deformation'] = args.deformation
         if args.deformSigma is not None:
             args_tr['deformSigma'] = args.deformSigma
+        if args.truncated_deform is not None:
+            args_tr['truncated_deform'] = args.truncated_deform
         if args.each_with_labels is not None:
             args_tr['each_with_labels'] = args.each_with_labels
         if args.rotate is not None:
