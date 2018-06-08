@@ -22,12 +22,19 @@ def run_mdgru(args=None):
     # Set environment flag(s) and finally import the classes that depend upon them
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in args.gpu])
     from model.mdgru_classification import MDGRUClassification
+    from model.mdgru_classification import MDGRUClassificationWithDiceLoss
+    from model.mdgru_classification import MDGRUClassificationWithGeneralizedDiceLoss
     from eval.tf import SupervisedEvaluationTensorflow
 
     # Set the necessary classes
     dc = GridDataCollection
     tdc = dc if args.nonthreaded else ThreadedGridDataCollection
-    mclassification = MDGRUClassification
+    if args.dice_generalized:
+        mclassification = MDGRUClassificationWithGeneralizedDiceLoss
+    elif args.dice_loss_label != None or args.dice_autoweighted:
+        mclassification = MDGRUClassificationWithDiceLoss
+    else:
+        mclassification = MDGRUClassification
     if args.gpuboundfraction != 1:
         mclassification.set_allowed_gpu_memory_fraction(args.gpuboundfraction)
 
@@ -68,6 +75,7 @@ def run_mdgru(args=None):
 
     # Set up model and evaluation
     args_eval = clean_eval_args(args)
+
     args_eval["namespace"] = modelname
 
     if args_tr is not None:

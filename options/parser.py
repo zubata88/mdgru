@@ -92,6 +92,10 @@ def get_parser():
     model_parameters.add_argument('--legacy_cgru_addition', action="store_true", help='allows to load old models despite new code. Only use when you know what you`re doing')
     model_parameters.add_argument('--filter_size_x', default=None, type=int, nargs="+", help='filter sizes for each dimension for the input')
     model_parameters.add_argument('--filter_size_h', default=None, type=int, nargs="+", help='filter sizes for each dimension for the previous output')
+    model_parameters.add_argument('--dice_loss_label', default=None, type=int, nargs="+", help='labels for which the dice loss shall be calculated')
+    model_parameters.add_argument('--dice_loss_weight', default=None, type=float, nargs="+", help='dice loss weight combined with (1-sum(weight))*crossentropy')
+    model_parameters.add_argument('--dice_autoweighted', action="store_true", help='weights the label Dices with the squared inverse gold standard area/volume; specify over which labels with dice_loss_label; sum of dice_loss_weight is used a weighting between cross entropy and generalized dice')
+    model_parameters.add_argument('--dice_generalized', action="store_true", help='total intersections of all labels over total sums of all labels, instead of summed Dices')
 
     execution_parameters = parser.add_argument_group('execution parameters')
     execution_parameters.add_argument('--nodropconnecth', action="store_true", help="dropconnect on prev output")
@@ -299,7 +303,11 @@ def clean_eval_args(args):
                  'only_save_labels': args.only_save_labels,
                  'filter_size_x': filter_size_x,
                  'filter_size_h': filter_size_h,
-                 'model_seed': args.model_seed
+                 'model_seed': args.model_seed,
+                 "dice_loss_label": args.dice_loss_label,
+                 "dice_loss_weight": args.dice_loss_weight,
+                 "dice_autoweighted": args.dice_autoweighted,
+                 "dice_generalized": args.dice_generalized,
                  }
 
     if not args.dont_use_tensorboard and args.image_summaries_each is not None:
