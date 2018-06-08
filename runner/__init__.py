@@ -266,7 +266,7 @@ class Runner(object):
 
                 evaluationWriter = csv.writer(csvfile)
                 evaluationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['checkpoint', 'iteration', 'time-stamp','score','label','min','mean','median','max'])
-                for key in errors[0][1].keys():
+                for key in sorted(errors[0][1].keys()):
                     try:
                         for label in range(0, len(errors[0][1][key])):
                             evaluationWriter.writerow([key]
