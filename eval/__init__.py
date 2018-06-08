@@ -213,6 +213,8 @@ class SupervisedEvaluation(object):
                     for j in range(self.evaluate_uncertainty_times):
                         dc.save(allres[j], os.path.join(file, "iter{}-".format(j) + self.estimatefilename),
                                 tporigin=file)
+            if np.min(p) < 0:
+                res[np.where(np.sum(res, -1) < 1e-8)] = [1] + [0 for _ in range(self.nclasses - 1)]
             res /= np.sum(res, -1).reshape(list(res.shape[:-1]) + [1])
             # evaluate accuracy...
             name = os.path.split(file)
