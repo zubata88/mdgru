@@ -147,6 +147,7 @@ def get_parser():
     execution_parameters.add_argument('--save_individual_evaluations', action='store_true',
                                       help='Save each evaluation sample per volume. Without this flag, only the '
                                            'standard deviation and mean over all samples is kept.')
+    execution_parameters.add_argument('--use_pytorch', action='store_true', help='use experimental pytorch version. Only core functionality is provided')
 
     return parser
 
@@ -183,7 +184,8 @@ def clean_datacollection_args(args):
         "nooriginal": args.nooriginal,
         "nclasses": args.nclasses,
         "subtractGauss": 1 - args.nofsg,
-        "correct_nifti_orientation": 1 - args.ignore_nifti_header
+        "correct_nifti_orientation": 1 - args.ignore_nifti_header,
+        "channels_last": not args.use_pytorch,
     }
     if args.mask is not None:
         args_data["choose_mask_at_random"] = len(args.mask) > 1
