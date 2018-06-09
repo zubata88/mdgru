@@ -18,6 +18,8 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
     def __init__(self, model, collectioninst, kw):
         super(SupervisedEvaluationTorch, self).__init__(model, collectioninst, kw)
         self.model = model(self.trdc.get_shape(), self.nclasses, kw)
+        self.model.initialize()
+        self.optimizer = th.optim.Adadelta(self.logits.parameters(), learning_rate=self.learning_rate, rho=self.momentum)
         # self.use_tensorboard = argget(kw, "use_tensorboard", True, keep=True)
         # if self.use_tensorboard:
         #     self.image_summaries_each = argget(kw, 'image_summaries_each', 100)

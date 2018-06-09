@@ -3,7 +3,6 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 from copy import copy, deepcopy
 
-import numpy as np
 import torch as th
 
 from helper import convolution_helper_padding_same, compile_arguments

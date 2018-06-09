@@ -2,13 +2,14 @@ __author__ = "Simon Andermatt"
 __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import numpy as np
-import tensorflow as tf
 
 from helper import argget, save_summary_for_nd_images
 from model_pytorch.mdrnn import MDGRUBlock
 from . import ClassificationModel
 from . import lazy_property
 import torch as th
+from model_pytorch import init_weights
+
 
 class MDGRUClassification(ClassificationModel):
     """ Provides a full MDGRU default network.
@@ -57,9 +58,7 @@ class MDGRUClassification(ClassificationModel):
                                                        labels=self.target)
         return loss
 
-    def optimize(self):
-        """Optimization routine using the Adadelta optimizer"""
-        optimizer = tf.train.AdadeltaOptimizer(learning_rate=self.learning_rate, rho=self.momentum)
-        rets = optimizer.minimize(self.cost, global_step=self.global_step)
-        # call prediction to at least initialize everything once:
-        return rets
+    def initialize(self):
+        self.logits.apply(init_weights)
+
+

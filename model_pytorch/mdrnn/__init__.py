@@ -1,12 +1,9 @@
 __author__ = "Simon Andermatt"
 __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
-import numpy as np
 import torch as th
 from helper import argget
-from helper import get_modified_xavier_method, compile_arguments
-# CaffeMDGRU is not supported anymore, uncomment at own risk:
-# from .caffe_mdgru import CaffeMDGRU
+from helper import compile_arguments
 from .mdgru import MDRNN
 
 

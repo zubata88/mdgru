@@ -1,14 +1,30 @@
 __author__ = "Simon Andermatt"
 __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
-# import tensorflow as tf
 import numpy as np
 from helper import argget
 import functools
 import copy
 import torch as th
-# from tensorflow.python import pywrap_tensorflow
+from torch.nn import init
 import logging
+
+
+def init_weights(m):
+    print(m)
+    if hasattr(m, 'initialize'):
+        m.initialize()
+    else:
+        classname = m.__class__.__name__
+        if classname.find('Conv') != -1:
+            init.xavier_normal(m.weight.data, gain=0.02)
+        elif classname.find('Linear') != -1:
+            init.xavier_normal(m.weight.data, gain=0.02)
+        elif classname.find('BatchNorm2d') != -1:
+            init.normal(m.weight.data, 1.0, 0.02)
+            init.constant(m.bias.data, 0.0)
+        else:
+            print("{} has no method initialize".format(type(m)))
 
 def lazy_property(function):
     """This function computes a property or simply returns it if already computed."""

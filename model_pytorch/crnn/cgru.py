@@ -4,10 +4,10 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 import logging
 from copy import deepcopy
 from helper import compile_arguments
-# from model_pytorch import batch_norm
 from model_pytorch.crnn import CRNNCell
 import torch as th
 from torch.nn.parameter import Parameter
+from torch.nn import init
 from torch import functional as F
 
 class CGRUCell(CRNNCell):
@@ -66,8 +66,6 @@ class CGRUCell(CRNNCell):
 
         self.bias_x_gates = Parameter(th.Tensor(self.filter_shape_x_gates[0]))
         self.bias_x_candidate = Parameter(th.Tensor(self.filter_shape_x_candidate[0]))
-        self.bias_h_gates = Parameter(th.Tensor(self.filter_shape_h_gates[0]))
-        self.bias_h_candidate = Parameter(th.Tensor(self.filter_shape_h_candidate[0]))
 
         if self.dropconnecth is not None:
             self.dropconnect_h_gates = th.zeros_like(self.filter_h_gates)
@@ -84,6 +82,14 @@ class CGRUCell(CRNNCell):
         # else:
         #     self.initial_state = th.Tensor(*self.)
         self.reset_parameters()
+
+    def initialize(self):
+        self.bias_x_gates.fill_(1)
+        self.bias_x_candidate.fill_(0)
+        init.xavier_normal_(self.filter_x_gates.data)
+        init.xavier_normal_(self.filter_x_candidate.data)
+        init.xavier_normal_(self.filter_h_gates.data)
+        init.xavier_normal_(self.filter_h_candidate.data)
 
     def forward(self, inputs):
         weights_h_gates = self.filter_h_gates
