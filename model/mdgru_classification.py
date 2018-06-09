@@ -4,7 +4,8 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 import numpy as np
 import tensorflow as tf
 
-from helper import argget, save_summary_for_nd_images
+from helper import argget
+from model import save_summary_for_nd_images
 from model.mdrnn import MDGRUNet
 from . import ClassificationModel
 from . import lazy_property

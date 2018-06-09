@@ -7,8 +7,7 @@ from copy import deepcopy
 import numpy as np
 import torch as th
 
-from helper import argget, convolution_helper_padding_same, get_modified_xavier_method, \
-    get_pseudo_orthogonal_block_circulant_initialization, compile_arguments
+from helper import argget, compile_arguments
 
 
 class CRNNCell(th.nn.Module):

@@ -11,8 +11,9 @@ from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import variable_scope as vs
 from tensorflow.python.util import nest
 
-from helper import argget, convolution_helper_padding_same, get_modified_xavier_method, \
-    get_pseudo_orthogonal_block_circulant_initialization, compile_arguments
+from helper import argget, compile_arguments
+from model import convolution_helper_padding_same, get_modified_xavier_method, \
+    get_pseudo_orthogonal_block_circulant_initialization
 
 
 class CRNNCell(LayerRNNCell):

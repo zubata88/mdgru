@@ -5,7 +5,7 @@ from copy import copy, deepcopy
 
 import torch as th
 
-from helper import convolution_helper_padding_same, compile_arguments
+from helper import compile_arguments
 from ..crnn.cgru import CGRUCell
 
 

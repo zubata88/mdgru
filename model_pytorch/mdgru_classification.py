@@ -3,10 +3,9 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import numpy as np
 
-from helper import argget, save_summary_for_nd_images
+from helper import argget
 from model_pytorch.mdrnn import MDGRUBlock
 from . import ClassificationModel
-from . import lazy_property
 import torch as th
 from model_pytorch import init_weights
 
