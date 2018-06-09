@@ -109,6 +109,7 @@ class GridDataCollection(DataCollection):
         self.numoffeatures = argget(kw, 'numoffeatures', len(self._get_features_and_masks(self.tps[0])[0]))
         self.sample_counter = 0
         self.minlabel = argget(kw, 'minlabel', 1)
+        self.channels_last = argget(kw, 'channels_last', True)
 
         if self.lazy == False and argget(kw, 'preloadall', False):
             self.preload_all()
@@ -346,6 +347,12 @@ class GridDataCollection(DataCollection):
             order.pop(1)
             order.append(1)
             labels = np.transpose(labels, order)
+        if not self.channels_last:
+            ndims = len(batch.shape)
+            neworder = [0, ndims-1] + [i for i in range(1, ndims-1)]
+            batch = np.transpose(batch, neworder)
+            labels = np.transpose(labels, neworder)
+
         return batch, labels
 
     def transformAffine(self, coords):
@@ -543,7 +550,13 @@ class GridDataCollection(DataCollection):
                 end = (w - padding) * (counts + 1)
                 subf, subm = self._extract_sample(features, masks, copy.deepcopy(start), copy.deepcopy(end), shape)
                 ma = np.asarray([subm])
-                yield np.asarray([subf]), ma, start, end
+                fe = np.asarray([subf])
+                if not self.channels_last:
+                    ndims = len(fe.shape)
+                    neworder = [0, ndims-1] + [i for i in range(1, ndims-1)]
+                    fe = np.transpose(fe, neworder)
+                    ma = np.transpose(ma, neworder)
+                yield fe, ma, start, end
 
         def volgeninfo(tps):
             for tp in tps:
