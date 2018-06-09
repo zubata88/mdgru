@@ -2,6 +2,7 @@ from eval import SupervisedEvaluation
 import logging
 import os
 from helper import argget, check_if_kw_empty
+import torch as th
 import numpy as np
 import copy
 
@@ -16,6 +17,7 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
     '''
     def __init__(self, model, collectioninst, kw):
         super(SupervisedEvaluationTorch, self).__init__(model, collectioninst, kw)
+        self.model = model(self.trdc.get_shape(), self.nclasses, kw)
         # self.use_tensorboard = argget(kw, "use_tensorboard", True, keep=True)
         # if self.use_tensorboard:
         #     self.image_summaries_each = argget(kw, 'image_summaries_each', 100)
@@ -31,7 +33,7 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         #         self.session_config = tf.ConfigProto(gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=self.gpubound))
         #     else:
         #         self.session_config = tf.ConfigProto()
-        raise Exception("not yet implemented")
+        # raise Exception("not yet implemented")
         # with tf.variable_scope(self.namespace):
         #     self.training = tf.placeholder(dtype=tf.bool)
         #     self.dropout = tf.placeholder(dtype=tf.float32)
@@ -76,7 +78,13 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
 
     def _train(self, batch, batchlabs):
         """set inputs and run torch training iteration"""
-        raise Exception("not yet implemented")
+        self.optimizer.zero_grad()
+        loss = self.model.cost(self.model.logits(batch, self.dropout_rate), batchlabs)
+        loss.backward()
+        self.optimizer.step()
+        return loss.data[0]
+
+    # raise Exception("not yet implemented")
         # tasks = [self.model.optimize, self.model.cost]
         # ph = {self.data: batch, self.target: batchlabs, self.dropout: self.dropout_rate, self.training: True}
         # if self.evaluate_merged:
@@ -92,7 +100,11 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
 
     def _predict_with_loss(self, batch, batchlabs):
         """run evaluation and calculate loss"""
-        raise Exception("not yet implemented")
+        logits = self.model.logits(batch, self.dropout_rate)
+        prediction = th.NN.softmax(logits)
+        return self.model.cost(logits, batchlabs).data[0], prediction.data
+
+        # raise Exception("not yet implemented")
         # tasks = [self.model.costs, self.model.prediction]
         # placeholders = {self.data: batch, self.target: batchlabs, self.dropout: 1,
         #                 self.training: False}
@@ -107,7 +119,8 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
 
     def _predict(self, batch, dropout, testing):
         """ predict given our graph for batch."""
-        raise Exception("not yet implemented")
+        return th.NN.softmax(self.model.logits(batch, dropout))
+        # raise Exception("not yet implemented")
         # if testing:
         #     model = self.test_model
         #     data = self.test_data
@@ -122,12 +135,14 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
 
     def _save(self, f):
         """Save model"""
-        raise Exception("not yet implemented")
+        th.save(self.model.state_dict(), f)
+        # raise Exception("not yet implemented")
         # self.saver.save(self.sess, f, global_step=self.model.global_step)
 
     def _load(self, f):
         """Load model"""
-        raise Exception("not yet implemented")
+        self.model.load_state_dict(th.load(f))
+        # raise Exception("not yet implemented")
         # if self.restore_optimistically:
         #     self._optimistic_restore(self.sess, f)
         # else:
