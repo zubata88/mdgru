@@ -5,6 +5,7 @@ from helper import argget, check_if_kw_empty
 import torch as th
 import numpy as np
 import copy
+from torch.autograd import Variable
 
 class SupervisedEvaluationTorch(SupervisedEvaluation):
     '''Base class for all evaluation classes. Child classes implement various
@@ -17,14 +18,23 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
     '''
     def __init__(self, model, collectioninst, kw):
         super(SupervisedEvaluationTorch, self).__init__(model, collectioninst, kw)
-        self.model = model(self.trdc.get_shape(), self.nclasses, kw)
+        data_shape = self.trdc.get_shape()
+        self.model = model(data_shape, self.nclasses, self.dropout_rate, kw)
         self.model.initialize()
-        self.optimizer = th.optim.Adadelta(self.logits.parameters(), learning_rate=self.learning_rate, rho=self.momentum)
+        if len(self.gpu):
+            self.model.logits.cuda(self.gpu[0])
+        self.optimizer = th.optim.Adadelta(self.model.logits.parameters(), lr=self.model.learning_rate, rho=self.model.momentum)
         # self.use_tensorboard = argget(kw, "use_tensorboard", True, keep=True)
         # if self.use_tensorboard:
         #     self.image_summaries_each = argget(kw, 'image_summaries_each', 100)
 
         # self.restore_optimistically = argget(kw, 'restore_optimistically', False)
+        self.input_shape = [1] + data_shape[1:]
+        self.batch = th.FloatTensor(*self.input_shape)
+        self.batchlabs = th.LongTensor(*self.input_shape)
+        if len(self.gpu):
+            self.batch = self.batch.cuda(self.gpu[0])
+            self.batchlabs = self.batchlabs.cuda(self.gpu[0])
 
         self.only_cpu = argget(kw, 'only_cpu', False)
         # self.gpubound = argget(kw, 'gpubound', 1)
@@ -78,10 +88,20 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
 
         check_if_kw_empty(self.__class__.__name__, kw, 'eval')
 
+    def check_input(self, batch, batchlabs=None):
+        if batch.shape != self.input_shape:
+            self.input_shape = batch.shape
+            self.batch.resize_(batch.size()).copy_(batch)
+            if batchlabs is not None:
+                self.batchlabs.resize_(batchlabs.size()).copy_(batchlabs)
+
     def _train(self, batch, batchlabs):
         """set inputs and run torch training iteration"""
+        batch = th.from_numpy(batch)
+        batchlabs = th.from_numpy(batchlabs)
+        self.check_input(batch, batchlabs)
         self.optimizer.zero_grad()
-        loss = self.model.cost(self.model.logits(batch, self.dropout_rate), batchlabs)
+        loss = self.model.cost(self.model.logits(Variable(self.batch)), Variable(self.batchlabs))
         loss.backward()
         self.optimizer.step()
         return loss.data[0]
@@ -102,9 +122,12 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
 
     def _predict_with_loss(self, batch, batchlabs):
         """run evaluation and calculate loss"""
-        logits = self.model.logits(batch, self.dropout_rate)
+        batch = th.from_numpy(batch)
+        batchlabs = th.from_numpy(batchlabs)
+        self.check_input(batch, batchlabs)
+        logits = self.model.logits(self.batch)
         prediction = th.NN.softmax(logits)
-        return self.model.cost(logits, batchlabs).data[0], prediction.data
+        return self.model.cost(logits, self.batchlabs).data[0], prediction.data
 
         # raise Exception("not yet implemented")
         # tasks = [self.model.costs, self.model.prediction]
@@ -121,7 +144,9 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
 
     def _predict(self, batch, dropout, testing):
         """ predict given our graph for batch."""
-        return th.NN.softmax(self.model.logits(batch, dropout))
+        batch = th.from_numpy(batch)
+        self.check_input(batch)
+        return th.NN.softmax(self.model.logits(self.batch))
         # raise Exception("not yet implemented")
         # if testing:
         #     model = self.test_model

@@ -8,7 +8,7 @@ from model_pytorch.crnn import CRNNCell
 import torch as th
 from torch.nn.parameter import Parameter
 from torch.nn import init
-from torch import functional as F
+from torch.nn import functional as F
 
 class CGRUCell(CRNNCell):
     """Convolutional gated recurrent unit.
@@ -55,7 +55,7 @@ class CGRUCell(CRNNCell):
         self.filter_shape_h_candidate = [self._num_units] * 2 + self.filter_size_h
         self.filter_shape_h_gates = deepcopy(self.filter_shape_h_candidate)
         self.filter_shape_h_gates[0] *= 2
-        self.filter_shape_x_candidate = [self._num_inputs, self._num_units] + self.filter_size_x
+        self.filter_shape_x_candidate = [self._num_units, self._num_inputs] + self.filter_size_x
         self.filter_shape_x_gates = deepcopy(self.filter_shape_x_candidate)
         self.filter_shape_x_gates[0] *= 2
 
@@ -81,11 +81,11 @@ class CGRUCell(CRNNCell):
             raise Exception("this is not yet supported")
         # else:
         #     self.initial_state = th.Tensor(*self.)
-        self.reset_parameters()
+        # self.reset_parameters()
 
     def initialize(self):
-        self.bias_x_gates.fill_(1)
-        self.bias_x_candidate.fill_(0)
+        self.bias_x_gates.data.fill_(1)
+        self.bias_x_candidate.data.fill_(0)
         init.xavier_normal_(self.filter_x_gates.data)
         init.xavier_normal_(self.filter_x_candidate.data)
         init.xavier_normal_(self.filter_h_gates.data)
@@ -122,12 +122,13 @@ class CGRUCell(CRNNCell):
             zrxb = self.convop(inp, weights_x_gates, self.bias_x_gates, padding=padding_x)
             htxb = self.convop(inp, weights_x_candidate, self.bias_x_candidate, padding=padding_x)
             if i > 0:
-                zrh = self.convop(state, weights_h_gates, padding=padding_h)
-                hth = self.convop(state, weights_h_candidate, padding=padding_h)
+                zrh = self.convop(states[i - 1], weights_h_gates, padding=padding_h)
+                hth = self.convop(states[i - 1], weights_h_candidate, padding=padding_h)
                 prev_state = states[i - 1]
             else:
                 zrh, hth, prev_state = 0, 0, 0
-            z, r = th.split(self.gate(zrxb + zrh), 2, 1)
+            zr = self.gate(zrxb + zrh)
+            z, r = th.split(zr, self._num_units, 1)
             ht = self.crnn_activation(htxb + r * hth)
             states.append(z * prev_state + (1-z) * ht)
         return states

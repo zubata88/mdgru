@@ -41,6 +41,7 @@ class SupervisedEvaluation(object):
         self.cross_entropy = argget(kw, "show_cross_entropy_loss", True)
         self.binary_evaluation = self.dice or self.f1 or self.f05 or self.f2
         self.estimatefilename = argget(kw, "estimatefilename", "estimate")
+        self.gpu = argget(kw, "gpu", 0)
 
     @abstractmethod
     def _train(self):
@@ -293,10 +294,10 @@ class SupervisedEvaluation(object):
     def add_summary_simple_value(self, text, value):
         raise NotImplementedError("this needs to be implemented and only works with tensorflow backend.")
 
-    def get_train_session(self):
+    def get_train_session(self, cachefolder):
         return self
 
-    def get_test_session(self):
+    def get_test_session(self, cachefolder):
         return self
 
     def set_session(self, sess, cachefolder, train=False):

@@ -95,11 +95,10 @@ class Model(object):
     """Abstract Model class"""
 
     def __init__(self, data, target, dropout, kw):
-        print("model")
         self.origargs = copy.copy(kw)
         # self.model_seed = argget(kw, 'model_seed', 12345678)
         # tf.set_random_seed(self.model_seed)
-        super(Model, self).__init__(data, target, dropout, kw)
+        # super(Model, self).__init__(data, target, dropout, kw)
         # self.training = argget(kw, "training", tf.constant(True))
         # self.global_step = tf.Variable(0, name="global_step", trainable=False)
         # self.use_tensorboard = argget(kw, "use_tensorboard", True)
@@ -122,10 +121,9 @@ class Model(object):
         raise Exception("this should never be called, but implemented by"
                         "the child class")
 
-    @lazy_property
-    def cost(self):
+    def cost(self, logits, batchlabs):
         """lazy property to compute the cost per batch"""
-        loss = th.mean(self.costs)
+        loss = th.mean(self.costs(logits, batchlabs))
         # if self.use_tensorboard:
         #     tf.summary.scalar("loss", loss)
         return loss
@@ -151,7 +149,6 @@ class ClassificationModel(Model):
     """Abstract model class. """
 
     def __init__(self, data, target, dropout, kw):
-        print("classificationmodel")
         super(ClassificationModel, self).__init__(data, target, dropout, kw)
         self.target = target
         self.dropout = dropout

@@ -8,6 +8,7 @@ from model_pytorch.mdrnn import MDGRUBlock
 from . import ClassificationModel
 import torch as th
 from model_pytorch import init_weights
+import torch.nn.functional as F
 
 
 class MDGRUClassification(ClassificationModel):
@@ -42,20 +43,19 @@ class MDGRUClassification(ClassificationModel):
                 mdgru_kw["noactivation"] = True
             if s is not None:
                 mdgru_kw["strides"] = [s for _ in range(num_spatial_dims)] if np.isscalar(s) else s
-            logits += [MDGRUBlock(num_spatial_dims, self.dropout, last_output_channel_size, mdgru, fcc, name="{}".format(it + 1), **kw)]
+            logits += [MDGRUBlock(num_spatial_dims, self.dropout, last_output_channel_size, mdgru, fcc, mdgru_kw)]
             last_output_channel_size = fcc if fcc is not None else mdgru
         self.logits = th.nn.Sequential(*logits)
+        self.loss = th.nn.modules.CrossEntropyLoss()
 
-    def prediction(self):
+    def prediction(self, batch):
         """Provides prediction in the form of a discrete probability distribution per voxel"""
-        pred = th.NN.softmax(self.logits)
+        pred = F.softmax(self.logits.forward(batch))
         return pred
 
-    def costs(self):
+    def costs(self, logits, batchlabs):
         """Cross entropy cost function"""
-        loss = th.nn.softmax_cross_entropy_with_logits(logits=self.logits,
-                                                       labels=self.target)
-        return loss
+        return self.loss(logits, batchlabs)
 
     def initialize(self):
         self.logits.apply(init_weights)

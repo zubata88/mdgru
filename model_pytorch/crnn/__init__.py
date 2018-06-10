@@ -33,7 +33,7 @@ class CRNNCell(th.nn.Module):
         "crnn_activation": th.tanh,
     }
 
-    def __init__(self,num_input, num_units, kw):
+    def __init__(self, num_input, num_units, kw):
         super(CRNNCell, self).__init__()
         crnn_kw, kw = compile_arguments(CRNNCell, kw, transitive=False)
         for k, v in crnn_kw.items():

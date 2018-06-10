@@ -247,10 +247,16 @@ class GridDataCollection(DataCollection):
         return states
 
     def get_shape(self):
-        return [None] + self.w + [self.numoffeatures]
+        if self.channels_last:
+            return [None] + self.w + [self.numoffeatures]
+        else:
+            return [None] + [self.numoffeatures] + self.w
 
     def get_target_shape(self):
-        return [None] + self.w + [None]
+        if self.channels_last:
+            return [None] + self.w + [None]
+        else:
+            return [None] + [None] + self.w
 
     def get_data_dims(self):
         return [len(self.tps)] + self.get_shape()[1:]
@@ -342,16 +348,17 @@ class GridDataCollection(DataCollection):
             batch = np.asarray(batch)
         labels = np.asarray(labels)
 
-        if not self.perform_one_hot_encoding:
-            order = [x for x in range(len(labels.shape))]
-            order.pop(1)
-            order.append(1)
-            labels = np.transpose(labels, order)
+        # if not self.perform_one_hot_encoding:
+        #     order = [x for x in range(len(labels.shape))]
+        #     order.pop(1)
+        #     order.append(1)
+        #     labels = np.transpose(labels, order)
         if not self.channels_last:
             ndims = len(batch.shape)
             neworder = [0, ndims-1] + [i for i in range(1, ndims-1)]
             batch = np.transpose(batch, neworder)
-            labels = np.transpose(labels, neworder)
+            if self.perform_one_hot_encoding:
+                labels = np.transpose(labels, neworder)
 
         return batch, labels
 
@@ -457,7 +464,7 @@ class GridDataCollection(DataCollection):
             tempdata[targetindex] = np.asarray([f[sourcesindex] for f in featuredata])
 
             if len(masks):
-                templabels = np.zeros(self.w, dtype=np.int8)
+                templabels = np.zeros(self.w, dtype=np.uint8)
                 templabels[targetindex[1:]] = np.asarray([f.squeeze()[sourcesindex] for f in masks])
                 if one_hot and not self.regression:
                     templabels = self._one_hot_vectorize(templabels, self.nclasses, zero_out_label=self.zero_out_label)

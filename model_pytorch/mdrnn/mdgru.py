@@ -55,15 +55,16 @@ class MDRNN(th.nn.Module):
         outputs = []
         for d, cgrus in zip(self.spatial_dimensions, self.cgrus):
             # split tensor along d:
-            cgru_split_input = th.split(input, 1, d + 2) #spatial dim, hence d + 2
+            cgru_split_input = th.unbind(input, d + 2) #spatial dim, hence d + 2
             cgru_forward_output = th.stack(cgrus[0].forward(cgru_split_input), d + 2)
-            cgru_backward_output = th.stack(cgrus[1].forward(cgru_split_input[::-1])[::-1])
+            cgru_backward_output = th.stack(cgrus[1].forward(cgru_split_input[::-1])[::-1], d + 2)
             # add the outputs:
             outputs += [cgru_forward_output, cgru_backward_output]
         return th.mean(th.stack(outputs, 0), 0)
 
 
     def __init__(self, dropout, spatial_dimensions, kw):
+        super(MDRNN, self).__init__()
         mdgru_kw, kw = compile_arguments(self.__class__, kw, transitive=False)
         for k, v in mdgru_kw.items():
             setattr(self, k, v)
@@ -104,15 +105,15 @@ class MDRNN(th.nn.Module):
             else:
                 st = None
 
-            crnn_dim_options = copy.copy(self.crnn_kw)
+            crnn_dim_options = copy(self.crnn_kw)
 
             crnn_dim_options["filter_size_x"] = fsx
             crnn_dim_options["filter_size_h"] = fsh
-            crnn_dim_options["strides"] = copy.copy(st)
+            crnn_dim_options["strides"] = copy(st)
 
             # forward and back direction
-            self.cgrus += th.ModuleList([self.crnn_class(self.num_input, self.num_hidden, copy.copy(crnn_dim_options)),
-                                         self.crnn_class(self.num_input, self.num_hidden, copy.copy(crnn_dim_options))])
+            self.cgrus += [th.nn.ModuleList([self.crnn_class(self.num_input, self.num_hidden, copy(crnn_dim_options)),
+                                         self.crnn_class(self.num_input, self.num_hidden, copy(crnn_dim_options))])]
 
     #         dimorder = [i for i in range(len(self.inputarr.get_shape()))]
     #         dimorder.insert(-1, dimorder.pop(d))
