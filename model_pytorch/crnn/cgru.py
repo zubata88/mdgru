@@ -68,14 +68,14 @@ class CGRUCell(CRNNCell):
         self.bias_x_candidate = Parameter(th.Tensor(self.filter_shape_x_candidate[0]))
 
         if self.dropconnecth is not None:
-            self.dropconnect_h_gates = th.zeros_like(self.filter_h_gates)
+            self.register_buffer("dropconnect_h_gates", th.zeros_like(self.filter_h_gates))
         if self.dropconnectx is not None:
-            self.dropconnect_x_gates = th.zeros_like(self.filter_x_gates)
+            self.register_buffer("dropconnect_x_gates", th.zeros_like(self.filter_x_gates))
         if self.use_dropconnect_on_state:
             if self.dropconnecth is not None:
-                self.dropconnect_h_candidate = th.zeros_like(self.filter_h_candidate)
+                self.register_buffer("dropconnect_h_candidate", th.zeros_like(self.filter_h_candidate))
             if self.dropconnectx is not None:
-                self.dropconnect_x_candidate = th.zeros_like(self.filter_x_candidate)
+                self.register_buffer("dropconnect_x_candidate", th.zeros_like(self.filter_x_candidate))
 
         if self.learnable_state:
             raise Exception("this is not yet supported")
@@ -90,6 +90,30 @@ class CGRUCell(CRNNCell):
         init.xavier_normal_(self.filter_x_candidate.data)
         init.xavier_normal_(self.filter_h_gates.data)
         init.xavier_normal_(self.filter_h_candidate.data)
+
+    # def cuda(self, device):
+    #     super(CGRUCell, self).cuda(device)
+    #     if self.dropconnecth is not None:
+    #         self.dropconnect_h_gates.cuda(device)
+    #     if self.dropconnectx is not None:
+    #         self.dropconnect_x_gates.cuda(device)
+    #     if self.use_dropconnect_on_state:
+    #         if self.dropconnecth is not None:
+    #             self.dropconnect_h_candidate.cuda(device)
+    #         if self.dropconnectx is not None:
+    #             self.dropconnect_x_candidate.cuda(device)
+    #
+    # def cpu(self):
+    #     super(CGRUCell, self).cpu()
+    #     if self.dropconnecth is not None:
+    #         self.dropconnect_h_gates.cpu()
+    #     if self.dropconnectx is not None:
+    #         self.dropconnect_x_gates.cpu()
+    #     if self.use_dropconnect_on_state:
+    #         if self.dropconnecth is not None:
+    #             self.dropconnect_h_candidate.cpu()
+    #         if self.dropconnectx is not None:
+    #             self.dropconnect_x_candidate.cpu()
 
     def forward(self, inputs):
         weights_h_gates = self.filter_h_gates
@@ -130,7 +154,7 @@ class CGRUCell(CRNNCell):
             zr = self.gate(zrxb + zrh)
             z, r = th.split(zr, self._num_units, 1)
             ht = self.crnn_activation(htxb + r * hth)
-            states.append(z * prev_state + (1-z) * ht)
+            states.append(z * prev_state + (1 - z) * ht)
         return states
 
     #

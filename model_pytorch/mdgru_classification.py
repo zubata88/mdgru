@@ -47,6 +47,7 @@ class MDGRUClassification(ClassificationModel):
             last_output_channel_size = fcc if fcc is not None else mdgru
         self.logits = th.nn.Sequential(*logits)
         self.loss = th.nn.modules.CrossEntropyLoss()
+        print(self.logits)
 
     def prediction(self, batch):
         """Provides prediction in the form of a discrete probability distribution per voxel"""

@@ -5,6 +5,7 @@ from helper import argget, check_if_kw_empty
 import torch as th
 import numpy as np
 import copy
+import time
 from torch.autograd import Variable
 
 class SupervisedEvaluationTorch(SupervisedEvaluation):
@@ -89,22 +90,26 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         check_if_kw_empty(self.__class__.__name__, kw, 'eval')
 
     def check_input(self, batch, batchlabs=None):
+        batch = th.from_numpy(batch)
+        if batchlabs is not None:
+            batchlabs = th.from_numpy(batchlabs)
         if batch.shape != self.input_shape:
             self.input_shape = batch.shape
-            self.batch.resize_(batch.size()).copy_(batch)
+            self.batch.resize_(batch.size())
             if batchlabs is not None:
-                self.batchlabs.resize_(batchlabs.size()).copy_(batchlabs)
+                self.batchlabs.resize_(batchlabs.size())
+        self.batch.copy_(batch)
+        if batchlabs is not None:
+            self.batchlabs.copy_(batchlabs)
 
     def _train(self, batch, batchlabs):
         """set inputs and run torch training iteration"""
-        batch = th.from_numpy(batch)
-        batchlabs = th.from_numpy(batchlabs)
         self.check_input(batch, batchlabs)
         self.optimizer.zero_grad()
         loss = self.model.cost(self.model.logits(Variable(self.batch)), Variable(self.batchlabs))
         loss.backward()
         self.optimizer.step()
-        return loss.data[0]
+        return loss.item()
 
     # raise Exception("not yet implemented")
         # tasks = [self.model.optimize, self.model.cost]
