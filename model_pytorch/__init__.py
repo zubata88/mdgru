@@ -89,10 +89,11 @@ def lazy_property(function):
 #         return tf.cond(training, batch_statistics, population_statistics)
 
 
-class Model(object):
+class Model(th.nn.Module):
     """Abstract Model class"""
 
     def __init__(self, data, target, dropout, kw):
+        super(Model, self).__init__()
         self.origargs = copy.copy(kw)
         # self.model_seed = argget(kw, 'model_seed', 12345678)
         # tf.set_random_seed(self.model_seed)

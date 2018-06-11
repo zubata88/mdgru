@@ -68,6 +68,10 @@ class SupervisedEvaluation(object):
     def _load(self, f):
         pass
 
+    @abstractmethod
+    def get_globalstep(self):
+        pass
+
     def train(self):
         """ Measures and logs time for data sampling and training iteration."""
         start_time = time.time()
@@ -306,5 +310,5 @@ class SupervisedEvaluation(object):
     def __enter__(self):
         pass
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         pass

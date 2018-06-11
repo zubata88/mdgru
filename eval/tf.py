@@ -148,9 +148,13 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
 
         logging.getLogger('eval').info('initialized all variables')
 
+    def get_globalstep(self):
+        return self.sess.run(self.model.global_step)
 
     def _save(self, f):
+        globalstep = self.get_globalstep()
         self.saver.save(self.sess, f, global_step=self.model.global_step)
+        return f + '-{}'.format(globalstep) #checkpointfilename
 
     def _optimistic_restore(self, session, save_file):
         reader = tf.train.NewCheckpointReader(save_file)

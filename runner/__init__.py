@@ -249,18 +249,16 @@ class Runner(object):
         self._finish(0)
 
     def save(self, filename):
-        globalstep = self.ev.sess.run(self.ev.model.global_step)
         abspath = os.path.join(self.cachefolder, filename)
-        self.ev.save(abspath)
-        self.checkpointfiles[0] = abspath + '-{}'.format(globalstep)
-        logging.getLogger('runner').info('Saved checkpoint {}'.format(filename+'-{}'.format(globalstep)))
+        self.checkpointfiles[0] = self.ev.save(abspath)
+        logging.getLogger('runner').info('Saved checkpoint {}'.format(self.checkpointfiles[0]))
 
     def write_error_to_csv(self, errors, filename, minerrors, avgerrors, medianerrors, maxerrors):
         try:
 
             with open(os.path.join(self.cachefolder, filename), 'a') as csvfile:
 
-                globalstep = self.ev.sess.run(self.ev.model.global_step)
+                globalstep = self.ev.get_globalstep()
                 currenttime = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
                 ckptfile = self.checkpointfiles[0] # if self.checkpointfile is a list -> adapt ckptfile
 
