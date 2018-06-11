@@ -21,8 +21,14 @@ def run_mdgru(args=None):
 
     # Set environment flag(s) and finally import the classes that depend upon them
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in args.gpu])
-    from model.mdgru_classification import MDGRUClassification
-    from eval.tf import SupervisedEvaluationTensorflow
+    if args.use_pytorch:
+        from model_pytorch.mdgru_classification import MDGRUClassification
+        from eval.torch import SupervisedEvaluationTorch
+        evalclass = SupervisedEvaluationTorch
+    else:
+        from model.mdgru_classification import MDGRUClassification
+        from eval.tf import SupervisedEvaluationTensorflow
+        evalclass = SupervisedEvaluationTensorflow
 
     # Set the necessary classes
     dc = GridDataCollection
@@ -83,7 +89,7 @@ def run_mdgru(args=None):
     else:
         datadict = {"train": traindc, "validation": valdc, "test": testdc}
 
-    ev = SupervisedEvaluationTensorflow(mclassification, datadict,
+    ev = evalclass(mclassification, datadict,
                                              args_eval)
 
     # Set up runner
