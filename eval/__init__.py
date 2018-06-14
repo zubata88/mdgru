@@ -16,6 +16,7 @@ from helper import argget
 class SupervisedEvaluation(object):
     def __init__(self, model, collectioninst, kw):
         self.origargs = copy.deepcopy(kw)
+        self.use_tensorboard = False
         self.dropout_rate = argget(kw, "dropout_rate", 0.5)
         self.current_epoch = 0
         self.current_iteration = 0
@@ -32,7 +33,6 @@ class SupervisedEvaluation(object):
         self.evaluate_uncertainty_dropout = argget(kw, "evaluate_uncertainty_dropout",
                                                    1.0)  # these standard values ensure that we dont evaluate uncertainty if nothing was provided.
         self.evaluate_uncertainty_saveall = argget(kw, "evaluate_uncertainty_saveall", False)
-
         self.f05 = argget(kw, "show_f05", True)
         self.f1 = argget(kw, "show_f1", True)
         self.f2 = argget(kw, "show_f2", True)
@@ -42,6 +42,8 @@ class SupervisedEvaluation(object):
         self.binary_evaluation = self.dice or self.f1 or self.f05 or self.f2
         self.estimatefilename = argget(kw, "estimatefilename", "estimate")
         self.gpu = argget(kw, "gpu", 0)
+        self.get_train_session = lambda x: self
+        self.get_test_session = lambda x: self
 
     @abstractmethod
     def _train(self):
@@ -280,7 +282,7 @@ class SupervisedEvaluation(object):
 
     def save(self, f):
         '''saves model to disk at location f'''
-        self._save(f)
+        ckpt = self._save(f)
         trdc = self.trdc.get_states()
         tedc = self.tedc.get_states()
         valdc = self.valdc.get_states()
@@ -294,15 +296,10 @@ class SupervisedEvaluation(object):
         states['epoch'] = self.current_epoch
         states['iteration'] = self.current_iteration
         pickle.dump(states, open(f + ".pickle", "wb"))
+        return ckpt
 
     def add_summary_simple_value(self, text, value):
         raise NotImplementedError("this needs to be implemented and only works with tensorflow backend.")
-
-    def get_train_session(self, cachefolder):
-        return self
-
-    def get_test_session(self, cachefolder):
-        return self
 
     def set_session(self, sess, cachefolder, train=False):
         return None

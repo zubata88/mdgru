@@ -44,7 +44,7 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
                                              shape=self.trdc.get_target_shape()[:-1] + [np.sum(self.nclasses)])
             else:
                 self.target = tf.placeholder(dtype=tf.float32,
-                                             shape=self.trdc.get_target_shape()[:-1] + [self.nclasses])
+                                             shape=self.trdc.get_target_shape())
             kw_copy = copy.deepcopy(kw)
             kw['training'] = self.training
             self.model = model(self.data, self.target, self.dropout, kw)
@@ -63,7 +63,7 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
                                                           shape=self.tedc.get_target_shape()[:-1] + [np.sum(self.nclasses)])
                     else:
                         self.test_target = tf.placeholder(dtype=tf.float32,
-                                                          shape=self.tedc.get_target_shape()[:-1] + [self.nclasses])
+                                                          shape=self.tedc.get_target_shape())
                     kw_copy['test_training'] = self.test_training
                     self.test_model = model(self.test_data, self.test_target, self.test_dropout, kw_copy)
                     self.test_model.prediction
@@ -77,18 +77,10 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
             self.test_data = self.data
             self.test_target = self.target
             self.test_saver = self.saver
+        self.get_train_session = lambda: tf.Session(config=self.session_config)
+        self.get_test_session = lambda: tf.Session(config=self.session_config, graph=self.test_graph)
 
         check_if_kw_empty(self.__class__.__name__, kw, 'eval')
-
-    def get_train_session(self, cachefolder):
-        sess = tf.Session(config=self.session_config)
-
-        return sess
-
-    def get_test_session(self, cachefolder):
-        sess = tf.Session(config=self.session_config, graph=self.test_graph)
-
-        return sess
 
     def _train(self, batch, batchlabs):
         tasks = [self.model.optimize, self.model.cost]

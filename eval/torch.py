@@ -146,9 +146,11 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         # return loss, prediction
 
     def _predict(self, batch, dropout, testing):
-        """ predict given our graph for batch."""
+        """ predict given our graph for batch. Be careful as this method returns results always in NHWC or NDHWC"""
+        batch_shape = batch.shape
+        reorder = [0] + [i for i in range(2, len(batch_shape))] + [1]
         self.check_input(batch)
-        return th.nn.functional.softmax(self.model.logits(self.batch)).data.cpu().numpy()
+        return th.nn.functional.softmax(self.model.logits(self.batch)).data.cpu().numpy().transpose(reorder)
         # raise Exception("not yet implemented")
         # if testing:
         #     model = self.test_model

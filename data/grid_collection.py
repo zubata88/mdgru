@@ -254,9 +254,9 @@ class GridDataCollection(DataCollection):
 
     def get_target_shape(self):
         if self.channels_last:
-            return [None] + self.w + [None]
+            return [None] + self.w + [self.nclasses]
         else:
-            return [None] + [None] + self.w
+            return [None] + [self.nclasses] + self.w
 
     def get_data_dims(self):
         return [len(self.tps)] + self.get_shape()[1:]
@@ -568,9 +568,9 @@ class GridDataCollection(DataCollection):
         def volgeninfo(tps):
             for tp in tps:
                 features, masks = self._get_features_and_masks(tp)
-                shape = np.shape(features[0])
-                volgen = create_volgen(shape, self.w, self.p, features, masks)
-                yield [volgen, tp, shape, self.w, self.p]
+                spatial_shape = np.shape(features[0])
+                volgen = create_volgen(spatial_shape, self.w, self.p, features, masks)
+                yield [volgen, tp, spatial_shape, self.w, self.p]
 
         return volgeninfo(self.tps)
 
