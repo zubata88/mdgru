@@ -5,6 +5,7 @@ from helper import argget, check_if_kw_empty
 import torch as th
 import numpy as np
 import copy
+import time
 from torch.autograd import Variable
 
 class SupervisedEvaluationTorch(SupervisedEvaluation):
@@ -89,22 +90,26 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         check_if_kw_empty(self.__class__.__name__, kw, 'eval')
 
     def check_input(self, batch, batchlabs=None):
+        batch = th.from_numpy(batch)
+        if batchlabs is not None:
+            batchlabs = th.from_numpy(batchlabs)
         if batch.shape != self.input_shape:
             self.input_shape = batch.shape
-            self.batch.resize_(batch.size()).copy_(batch)
+            self.batch.resize_(batch.size())
             if batchlabs is not None:
-                self.batchlabs.resize_(batchlabs.size()).copy_(batchlabs)
+                self.batchlabs.resize_(batchlabs.size())
+        self.batch.copy_(batch)
+        if batchlabs is not None:
+            self.batchlabs.copy_(batchlabs)
 
     def _train(self, batch, batchlabs):
         """set inputs and run torch training iteration"""
-        batch = th.from_numpy(batch)
-        batchlabs = th.from_numpy(batchlabs)
         self.check_input(batch, batchlabs)
         self.optimizer.zero_grad()
         loss = self.model.cost(self.model.logits(Variable(self.batch)), Variable(self.batchlabs))
         loss.backward()
         self.optimizer.step()
-        return loss.data[0]
+        return loss.item()
 
     # raise Exception("not yet implemented")
         # tasks = [self.model.optimize, self.model.cost]
@@ -122,12 +127,10 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
 
     def _predict_with_loss(self, batch, batchlabs):
         """run evaluation and calculate loss"""
-        batch = th.from_numpy(batch)
-        batchlabs = th.from_numpy(batchlabs)
         self.check_input(batch, batchlabs)
         logits = self.model.logits(self.batch)
-        prediction = th.NN.softmax(logits)
-        return self.model.cost(logits, self.batchlabs).data[0], prediction.data
+        prediction = th.nn.softmax(logits)
+        return self.model.cost(logits, self.batchlabs).data[0], prediction.data.cpu().numpy()
 
         # raise Exception("not yet implemented")
         # tasks = [self.model.costs, self.model.prediction]
@@ -143,10 +146,11 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         # return loss, prediction
 
     def _predict(self, batch, dropout, testing):
-        """ predict given our graph for batch."""
-        batch = th.from_numpy(batch)
+        """ predict given our graph for batch. Be careful as this method returns results always in NHWC or NDHWC"""
+        batch_shape = batch.shape
+        reorder = [0] + [i for i in range(2, len(batch_shape))] + [1]
         self.check_input(batch)
-        return th.NN.softmax(self.model.logits(self.batch))
+        return th.nn.functional.softmax(self.model.logits(self.batch)).data.cpu().numpy().transpose(reorder)
         # raise Exception("not yet implemented")
         # if testing:
         #     model = self.test_model
@@ -160,15 +164,24 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         #     dropoutph = self.dropout
         # return self.sess.run(model.prediction, {data: batch, dropoutph: dropout, trainingph: False})
 
+    def get_globalstep(self):
+        return next(iter(self.optimizer.state_dict().values()))['step']
+
     def _save(self, f):
         """Save model"""
-        th.save(self.model.state_dict(), f)
+        modelstate = self.model.state_dict()
+        optimizerstate = self.optimizer.state_dict()
+        globalstep = next(iter(optimizerstate['state'].values()))['step']
+        th.save({'model': modelstate, 'optimizer': optimizerstate}, f + "-{}".format(globalstep))
+        return f + '-{}'.format(globalstep) 
         # raise Exception("not yet implemented")
         # self.saver.save(self.sess, f, global_step=self.model.global_step)
 
     def _load(self, f):
         """Load model"""
-        self.model.load_state_dict(th.load(f))
+        state = th.load(f)
+        self.model.load_state_dict(state["model"])
+        self.optimizer.load_state_dict(state["optimizer"])
         # raise Exception("not yet implemented")
         # if self.restore_optimistically:
         #     self._optimistic_restore(self.sess, f)

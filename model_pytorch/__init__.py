@@ -11,20 +11,18 @@ import logging
 
 
 def init_weights(m):
-    print(m)
     if hasattr(m, 'initialize'):
         m.initialize()
     else:
         classname = m.__class__.__name__
         if classname.find('Conv') != -1:
-            init.xavier_normal(m.weight.data, gain=0.02)
-        elif classname.find('Linear') != -1:
-            init.xavier_normal(m.weight.data, gain=0.02)
-        elif classname.find('BatchNorm2d') != -1:
-            init.normal(m.weight.data, 1.0, 0.02)
-            init.constant(m.bias.data, 0.0)
+            init.xavier_normal_(m.weight.data)
+        # elif classname.find('Linear') != -1:
+        #     init.xavier_normal_(m.weight.data, gain=0.02)
         else:
-            print("{} has no method initialize".format(type(m)))
+            pass #if not in above list, parameters wont be initialized using the initialization rule.
+            # print("{} has no method initialize".format(type(m)))
+
 
 def lazy_property(function):
     """This function computes a property or simply returns it if already computed."""
@@ -91,10 +89,11 @@ def lazy_property(function):
 #         return tf.cond(training, batch_statistics, population_statistics)
 
 
-class Model(object):
+class Model(th.nn.Module):
     """Abstract Model class"""
 
     def __init__(self, data, target, dropout, kw):
+        super(Model, self).__init__()
         self.origargs = copy.copy(kw)
         # self.model_seed = argget(kw, 'model_seed', 12345678)
         # tf.set_random_seed(self.model_seed)

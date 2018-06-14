@@ -52,16 +52,20 @@ class MDRNN(th.nn.Module):
     }
 
     def forward(self, input):
-        outputs = []
-        for d, cgrus in zip(self.spatial_dimensions, self.cgrus):
+
+        # outputs = []
+
+        for i, (d, cgrus) in enumerate(zip(self.spatial_dimensions, self.cgrus)):
             # split tensor along d:
             cgru_split_input = th.unbind(input, d + 2) #spatial dim, hence d + 2
-            cgru_forward_output = th.stack(cgrus[0].forward(cgru_split_input), d + 2)
-            cgru_backward_output = th.stack(cgrus[1].forward(cgru_split_input[::-1])[::-1], d + 2)
-            # add the outputs:
-            outputs += [cgru_forward_output, cgru_backward_output]
-        return th.mean(th.stack(outputs, 0), 0)
-
+            output = th.stack(cgrus[0].forward(cgru_split_input), d + 2) \
+                     + th.stack(cgrus[1].forward(cgru_split_input[::-1])[::-1], d + 2)
+            if i == 0:
+                outputs = output
+            else:
+                outputs += output
+        outputs /= len(self.cgrus) * 2 # transform the sum to a mean over all cgrus (self.cgrus contains birnn)
+        return outputs
 
     def __init__(self, dropout, spatial_dimensions, kw):
         super(MDRNN, self).__init__()
@@ -80,6 +84,7 @@ class MDRNN(th.nn.Module):
             self.crnn_kw["dropconnectx"] = self.dropout
         else:
             self.crnn_kw["dropconnectx"] = None
+
 
         for d in self.spatial_dimensions:
             fsx = deepcopy(self.filter_size_x)

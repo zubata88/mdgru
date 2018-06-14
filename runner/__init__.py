@@ -153,7 +153,6 @@ class Runner(object):
             except:
                 logging.getLogger('runner').info(error)
 
-
             def save_all_res(cachefolder, rr, dc, tname):
                 for rit, r in enumerate(rr):
                     if showIt:
@@ -249,24 +248,22 @@ class Runner(object):
         self._finish(0)
 
     def save(self, filename):
-        globalstep = self.ev.sess.run(self.ev.model.global_step)
         abspath = os.path.join(self.cachefolder, filename)
-        self.ev.save(abspath)
-        self.checkpointfiles[0] = abspath + '-{}'.format(globalstep)
-        logging.getLogger('runner').info('Saved checkpoint {}'.format(filename+'-{}'.format(globalstep)))
+        self.checkpointfiles[0] = self.ev.save(abspath)
+        logging.getLogger('runner').info('Saved checkpoint {}'.format(self.checkpointfiles[0]))
 
     def write_error_to_csv(self, errors, filename, minerrors, avgerrors, medianerrors, maxerrors):
         try:
 
             with open(os.path.join(self.cachefolder, filename), 'a') as csvfile:
 
-                globalstep = self.ev.sess.run(self.ev.model.global_step)
+                globalstep = self.ev.get_globalstep()
                 currenttime = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
                 ckptfile = self.checkpointfiles[0] # if self.checkpointfile is a list -> adapt ckptfile
 
                 evaluationWriter = csv.writer(csvfile)
                 evaluationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['checkpoint', 'iteration', 'time-stamp','score','label','min','mean','median','max'])
-                for key in errors[0][1].keys():
+                for key in sorted(errors[0][1].keys()):
                     try:
                         for label in range(0, len(errors[0][1][key])):
                             evaluationWriter.writerow([key]
@@ -325,7 +322,7 @@ class Runner(object):
         shutil.copyfile(self.runfile, os.path.join(self.cachefolder, 'runfile.py'))
 
         if "train" in self.episodes:
-            with self.ev.get_train_session(self.cachefolder) as sess:
+            with self.ev.get_train_session() as sess:
                 self.ev.set_session(sess, self.cachefolder, train=True)
                 if self.checkpointfiles[0]:
                     self.ev.load(self.checkpointfiles[0])
@@ -333,7 +330,7 @@ class Runner(object):
 
         if "test" in self.episodes or "evaluate" in self.episodes:
             self.use_tensorboard = False # no need, since we evaluate everything anyways.
-            with self.ev.get_test_session(self.cachefolder) as sess:
+            with self.ev.get_test_session() as sess:
                 self.ev.set_session(sess, self.cachefolder)
                 for est, ckpt in zip(self.estimatefilenames, self.checkpointfiles):
                     if ckpt:
