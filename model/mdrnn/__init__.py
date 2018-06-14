@@ -5,8 +5,8 @@ import numpy as np
 import tensorflow as tf
 
 from helper import argget
-from helper import get_modified_xavier_method, compile_arguments
-from model import batch_norm
+from helper import compile_arguments
+from model import batch_norm, get_modified_xavier_method
 # CaffeMDGRU is not supported anymore, uncomment at own risk:
 # from .caffe_mdgru import CaffeMDGRU
 from .mdgru import MDRNN

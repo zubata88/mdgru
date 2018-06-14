@@ -5,8 +5,8 @@ from copy import copy, deepcopy
 
 import numpy as np
 import tensorflow as tf
-
-from helper import convolution_helper_padding_same, compile_arguments
+from model import convolution_helper_padding_same
+from helper import compile_arguments
 from ..crnn.cgru import CGRUCell
 
 

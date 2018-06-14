@@ -109,6 +109,7 @@ class GridDataCollection(DataCollection):
         self.numoffeatures = argget(kw, 'numoffeatures', len(self._get_features_and_masks(self.tps[0])[0]))
         self.sample_counter = 0
         self.minlabel = argget(kw, 'minlabel', 1)
+        self.channels_last = argget(kw, 'channels_last', True)
 
         if self.lazy == False and argget(kw, 'preloadall', False):
             self.preload_all()
@@ -246,10 +247,16 @@ class GridDataCollection(DataCollection):
         return states
 
     def get_shape(self):
-        return [None] + self.w + [self.numoffeatures]
+        if self.channels_last:
+            return [None] + self.w + [self.numoffeatures]
+        else:
+            return [None] + [self.numoffeatures] + self.w
 
     def get_target_shape(self):
-        return [None] + self.w + [None]
+        if self.channels_last:
+            return [None] + self.w + [self.nclasses]
+        else:
+            return [None] + [self.nclasses] + self.w
 
     def get_data_dims(self):
         return [len(self.tps)] + self.get_shape()[1:]
@@ -341,11 +348,18 @@ class GridDataCollection(DataCollection):
             batch = np.asarray(batch)
         labels = np.asarray(labels)
 
-        if not self.perform_one_hot_encoding:
-            order = [x for x in range(len(labels.shape))]
-            order.pop(1)
-            order.append(1)
-            labels = np.transpose(labels, order)
+        # if not self.perform_one_hot_encoding:
+        #     order = [x for x in range(len(labels.shape))]
+        #     order.pop(1)
+        #     order.append(1)
+        #     labels = np.transpose(labels, order)
+        if not self.channels_last:
+            ndims = len(batch.shape)
+            neworder = [0, ndims-1] + [i for i in range(1, ndims-1)]
+            batch = np.transpose(batch, neworder)
+            if self.perform_one_hot_encoding:
+                labels = np.transpose(labels, neworder)
+
         return batch, labels
 
     def transformAffine(self, coords):
@@ -450,7 +464,7 @@ class GridDataCollection(DataCollection):
             tempdata[targetindex] = np.asarray([f[sourcesindex] for f in featuredata])
 
             if len(masks):
-                templabels = np.zeros(self.w, dtype=np.int8)
+                templabels = np.zeros(self.w, dtype=np.uint8)
                 templabels[targetindex[1:]] = np.asarray([f.squeeze()[sourcesindex] for f in masks])
                 if one_hot and not self.regression:
                     templabels = self._one_hot_vectorize(templabels, self.nclasses, zero_out_label=self.zero_out_label)
@@ -543,14 +557,20 @@ class GridDataCollection(DataCollection):
                 end = (w - padding) * (counts + 1)
                 subf, subm = self._extract_sample(features, masks, copy.deepcopy(start), copy.deepcopy(end), shape)
                 ma = np.asarray([subm])
-                yield np.asarray([subf]), ma, start, end
+                fe = np.asarray([subf])
+                if not self.channels_last:
+                    ndims = len(fe.shape)
+                    neworder = [0, ndims-1] + [i for i in range(1, ndims-1)]
+                    fe = np.transpose(fe, neworder)
+                    ma = np.transpose(ma, neworder)
+                yield fe, ma, start, end
 
         def volgeninfo(tps):
             for tp in tps:
                 features, masks = self._get_features_and_masks(tp)
-                shape = np.shape(features[0])
-                volgen = create_volgen(shape, self.w, self.p, features, masks)
-                yield [volgen, tp, shape, self.w, self.p]
+                spatial_shape = np.shape(features[0])
+                volgen = create_volgen(spatial_shape, self.w, self.p, features, masks)
+                yield [volgen, tp, spatial_shape, self.w, self.p]
 
         return volgeninfo(self.tps)
 
