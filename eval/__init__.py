@@ -42,8 +42,8 @@ class SupervisedEvaluation(object):
         self.binary_evaluation = self.dice or self.f1 or self.f05 or self.f2
         self.estimatefilename = argget(kw, "estimatefilename", "estimate")
         self.gpu = argget(kw, "gpu", 0)
-        self.get_train_session = lambda x: self
-        self.get_test_session = lambda x: self
+        self.get_train_session = lambda: self
+        self.get_test_session = lambda: self
 
     @abstractmethod
     def _train(self):
