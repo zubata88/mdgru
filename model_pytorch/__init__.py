@@ -92,7 +92,7 @@ def lazy_property(function):
 class Model(th.nn.Module):
     """Abstract Model class"""
 
-    def __init__(self, data, target, dropout, kw):
+    def __init__(self, data, dropout, kw):
         super(Model, self).__init__()
         self.origargs = copy.copy(kw)
         # self.model_seed = argget(kw, 'model_seed', 12345678)
@@ -147,9 +147,8 @@ class Model(th.nn.Module):
 class ClassificationModel(Model):
     """Abstract model class. """
 
-    def __init__(self, data, target, dropout, kw):
-        super(ClassificationModel, self).__init__(data, target, dropout, kw)
-        self.target = target
+    def __init__(self, data, dropout, kw):
+        super(ClassificationModel, self).__init__(data, dropout, kw)
         self.dropout = dropout
         self.learning_rate = argget(kw, "learning_rate", 0.001)
         self.momentum = argget(kw, "momentum", 0.9)
@@ -160,9 +159,8 @@ class ClassificationModel(Model):
 
 class RegressionModel(Model):
     """Abstract model class for regression tasks."""
-    def __init__(self, data, target, dropout, kw):
-        super(RegressionModel, self).__init__(data, target, dropout, kw)
-        self.target = target
+    def __init__(self, data, dropout, kw):
+        super(RegressionModel, self).__init__(data, dropout, kw)
         self.dropout = dropout
         self.learning_rate = argget(kw, "learning_rate", 0.001)
         self.nclasses = argget(kw, "nclasses", 1)

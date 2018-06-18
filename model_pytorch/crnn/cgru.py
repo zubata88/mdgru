@@ -37,7 +37,8 @@ class CGRUCell(CRNNCell):
         "min_mini_batch": False,
         # "istraining": th.constant(True),
         "gate": th.sigmoid,
-        "learnable_state": False
+        "learnable_state": False,
+        "start_state": None
     }
 
     def __init__(self, num_input, num_units, kw):
@@ -142,19 +143,21 @@ class CGRUCell(CRNNCell):
         # dilation = [1] * self.num_spatial_dims
         # groups = [1] * self.num_spatial_dims
         states = []
+        prev_state = self.start_state
         for i, inp in enumerate(inputs):
             zrxb = self.convop(inp, weights_x_gates, self.bias_x_gates, padding=padding_x)
             htxb = self.convop(inp, weights_x_candidate, self.bias_x_candidate, padding=padding_x)
-            if i > 0:
-                zrh = self.convop(states[i - 1], weights_h_gates, padding=padding_h)
-                hth = self.convop(states[i - 1], weights_h_candidate, padding=padding_h)
-                prev_state = states[i - 1]
+            if prev_state is not None:
+                zrh = self.convop(prev_state, weights_h_gates, padding=padding_h)
+                hth = self.convop(prev_state, weights_h_candidate, padding=padding_h)
             else:
                 zrh, hth, prev_state = 0, 0, 0
             zr = self.gate(zrxb + zrh)
             z, r = th.split(zr, self._num_units, 1)
             ht = self.crnn_activation(htxb + r * hth)
             states.append(z * prev_state + (1 - z) * ht)
+            # For next iteration:
+            prev_state = states[i]
         return states
 
     #

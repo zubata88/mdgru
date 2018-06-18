@@ -26,8 +26,8 @@ class MDGRUClassification(ClassificationModel):
     :param data_shape: subvolume size
     """
 
-    def __init__(self, data_shape, nclasses, dropout, kw):
-        super(MDGRUClassification, self).__init__(data_shape, nclasses, dropout, kw)
+    def __init__(self, data_shape, dropout, kw):
+        super(MDGRUClassification, self).__init__(data_shape, dropout, kw)
         self.fc_channels = argget(kw, "fc_channels", [25, 45, self.nclasses])
         self.mdgru_channels = argget(kw, "mdgru_channels", [16, 32, 64])
         self.strides = argget(kw, "strides", [None for _ in self.mdgru_channels])

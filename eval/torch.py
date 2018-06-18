@@ -20,7 +20,7 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
     def __init__(self, model, collectioninst, kw):
         super(SupervisedEvaluationTorch, self).__init__(model, collectioninst, kw)
         data_shape = self.trdc.get_shape()
-        self.model = model(data_shape, self.nclasses, self.dropout_rate, kw)
+        self.model = model(data_shape, self.dropout_rate, kw)
         self.model.initialize()
         if len(self.gpu):
             self.model.logits.cuda(self.gpu[0])
