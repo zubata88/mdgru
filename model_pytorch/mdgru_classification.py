@@ -54,6 +54,9 @@ class MDGRUClassification(ClassificationModel):
         pred = F.softmax(self.logits.forward(batch))
         return pred
 
+    def forward(self, input):
+        return self.logits.forward(input)
+
     def costs(self, logits, batchlabs):
         """Cross entropy cost function"""
         return self.loss(logits, batchlabs)

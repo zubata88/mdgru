@@ -11,8 +11,8 @@ import logging
 
 
 def init_weights(m):
-    if hasattr(m, 'initialize'):
-        m.initialize()
+    if hasattr(m, 'initialize_weights'):
+        m.initialize_weights()
     else:
         classname = m.__class__.__name__
         if classname.find('Conv') != -1:

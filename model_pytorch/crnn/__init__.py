@@ -83,15 +83,15 @@ class CRNNCell(th.nn.Module):
     #         data = tf.concat([tf.slice(data, begin1, size1), data, tf.slice(data, begin2, size2)], i + 1)
     #     return data
 
-    def _get_dropconnect(self, tensor, keep_rate):
+    def _get_dropconnect(self, t, keep_rate):
         """Creates factors to be applied to filters to achieve either Bernoulli or Gaussian dropconnect."""
         if keep_rate is None:
             raise Exception('keeprate cannot be none if this is called')
         if self.use_bernoulli:
-            dc = tensor.random_() < keep_rate
-            tensor.fill_(1).mul_(dc).mul_(1/keep_rate)
+            dc = t.random_() < keep_rate
+            t.fill_(1).mul_(dc).mul_(1/keep_rate)
         else:
-            tensor.normal_(1, np.sqrt((1 - keep_rate) / keep_rate))
+            t.normal_(1, np.sqrt((1 - keep_rate) / keep_rate))
 
     # def _convolution(self, data, convolution_filter, filter_shape=None, strides=None, is_circular_convolution=False):
     #     """Convolves data and convolution_filter, using circular convolution if required."""

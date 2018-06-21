@@ -84,7 +84,7 @@ class CGRUCell(CRNNCell):
         #     self.initial_state = th.Tensor(*self.)
         # self.reset_parameters()
 
-    def initialize(self):
+    def initialize_weights(self):
         self.bias_x_gates.data.fill_(1)
         self.bias_x_candidate.data.fill_(0)
         init.xavier_normal_(self.filter_x_gates.data)
@@ -125,18 +125,17 @@ class CGRUCell(CRNNCell):
         if self.training: #TODO: add option to apply dropout during inference!
             if self.dropconnecth is not None:
                 self._get_dropconnect(self.dropconnect_h_gates, self.dropconnecth)
-                weights_h_gates = weights_h_gates * self.dropconnect_h_gates
+                weights_h_gates = self.filter_h_gates * self.dropconnect_h_gates
             if self.dropconnectx is not None:
                 self._get_dropconnect(self.dropconnect_x_gates, self.dropconnectx)
-                weights_x_gates = weights_x_gates * self.dropconnect_x_gates
+                weights_x_gates = self.filter_x_gates * self.dropconnect_x_gates
             if self.use_dropconnect_on_state:
                 if self.dropconnecth is not None:
                     self._get_dropconnect(self.dropconnect_h_candidate, self.dropconnecth)
-                    weights_h_candidate = weights_h_candidate * self.dropconnect_h_candidate
+                    weights_h_candidate = self.filter_h_candidate * self.dropconnect_h_candidate
                 if self.dropconnectx is not None:
                     self._get_dropconnect(self.dropconnect_x_candidate, self.dropconnectx)
-                    weights_x_candidate = weights_x_candidate * self.dropconnect_x_candidate
-            state = None
+                    weights_x_candidate = self.filter_x_candidate * self.dropconnect_x_candidate
         # stride = [1] * self.num_spatial_dims
         padding_x = [f//2 for f in self.filter_size_x]
         padding_h = [f//2 for f in self.filter_size_h]

@@ -67,7 +67,6 @@ class MDGRUBlock(th.nn.Module):
                 model += [self.vwfc_activation()]
         self.model = th.nn.Sequential(*model)
 
-
     def forward(self, input):
         return self.model.forward(input)
 
