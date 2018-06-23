@@ -15,8 +15,10 @@ def init_weights(m):
         m.initialize_weights()
     else:
         classname = m.__class__.__name__
-        if classname.find('Conv') != -1:
+        if classname.find('Conv') != -1 and hasattr(m, 'weight'):
             init.xavier_normal_(m.weight.data)
+            if hasattr(m, 'bias'):
+                init.constant_(m.bias.data, 0.0)
         # elif classname.find('Linear') != -1:
         #     init.xavier_normal_(m.weight.data, gain=0.02)
         else:

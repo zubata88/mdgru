@@ -41,6 +41,7 @@ class SupervisedEvaluation(object):
         self.cross_entropy = argget(kw, "show_cross_entropy_loss", True)
         self.binary_evaluation = self.dice or self.f1 or self.f05 or self.f2
         self.estimatefilename = argget(kw, "estimatefilename", "estimate")
+        self.print_each = argget(kw, 'print_each', 1)
         self.gpu = argget(kw, "gpu", 0)
         self.get_train_session = lambda: self
         self.get_test_session = lambda: self
@@ -82,7 +83,8 @@ class SupervisedEvaluation(object):
         loss = self._train(batch, batchlabs)
         self.currit += 1
         end_time = time.time()
-        logging.getLogger("eval").info("it: {}, time: [i/o: {}, processing: {}, all: {}], loss: {}"
+        if (self.currit % self.print_each == 0):
+            logging.getLogger("eval").info("it: {}, time: [i/o: {}, processing: {}, all: {}], loss: {}"
                                        .format(self.currit,
                                                np.round(time_after_loading - start_time, 6),
                                                np.round(end_time - time_after_loading, 6),
