@@ -160,7 +160,7 @@ class SupervisedEvaluation(object):
                 'evaluating file {} of shape {} with w {} and p {}'.format(file, shape, w, p))
             if len(shape) > 3:
                 shape = np.asarray([s for s in shape if s > 1])
-            res = np.zeros(list(shape) + [self.nclasses])
+            res = np.zeros(list(shape) + [self.nclasses], dtype=np.float32)
             if self.evaluate_uncertainty_times > 1:
                 uncertres = np.zeros(res.shape)
                 if self.evaluate_uncertainty_saveall:
