@@ -503,8 +503,8 @@ class GridDataCollection(DataCollection):
                             return [], []
 
                 else:
-                    logging.getLogger('data').warning(
-                        'maybe you want to revise this section before using! when do we not need a onehot?')
+                    # logging.getLogger('data').warning(
+                    #     'maybe you want to revise this section before using! when do we not need a onehot?')
                     templabels = np.asarray(
                         [map_coordinates(f.squeeze(), coords, order=1 if self.softlabels else 0) for f in masks])
                     templabels = templabels.transpose([i for i in range(1, len(templabels.shape))] + [0])
