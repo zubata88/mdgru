@@ -112,22 +112,22 @@ class Model(th.nn.Module):
         pass
         self.dimensions = argget(kw, "dimensions", None)
 
-    def prediction(self):
-        """lazy property call to produce a prediction in tensorflow."""
-        raise Exception("this should never be called, but implemented by"
-                        "the child class")
+    # def prediction(self):
+    #     """lazy property call to produce a prediction in tensorflow."""
+    #     raise Exception("this should never be called, but implemented by"
+    #                     "the child class")
+    #
+    # def costs(self):
+    #     """lazy property to compute the costs per sample."""
+    #     raise Exception("this should never be called, but implemented by"
+    #                     "the child class")
 
-    def costs(self):
-        """lazy property to compute the costs per sample."""
-        raise Exception("this should never be called, but implemented by"
-                        "the child class")
-
-    def cost(self, logits, batchlabs):
-        """lazy property to compute the cost per batch"""
-        loss = th.mean(self.costs(logits, batchlabs))
-        # if self.use_tensorboard:
-        #     tf.summary.scalar("loss", loss)
-        return loss
+    # def cost(self, logits, batchlabs):
+    #     """lazy property to compute the cost per batch"""
+    #     loss = th.mean(self.costs(logits, batchlabs))
+    #     # if self.use_tensorboard:
+    #     #     tf.summary.scalar("loss", loss)
+    #     return loss
 
     @staticmethod
     def get_model_name_from_ckpt(ckpt):

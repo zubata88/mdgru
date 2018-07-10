@@ -34,9 +34,9 @@ class MDRNN(th.nn.Module):
 
     """
     _defaults = {
-        "use_dropconnect_x": True,
-        "use_dropconnect_h": True,
-        "swap_memory": True,
+        "use_dropconnect_x": {'value': True, 'help': "Should dropconnect be applied to the input?", 'invert':'dont_'},
+        "use_dropconnect_h": {'value': True, 'help': "Should DropConnect be applied to the state?", 'invert': 'dont_'},
+        # "swap_memory": True,
         "return_cgru_results": False,
         "use_static_rnn": False,
         "no_avg_pool": True,

@@ -8,6 +8,7 @@ import copy
 import time
 from torch.autograd import Variable
 
+
 class SupervisedEvaluationTorch(SupervisedEvaluation):
     '''Base class for all evaluation classes. Child classes implement various
         test_* methods to test modeldependent aspects.
@@ -17,14 +18,16 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         saver: tensorflow saver to save or load the model data.
 
     '''
+
     def __init__(self, model, collectioninst, kw):
         super(SupervisedEvaluationTorch, self).__init__(model, collectioninst, kw)
         data_shape = self.trdc.get_shape()
         self.model = model(data_shape, self.dropout_rate, kw)
         self.model.initialize()
         if len(self.gpu):
-            self.model.logits.cuda(self.gpu[0])
-        self.optimizer = th.optim.Adadelta(self.model.logits.parameters(), lr=self.model.learning_rate, rho=self.model.momentum)
+            self.model.model.cuda(self.gpu[0])
+        self.optimizer = th.optim.Adadelta(self.model.model.parameters(), lr=self.model.learning_rate,
+                                           rho=self.model.momentum)
         # self.use_tensorboard = argget(kw, "use_tensorboard", True, keep=True)
         # if self.use_tensorboard:
         #     self.image_summaries_each = argget(kw, 'image_summaries_each', 100)
@@ -106,31 +109,31 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         """set inputs and run torch training iteration"""
         self.check_input(batch, batchlabs)
         self.optimizer.zero_grad()
-        loss = self.model.cost(self.model.logits(Variable(self.batch)), Variable(self.batchlabs))
+        loss = self.model.loss(self.model.model(self.batch), self.batchlabs)
         loss.backward()
         self.optimizer.step()
         return loss.item()
 
     # raise Exception("not yet implemented")
-        # tasks = [self.model.optimize, self.model.cost]
-        # ph = {self.data: batch, self.target: batchlabs, self.dropout: self.dropout_rate, self.training: True}
-        # if self.evaluate_merged:
-        #     if self.currit % self.image_summaries_each == 0:
-        #         tasks.append(self.merged_images)
-        #     else:
-        #         tasks.append(self.merged_basic)
-        #     _, loss, summary = self.sess.run(tasks, ph)
-        #     self.train_writer.add_summary(summary, tf.train.get_global_step())
-        # else:
-        #     _, loss = self.sess.run(tasks, ph)
-        # return loss
+    # tasks = [self.model.optimize, self.model.cost]
+    # ph = {self.data: batch, self.target: batchlabs, self.dropout: self.dropout_rate, self.training: True}
+    # if self.evaluate_merged:
+    #     if self.currit % self.image_summaries_each == 0:
+    #         tasks.append(self.merged_images)
+    #     else:
+    #         tasks.append(self.merged_basic)
+    #     _, loss, summary = self.sess.run(tasks, ph)
+    #     self.train_writer.add_summary(summary, tf.train.get_global_step())
+    # else:
+    #     _, loss = self.sess.run(tasks, ph)
+    # return loss
 
     def _predict_with_loss(self, batch, batchlabs):
         """run evaluation and calculate loss"""
         self.check_input(batch, batchlabs)
-        logits = self.model.logits(self.batch)
-        prediction = th.nn.softmax(logits)
-        return self.model.cost(logits, self.batchlabs).data[0], prediction.data.cpu().numpy()
+        result = self.model.model(self.batch)
+        prediction = th.nn.softmax(result)
+        return self.model.loss(result, self.batchlabs).data[0], prediction.data.cpu().numpy()
 
         # raise Exception("not yet implemented")
         # tasks = [self.model.costs, self.model.prediction]
@@ -150,7 +153,7 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         batch_shape = batch.shape
         reorder = [0] + [i for i in range(2, len(batch_shape))] + [1]
         self.check_input(batch)
-        return th.nn.functional.softmax(self.model.logits(self.batch)).data.cpu().numpy().transpose(reorder)
+        return self.model.prediction(self.batch).data.cpu().numpy().transpose(reorder)
         # raise Exception("not yet implemented")
         # if testing:
         #     model = self.test_model
@@ -173,7 +176,7 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         optimizerstate = self.optimizer.state_dict()
         globalstep = next(iter(optimizerstate['state'].values()))['step']
         th.save({'model': modelstate, 'optimizer': optimizerstate}, f + "-{}".format(globalstep))
-        return f + '-{}'.format(globalstep) 
+        return f + '-{}'.format(globalstep)
         # raise Exception("not yet implemented")
         # self.saver.save(self.sess, f, global_step=self.model.global_step)
 
@@ -203,4 +206,3 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         #         finally:
         #             raise e
         #
-

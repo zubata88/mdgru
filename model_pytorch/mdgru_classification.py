@@ -45,23 +45,23 @@ class MDGRUClassification(ClassificationModel):
                 mdgru_kw["strides"] = [s for _ in range(num_spatial_dims)] if np.isscalar(s) else s
             logits += [MDGRUBlock(num_spatial_dims, self.dropout, last_output_channel_size, mdgru, fcc, mdgru_kw)]
             last_output_channel_size = fcc if fcc is not None else mdgru
-        self.logits = th.nn.Sequential(*logits)
+        self.model = th.nn.Sequential(*logits)
         self.loss = th.nn.modules.CrossEntropyLoss()
-        print(self.logits)
+        print(self.model)
 
     def prediction(self, batch):
         """Provides prediction in the form of a discrete probability distribution per voxel"""
-        pred = F.softmax(self.logits.forward(batch))
+        pred = F.softmax(self.model(batch))
         return pred
-
-    def forward(self, input):
-        return self.logits.forward(input)
-
-    def costs(self, logits, batchlabs):
-        """Cross entropy cost function"""
-        return self.loss(logits, batchlabs)
+    #
+    # def forward(self, input):
+    #     return self.logits.forward(input)
+    #
+    # def costs(self, logits, batchlabs):
+    #     """Cross entropy cost function"""
+    #     return self.loss(logits, batchlabs)
 
     def initialize(self):
-        self.logits.apply(init_weights)
+        self.model.apply(init_weights)
 
 
