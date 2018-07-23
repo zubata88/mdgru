@@ -5,7 +5,7 @@ from copy import copy, deepcopy
 
 import torch as th
 
-from helper import compile_arguments
+from helper import compile_arguments, harmonize_filter_size
 from ..crnn.cgru import CGRUCell
 
 
@@ -15,10 +15,7 @@ class MDRNN(th.nn.Module):
     _defaults contains initial values for most class attributes.
     :param use_dropconnect_x: Flag if dropconnect regularization should be applied to input weights
     :param use_dropconnect_h: Flag if dropconnect regularization should be applied to state weights
-    :param swap_memory: Flag that trades slower computation with less memory consumption by swapping memory to CPU RAM
     :param return_cgru_results: Flag if instead of a sum, the individual cgru results should be returned
-    :param use_static_rnn: Static rnn graph creation, not recommended
-    :param no_avg_pool: Flag that defines if instead of average pooling convolutions with strides should be used
     :param filter_size_x: Dimensions of filters for the input (the current time dimension is ignored in each cRNN)
     :param filter_size_h: Dimensions of filters for the state (the current time dimension is ignored in each cRNN)
     :param crnn_activation: Activation function for the candidate / state / output in each cRNN
@@ -34,17 +31,15 @@ class MDRNN(th.nn.Module):
 
     """
     _defaults = {
-        "use_dropconnect_x": {'value': True, 'help': "Should dropconnect be applied to the input?", 'invert':'dont_'},
+        "use_dropconnect_x": {'value': True, 'help': "Should dropconnect be applied to the input?", 'invert': 'dont_'},
         "use_dropconnect_h": {'value': True, 'help': "Should DropConnect be applied to the state?", 'invert': 'dont_'},
         # "swap_memory": True,
-        "return_cgru_results": False,
-        "use_static_rnn": False,
-        "no_avg_pool": True,
-        "filter_size_x": [7, 7, 7],
-        "filter_size_h": [7, 7, 7],
-        "crnn_activation": th.nn.Tanh,
-        "legacy_cgru_addition": False,
-        "crnn_class": CGRUCell,
+        "return_cgru_results": {'value': False, 'help': "Instead of summing, individual cgru channel results are concatenated."},
+        "filter_size_x": {'value': [7, 7, 7], 'help': "Convolution kernel size for input."},
+        "filter_size_h": {'value': [7, 7, 7], 'help': "Convolution kernel size for state."},
+        "crnn_activation": {'value': th.nn.Tanh, 'help': "Activation function to be used for the CRNN."},
+        "legacy_cgru_addition": {'value': False, 'help': "results in worse weight initialization, only use if you know what you are doing!"},
+        "crnn_class": {'value': CGRUCell, 'help': 'CRNN class to be used in the MDRNN'}, #this is silly as we wont be able to ever display the correct help message if this is changed....
         "strides": None,
         "name": "mdgru",
         "num_hidden": 100,
@@ -53,9 +48,11 @@ class MDRNN(th.nn.Module):
 
     def __init__(self, dropout, spatial_dimensions, kw):
         super(MDRNN, self).__init__()
-        mdgru_kw, kw = compile_arguments(self.__class__, kw, transitive=False)
+        mdgru_kw, kw = compile_arguments(MDRNN, kw, transitive=False)
         for k, v in mdgru_kw.items():
             setattr(self, k, v)
+        self.filter_size_x = harmonize_filter_size(self.filter_size_x, len(spatial_dimensions))
+        self.filter_size_h = harmonize_filter_size(self.filter_size_h, len(spatial_dimensions))
         self.crnn_kw, kw = compile_arguments(self.crnn_class, kw, transitive=True)
         self.spatial_dimensions = spatial_dimensions
         self.dropout = dropout
@@ -76,20 +73,6 @@ class MDRNN(th.nn.Module):
             fsh.pop(d)
             if self.strides is not None:
                 raise Exception('we do not allow strides yet in the pytorch version')
-                # st = deepcopy(self.strides)
-                # stontime = st.pop(d - 1)
-                # if self.no_avgpool:
-                #     def compress_time(data, fsize, stride, padding):
-                #         fshape = fsize[1: -1] + [data.get_shape().as_list()[-1]] * 2
-                #         filt = tf.get_variable("compressfilt", fshape)
-                #         return convolution_helper_padding_same(data, filt, fshape, stride[1: -1])
-                # else:
-                #     if len(self.strides) == 3:
-                #         compress_time = tf.nn.avg_pool3d
-                #     elif len(self.strides) == 2:
-                #         compress_time = tf.nn.avg_pool
-                #     else:
-                #         raise Exception("this wont work avg pool only implemented for 2 and 3d.")
             else:
                 st = None
 

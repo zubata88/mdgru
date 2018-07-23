@@ -10,14 +10,24 @@ from abc import abstractmethod
 
 import numpy as np
 
-from helper import argget
+from helper import argget, compile_arguments
 
 
 class SupervisedEvaluation(object):
+    _defaults = {
+        'dropout_rate': {'value': 0.5, 'help': '"keep rate" for weights using dropconnect. The higher the value, the closer the sampled models to the full model.'},
+        'namespace': {'value': 'default', 'help': "override default model name (if no ckpt is provided). Probably not a good idea!", 'alt': ['modelname']},
+    }
+
     def __init__(self, model, collectioninst, kw):
+
+        eval_kw, kw = compile_arguments(SupervisedEvaluation, kw, transitive=False)
+        for k, v in eval_kw.items():
+            setattr(self, k, v)
+
         self.origargs = copy.deepcopy(kw)
         self.use_tensorboard = False
-        self.dropout_rate = argget(kw, "dropout_rate", 0.5)
+        #self.dropout_rate = argget(kw, "dropout_rate", 0.5)
         self.current_epoch = 0
         self.current_iteration = 0
         self.trdc = collectioninst["train"]
@@ -25,7 +35,7 @@ class SupervisedEvaluation(object):
         self.valdc = collectioninst["validation"]
         self.nclasses = argget(kw, "nclasses", 2, keep=True)
         self.currit = 0
-        self.namespace = argget(kw, "namespace", "default")
+
         self.only_save_labels = argget(kw, "only_save_labels", False)
         self.batch_size = argget(kw, "batch_size", 1)
         self.validate_same = argget(kw, "validate_same", False)

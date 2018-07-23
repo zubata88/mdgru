@@ -196,11 +196,81 @@ def compile_arguments(cls, kw, transitive=False):
     :param transitive: determines if parent classes should also be consulted
     :param kw: the keyword dictionary to separate into valid arguments and rest
     """
+    kw = copy.copy(kw)
     new_kw = {}
     if transitive:
         for b in cls.__bases__:
             if hasattr(b, '_defaults'):
                 temp_kw, kw = compile_arguments(b, kw, transitive=True)
                 new_kw.update(temp_kw)
-    new_kw.update({k: argget(kw, k, v) for k, v in cls._defaults.items()})
+    # compile defaults array from complex _defaults dict:
+    defaults = {k: v['value'] if isinstance(v, dict) else v for k, v in cls._defaults.items()}
+    new_kw.update({k: argget(kw, k, v) for k, v in defaults.items()})
     return new_kw, kw
+
+
+def collect_parameters(cls, kw_args={}):
+    args = copy.copy(kw_args)
+    for b in cls.__bases__:
+        if hasattr(b, '_defaults'):
+            args = collect_parameters(b, args)
+    params = {k: v for k, v in cls._defaults.items() if isinstance(v, dict) and 'help' in v}
+    args.update(params)
+    return args
+
+
+def define_arguments(cls, parser):
+    if hasattr(cls, 'collect_parameters'):
+        args = cls.collect_parameters()
+    else:
+        args = collect_parameters(cls)
+    for k, v in args.items():
+        key = k
+        kw = {'help': v['help']}
+
+        if 'type' in v:
+            kw['type'] = v['type']
+        if 'nargs' in v:
+            kw['nargs'] = v['nargs']
+        elif 'value' in v and isinstance(v['value'], (list, dict)):
+            kw['nargs'] = '+'
+
+        propname = copy.copy(key)
+        if 'value' in v:
+            if isinstance(v['value'], bool):
+                if v['value'] == False:
+                    kw['action'] = 'store_true'
+                else:
+                    kw['dest'] = key
+                    kw['action'] = 'store_false'
+                    if 'invert_meaning' in v and not 'name' in v:
+                        propname = kw['invert_meaning'] + key
+                    else:
+                        propname = "no_" + key
+            else:
+                kw['default'] = v['value']
+
+        if 'name' in v: #overrides invert_meaning!
+            propname = v['name']
+            kw['dest'] = key
+        props = ["--" + propname]
+        if 'short' in v:
+            props = ['-' + v['short']] + props
+        if 'alt' in v:
+            props += ['--' + x for x in v['alt']]
+        parser.add_argument(*props, **kw)
+    return parser
+
+
+def harmonize_filter_size(fs, ndim):
+    if fs is None:
+        return [7 for _ in range(ndim)]
+    if len(fs) != ndim:
+        if len(fs) == 1:
+            fs = [fs[0] for _ in range(ndim)]
+        elif fs is None:
+            fs = [7 for _ in range(ndim)]
+        else:
+            print('Filter size and number of dimensions for subvolume do not match!')
+            exit(0)
+    return fs

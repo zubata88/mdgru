@@ -6,7 +6,7 @@ from copy import copy, deepcopy
 import numpy as np
 import tensorflow as tf
 from model import convolution_helper_padding_same
-from helper import compile_arguments
+from helper import compile_arguments, harmonize_filter_size
 from ..crnn.cgru import CGRUCell
 
 
@@ -35,16 +35,16 @@ class MDRNN(object):
 
     """
     _defaults = {
-        "use_dropconnect_x": True,
-        "use_dropconnect_h": True,
+        "use_dropconnect_x": {'value': True, 'help': "Should dropconnect be applied to the input?", 'invert': 'dont_'},
+        "use_dropconnect_h": {'value': True, 'help': "Should DropConnect be applied to the state?", 'invert': 'dont_'},
         "swap_memory": True,
-        "return_cgru_results": False,
+        "return_cgru_results": {'value': False, 'help': 'If provided, returns cgru results as channels instead of a sum over all cgrus', 'name': 'dontsumcgrus'},
         "use_static_rnn": False,
         "no_avg_pool": True,
-        "filter_size_x": [7, 7, 7],
-        "filter_size_h": [7, 7, 7],
+        "filter_size_x": {'value':[7, 7, 7], 'help': 'filter sizes for each dimension of the input', 'type': int},
+        "filter_size_h": {'value': [7, 7, 7], 'help': 'filter sizes for each dimension of the state', 'type': int},
         "crnn_activation": tf.nn.tanh,
-        "legacy_cgru_addition": False,
+        "legacy_cgru_addition": {'value': False, 'help': "results in worse weight initialization, only use if you know what you are doing!"},
         "crnn_class": CGRUCell,
         "strides": None,
         "name": "mdgru",
@@ -52,16 +52,19 @@ class MDRNN(object):
     }
 
     def __init__(self, inputarr, dropout, dimensions, kw):
-        mdgru_kw, kw = compile_arguments(self.__class__, kw, transitive=False)
+        mdgru_kw, kw = compile_arguments(MDRNN, kw, transitive=False)
         for k, v in mdgru_kw.items():
             setattr(self, k, v)
         self.crnn_kw, kw = compile_arguments(self.crnn_class, kw, transitive=True)
 
         self.inputarr = inputarr
+        ndims = len(inputarr.get_shape()[1:-1])
         if dimensions is None:
-            self.dimensions = [x + 1 for x in range(len(inputarr.get_shape()[1:-1]))]
+            self.dimensions = [x + 1 for x in range(ndims)]
         else:
             self.dimensions = dimensions
+        self.filter_size_x = harmonize_filter_size(self.filter_size_x, ndims)
+        self.filter_size_h = harmonize_filter_size(self.filter_size_h, ndims)
         self.dropout = dropout
 
     def __call__(self):

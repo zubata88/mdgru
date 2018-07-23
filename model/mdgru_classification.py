@@ -4,9 +4,10 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 import numpy as np
 import tensorflow as tf
 
-from helper import argget
+from helper import argget, collect_parameters, define_arguments
 from model import save_summary_for_nd_images
 from model.mdrnn import MDGRUNet
+from model.mdrnn.mdgru import MDRNN
 from . import ClassificationModel
 from . import lazy_property
 
@@ -84,3 +85,10 @@ class MDGRUClassification(ClassificationModel, MDGRUNet):
         # call prediction to at least initialize everything once:
         self.prediction
         return rets
+
+    @staticmethod
+    def collect_parameters():
+        args = collect_parameters(MDGRUNet, {})
+        args = collect_parameters(MDRNN, args)
+        args = collect_parameters(MDRNN._defaults['crnn_class'], args)
+        return args

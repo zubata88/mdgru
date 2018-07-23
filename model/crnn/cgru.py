@@ -29,14 +29,14 @@ class CGRUCell(CRNNCell):
     :param gate: Defines activation function to be used for gates
     """
     _defaults = {
-        "add_x_bn": False,
-        "add_h_bn": False,
-        "add_a_bn": False,
-        "resgrux": False,
-        "resgruh": False,
-        "put_r_back": False,
-        "use_dropconnect_on_state": False,
-        "min_mini_batch": False,
+        "add_x_bn": {'value': False, 'help': 'Add batch normalization at the gates input'},
+        "add_h_bn": {'value': False, 'help': 'Add batch normalization at the gates state'},
+        "add_a_bn": {'value': False, 'help': 'Add batch normalization at the candidates input and state'},
+        "resgrux": {'value': False, 'help': 'Add residual learning to the input of each cgru'},
+        "resgruh": {'value': False, 'help': 'Add residual learning to the state of each cgru'},
+        "put_r_back": {'value': False, 'help': 'Move the reset gate to the location the original GRU applies it at'},
+        "use_dropconnect_on_state": {'value': False, 'help': 'Apply dropconnect on the candidate weights as well'},
+        "min_mini_batch": {'value': None, 'help': 'Number of iterations batches to average over'},
         "istraining": tf.constant(True),
         "gate": tf.nn.sigmoid,
     }
@@ -46,6 +46,9 @@ class CGRUCell(CRNNCell):
         cgru_kw, kw = compile_arguments(CGRUCell, kw, transitive=False)
         for k, v in cgru_kw.items():
             setattr(self, k, v)
+
+        if self.min_mini_batch and self.min_mini_batch < 2:
+            self.min_mini_batch = None
 
         filter_shape_h_candidate = self.filter_size_h + [self._num_units] * 2
         filter_shape_h_gates = deepcopy(filter_shape_h_candidate)

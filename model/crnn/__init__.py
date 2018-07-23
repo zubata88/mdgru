@@ -33,7 +33,7 @@ class CRNNCell(LayerRNNCell):
     _defaults = {
         "periodic_convolution_x": False,
         "periodic_convolution_h": False,
-        "use_bernoulli": False,
+        "use_bernoulli": {'value': False, 'help': 'Use bernoulli or gaussian distribution for dropconnect'},
         "dropconnectx": None,
         "dropconnecth": None,
         "crnn_activation": tf.nn.tanh,

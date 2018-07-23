@@ -5,6 +5,8 @@ import numpy as np
 
 from helper import argget
 from model_pytorch.mdrnn import MDGRUBlock
+from model_pytorch.mdrnn.mdgru import MDRNN
+from helper import collect_parameters, define_arguments
 from . import ClassificationModel
 import torch as th
 from model_pytorch import init_weights
@@ -53,15 +55,13 @@ class MDGRUClassification(ClassificationModel):
         """Provides prediction in the form of a discrete probability distribution per voxel"""
         pred = F.softmax(self.model(batch))
         return pred
-    #
-    # def forward(self, input):
-    #     return self.logits.forward(input)
-    #
-    # def costs(self, logits, batchlabs):
-    #     """Cross entropy cost function"""
-    #     return self.loss(logits, batchlabs)
 
     def initialize(self):
         self.model.apply(init_weights)
 
-
+    @staticmethod
+    def collect_parameters():
+        args = collect_parameters(MDGRUBlock, {})
+        args = collect_parameters(MDRNN, args)
+        args = collect_parameters(MDRNN._defaults['crnn_class']['value'], args)
+        return args

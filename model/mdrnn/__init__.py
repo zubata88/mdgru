@@ -16,13 +16,13 @@ class MDGRUNet(object):
     """Convenience class combining attributes to be used for multiple MDRNN and voxel-wise fully connected layers."""
     _defaults = {
         "add_e_bn": False,
-        "resmdgru": False,
+        "resmdgru": {'value': False, 'help': 'Add a residual connection around an MDGRU block'},
         "vwfc_activation": tf.nn.tanh,
     }
 
     def __init__(self, data, target, dropout, kw):
         super(MDGRUNet, self).__init__()
-        mdrnn_net_kw, kw = compile_arguments(self.__class__, kw, transitive=False)
+        mdrnn_net_kw, kw = compile_arguments(MDGRUNet, kw, transitive=False)
         for k, v in mdrnn_net_kw.items():
             setattr(self, k, v)
         self.mdrnn_kw, kw = compile_arguments(MDRNN, kw, transitive=True)

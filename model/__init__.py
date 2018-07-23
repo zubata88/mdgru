@@ -3,7 +3,7 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import tensorflow as tf
 import numpy as np
-from helper import argget
+from helper import argget, compile_arguments
 import copy
 from tensorflow.python import pywrap_tensorflow
 import logging
@@ -195,11 +195,17 @@ def batch_norm(x, name_scope, training, epsilon=1e-3, decay=0.999, bias=True, m=
 
 class Model(object):
     """Abstract Model class"""
+    _defaults = {
+        "model_seed": {'value': 12345678, 'help': "Override default model initialization random seed"},
+    }
 
     def __init__(self, data, target, dropout, kw):
         print("model")
+        model_kw, kw = compile_arguments(Model, kw, transitive=False)
+        for k, v in model_kw.items():
+            setattr(self, k, v)
         self.origargs = copy.copy(kw)
-        self.model_seed = argget(kw, 'model_seed', 12345678)
+        # self.model_seed = argget(kw, 'model_seed', 12345678)
         tf.set_random_seed(self.model_seed)
         super(Model, self).__init__(data, target, dropout, kw)
         self.training = argget(kw, "training", tf.constant(True))
@@ -246,9 +252,9 @@ class Model(object):
     def set_allowed_gpu_memory_fraction(gpuboundfraction):
         tf.GPUOptions(per_process_gpu_memory_fraction=gpuboundfraction)
 
+
 class ClassificationModel(Model):
     """Abstract model class. """
-
     def __init__(self, data, target, dropout, kw):
         print("classificationmodel")
         super(ClassificationModel, self).__init__(data, target, dropout, kw)
@@ -257,8 +263,6 @@ class ClassificationModel(Model):
         self.learning_rate = argget(kw, "learning_rate", 0.001)
         self.momentum = argget(kw, "momentum", 0.9)
         self.nclasses = argget(kw, "nclasses", 2)
-
-
 
 
 class RegressionModel(Model):

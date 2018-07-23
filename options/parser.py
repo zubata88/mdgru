@@ -2,8 +2,6 @@ import argparse
 import os
 import numpy as np
 import copy
-DROP_RATE_DEFAULT = 0.5
-MINMINIBATCH_DEFAULT = 16
 BATCHSIZE_DEFAULT = 1
 EACH_WITH_LABELS_DEFAULT = 0
 GPU_DEFAULT = [0]
@@ -17,7 +15,7 @@ GPUBOUNDFRACTION_DEFAULT = 1
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description="evaluate any data with given parameters")
+    parser = argparse.ArgumentParser(description="evaluate any data with given parameters", add_help=False)
 
     data_parameters = parser.add_argument_group('data parameters')
     data_parameters.add_argument('--datapath', help='path where training, validation and testing and experiments folder'
@@ -70,31 +68,11 @@ def get_parser():
     sampling_parameters.add_argument('--num_threads', default=1, type=int,
                                      help='specify how many threads should be run for threaded version of griddatacollection')
 
-    model_parameters = parser.add_argument_group('model parameters')
-    model_parameters.add_argument('-d', '--droprate', default=DROP_RATE_DEFAULT, type=float,
-                                  help='drop rate used for dropconnect')
-    model_parameters.add_argument('--bnx', action="store_true", help="batchnorm over input x in rnn")
-    model_parameters.add_argument('--bnh', action="store_true", help="batchnorm over input h in rnn")
-    model_parameters.add_argument('--bna', action="store_true", help="batchnorm in activation of ht")
-    model_parameters.add_argument('--bne', action="store_true", help="batchnorm after matmul after mdrnn")
-    model_parameters.add_argument('--minminibatch', type=int, default=MINMINIBATCH_DEFAULT,
-                                  help="batchnorm number of mini batches to average over")
-    model_parameters.add_argument('--resx', action="store_true", help="residual learning for each input slice x")
-    model_parameters.add_argument('--resh', action="store_true", help="residual learning for each prev output h")
-    model_parameters.add_argument('--mdgrures', action="store_true", help="residual learning for each mdrnn as a whole")
-    model_parameters.add_argument('--modelname', default=None, help='override modelname')
-    model_parameters.add_argument('--dontsumcgrus', action="store_true",
-                                  help="use rnn results individually instead of as a sum")
-    model_parameters.add_argument('--putrback', action="store_true", help="use original gru formulation")
-    model_parameters.add_argument('--model_seed', type=int, default=None, help='set a seed such that all models will create reproducible initializations')
-    model_parameters.add_argument('--legacy_cgru_addition', action="store_true", help='allows to load old models despite new code. Only use when you know what you`re doing')
-    model_parameters.add_argument('--filter_size_x', default=None, type=int, nargs="+", help='filter sizes for each dimension for the input')
-    model_parameters.add_argument('--filter_size_h', default=None, type=int, nargs="+", help='filter sizes for each dimension for the previous output')
 
     execution_parameters = parser.add_argument_group('execution parameters')
-    execution_parameters.add_argument('--nodropconnecth', action="store_true", help="dropconnect on prev output")
-    execution_parameters.add_argument('--nodropconnectx', action="store_true", help="no dropconnect on input slice")
-    execution_parameters.add_argument('--use_dropconnect_on_state', action="store_true", help="apply dropconnect also on the weights that are used to form the proposal in CGRU")
+    # execution_parameters.add_argument('--nodropconnecth', action="store_true", help="dropconnect on prev output")
+    # execution_parameters.add_argument('--nodropconnectx', action="store_true", help="no dropconnect on input slice")
+    # execution_parameters.add_argument('--use_dropconnect_on_state', action="store_true", help="apply dropconnect also on the weights that are used to form the proposal in CGRU")
     execution_parameters.add_argument('--gpu', type=int, nargs="+", default=GPU_DEFAULT, help="set gpu")
     execution_parameters.add_argument('--iterations', type=int, help="set num iterations, overrides epochs if set")
     execution_parameters.add_argument('--epochs', type=int, default=EPOCHS_DEFAULT, help="set num epochs")
@@ -262,31 +240,12 @@ def clean_datacollection_args(args):
 
 
 def clean_eval_args(args):
-    def harmonize_filter_size(fs, w):
-        if fs is None:
-            return [7 for _ in w]
-        if len(fs) != len(w):
-            if len(fs) == 1:
-                fs = [fs[0] for _ in w]
-            elif fs is None:
-                fs = [7 for _ in w]
-            else:
-                print('Filter size and number of dimensions for subvolume do not match!')
-                exit(0)
-        return fs
-
-
-    filter_size_x = harmonize_filter_size(args.filter_size_x, args.windowsize)
-    filter_size_h = harmonize_filter_size(args.filter_size_h, args.windowsize)
 
     args_eval = {"batch_size": args.batchsize,
                  "learning_rate": args.learningrate,
                  "whiten": False,
-                 "min_mini_batch": None if args.minminibatch < 2 else args.minminibatch,
-                 "dropout_rate": args.droprate,
-                 "use_dropconnect_h": 1 - args.nodropconnecth,
-                 "use_dropconnect_x": 1 - args.nodropconnectx,
-                 "nclasses": args.nclasses,
+                 "dropout_rate": args.dropout_rate,
+                 # "nclasses": args.nclasses,
                  'validate_same': True,
                  'use_tensorboard': 1-args.dont_use_tensorboard,
                  'swap_memory': args.swap_memory,
@@ -296,24 +255,15 @@ def clean_eval_args(args):
                  'evaluate_uncertainty_dropout': args.dropout_during_evaluation,
                  'evaluate_uncertainty_saveall': args.save_individual_evaluations,
                  'only_save_labels': args.only_save_labels,
-                 'filter_size_x': filter_size_x,
-                 'filter_size_h': filter_size_h,
-                 'model_seed': args.model_seed,
-                 'gpu': args.gpu
+                 'gpu': args.gpu,
+                 'namespace': args.namespace
                  }
 
     if not args.dont_use_tensorboard and args.image_summaries_each is not None:
         args_eval['image_summaries_each'] = args.image_summaries_each
     argvars = vars(args)
     arglookup = {
-        'learning_rate': 'learningrate',
         'batch_size': 'batchsize',
-        'add_x_bn': 'bnx', 'add_h_bn': 'bnh', 'add_e_bn': 'bne', 'add_a_bn': 'bna',
-        'resmdgru': 'mdgrures',
-        'resgrux': 'resx',
-        'resgruh': 'resh',
-        'return_cgru_results': 'dontsumcgrus',
-        'put_r_back': 'putrback',
     }
     for k, v in arglookup.items():
         if v in argvars.keys():
@@ -322,6 +272,9 @@ def clean_eval_args(args):
         args_eval['only_cpu'] = args.cpu
     if args.gpuboundfraction is not None:
         args_eval['gpubound'] = args.gpuboundfraction
+    if args.ckpt is not None and not args.use_pytorch:
+        from model import Model
+        args_eval['namespace'] = Model.get_model_name_from_ckpt(args.ckpt[0])
     return args_eval
 
 

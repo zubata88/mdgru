@@ -16,28 +16,28 @@ class CGRUCell(CRNNCell):
     This class processes n-d data along the last dimension using a gated recurrent unit, which uses n-1 d convolutions
     on its path along that last dimension to gather context from input and last state to produce the new state.
     Property defaults contains defaults for all properties of a CGRUCell that are the same for one MDGRU.
-    :param add_x_bn: Enables batch normalization on inputs for gates
-    :param add_h_bn: Enables batch normalization on last state for gates
-    :param add_a_bn: Enables batch normalization for the candidate (both input and last state)
-    :param resgrux: Enables residual learning on weighted input
-    :param resgruh: Enables residual learning on weighted previous output / state
+    # :param add_x_bn: Enables batch normalization on inputs for gates
+    # :param add_h_bn: Enables batch normalization on last state for gates
+    # :param add_a_bn: Enables batch normalization for the candidate (both input and last state)
+    # :param resgrux: Enables residual learning on weighted input
+    # :param resgruh: Enables residual learning on weighted previous output / state
     :param use_dropconnect_on_state: Should dropconnect be used also for the candidate computation?
     :param put_r_back: Use reset gate r's position of original gru formulation, which complicates computation.
     :param min_mini_batch: Emulation
     :param gate: Defines activation function to be used for gates
     """
     _defaults = {
-        "add_x_bn": False,
-        "add_h_bn": False,
-        "add_a_bn": False,
-        "resgrux": False,
-        "resgruh": False,
-        "put_r_back": False,
-        "use_dropconnect_on_state": False,
-        "min_mini_batch": False,
+        # "add_x_bn": False,
+        # "add_h_bn": False,
+        # "add_a_bn": False,
+        # "resgrux": False,
+        # "resgruh": False,
+        "put_r_back": {'value': False, 'help': 'Place reset gate at its original location, as in the original GRU'},
+        "use_dropconnect_on_state": {'value': False, 'help': 'Apply dropconnect regularization also to the proposal, not only the gates'},
+        # "min_mini_batch": False,
         # "istraining": th.constant(True),
-        "gate": th.sigmoid,
-        "learnable_state": False,
+        "gate": {'value': th.sigmoid, 'help': 'Gate activation function to use'},
+        # "learnable_state": False,
         "start_state": None
     }
 
@@ -78,8 +78,8 @@ class CGRUCell(CRNNCell):
             if self.dropconnectx is not None:
                 self.register_buffer("dropconnect_x_candidate", th.zeros_like(self.filter_x_candidate))
 
-        if self.learnable_state:
-            raise Exception("this is not yet supported")
+        # if self.learnable_state:
+        #     raise Exception("this is not yet supported")
         # else:
         #     self.initial_state = th.Tensor(*self.)
         # self.reset_parameters()
