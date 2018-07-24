@@ -200,23 +200,24 @@ class Model(object):
     }
 
     def __init__(self, data, target, dropout, kw):
+        self.origargs = copy.copy(kw)
         print("model")
         model_kw, kw = compile_arguments(Model, kw, transitive=False)
         for k, v in model_kw.items():
             setattr(self, k, v)
-        self.origargs = copy.copy(kw)
+
         # self.model_seed = argget(kw, 'model_seed', 12345678)
         tf.set_random_seed(self.model_seed)
         super(Model, self).__init__(data, target, dropout, kw)
         self.training = argget(kw, "training", tf.constant(True))
         self.global_step = tf.Variable(0, name="global_step", trainable=False)
         self.use_tensorboard = argget(kw, "use_tensorboard", True)
-
-        if argget(kw, "whiten", False):
-            self.data = batch_norm(data, "bn", self.training, m=32)
-        else:
-            self.data = data
-        pass
+        #
+        # if argget(kw, "whiten", False):
+        #     self.data = batch_norm(data, "bn", self.training, m=32)
+        # else:
+        self.data = data
+        # pass
         self.dimensions = argget(kw, "dimensions", None)
 
     def prediction(self):
@@ -260,7 +261,7 @@ class ClassificationModel(Model):
         super(ClassificationModel, self).__init__(data, target, dropout, kw)
         self.target = target
         self.dropout = dropout
-        self.learning_rate = argget(kw, "learning_rate", 0.001)
+        self.learning_rate = argget(kw, "learning_rate", 1)
         self.momentum = argget(kw, "momentum", 0.9)
         self.nclasses = argget(kw, "nclasses", 2)
 

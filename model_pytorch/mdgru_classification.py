@@ -3,7 +3,7 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import numpy as np
 
-from helper import argget
+from helper import argget, compile_arguments
 from model_pytorch.mdrnn import MDGRUBlock
 from model_pytorch.mdrnn.mdgru import MDRNN
 from helper import collect_parameters, define_arguments
@@ -65,3 +65,14 @@ class MDGRUClassification(ClassificationModel):
         args = collect_parameters(MDRNN, args)
         args = collect_parameters(MDRNN._defaults['crnn_class']['value'], args)
         return args
+
+    @staticmethod
+    def compile_arguments(kw):
+        block_kw, kw = compile_arguments(MDGRUBlock, kw, transitive=True)
+        mdrnn_kw, kw = compile_arguments(MDRNN, kw, transitive=True)
+        crnn_kw, kw = compile_arguments(MDRNN._defaults['crnn_class']['value'], kw, transitive=True)
+        new_kw = {}
+        new_kw.update(crnn_kw)
+        new_kw.update(mdrnn_kw)
+        new_kw.update(block_kw)
+        return new_kw, kw

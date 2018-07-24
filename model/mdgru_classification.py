@@ -4,7 +4,7 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 import numpy as np
 import tensorflow as tf
 
-from helper import argget, collect_parameters, define_arguments
+from helper import argget, collect_parameters, define_arguments, compile_arguments
 from model import save_summary_for_nd_images
 from model.mdrnn import MDGRUNet
 from model.mdrnn.mdgru import MDRNN
@@ -92,3 +92,14 @@ class MDGRUClassification(ClassificationModel, MDGRUNet):
         args = collect_parameters(MDRNN, args)
         args = collect_parameters(MDRNN._defaults['crnn_class'], args)
         return args
+
+    @staticmethod
+    def compile_arguments(kw):
+        # block_kw, kw = compile_arguments(MDGRUBlock, kw, transitive=True)
+        mdrnn_kw, kw = compile_arguments(MDRNN, kw, transitive=True)
+        crnn_kw, kw = compile_arguments(MDRNN._defaults['crnn_class'], kw, transitive=True)
+        new_kw = {}
+        new_kw.update(crnn_kw)
+        new_kw.update(mdrnn_kw)
+        # new_kw.update(block_kw)
+        return new_kw, kw

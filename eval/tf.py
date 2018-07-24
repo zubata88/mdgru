@@ -4,9 +4,10 @@ import logging
 import os
 import pickle
 from tensorflow.python import pywrap_tensorflow
-from helper import argget, check_if_kw_empty
+from helper import argget, check_if_kw_empty, compile_arguments
 import numpy as np
 import copy
+
 
 class SupervisedEvaluationTensorflow(SupervisedEvaluation):
     '''Base class for all evaluation classes. Child classes implement various
@@ -17,21 +18,27 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
         saver: tensorflow saver to save or load the model data.
     
     '''
+    _defaults = {'use_tensorboard': {'value': True, 'help': 'Dont use tensorboard', 'invert_meaning': 'dont_'},
+                 'image_summaries_each': {'value': 100,
+                                          'help': 'Store image summaries in tensorboard every # iterations'},
+                 'restore_optimistically': False,  # probably never going to use this again!
+                 'only_cpu': {'value': False, 'help': 'Only use cpu'},
+                 'gpubound': {'value': 1.0, 'name': 'gpu_bound_fraction',
+                              'help': 'manage how much of the memory of the gpu can be used', 'type': float}
+                 }
+
     def __init__(self, model, collectioninst, kw):
         super(SupervisedEvaluationTensorflow, self).__init__(model, collectioninst, kw)
-        self.use_tensorboard = argget(kw, "use_tensorboard", True, keep=True)
-        if self.use_tensorboard:
-            self.image_summaries_each = argget(kw, 'image_summaries_each', 100)
+        eval_kw, kw = compile_arguments(SupervisedEvaluationTensorflow, kw, transitive=False)
+        for k, v in eval_kw.items():
+            setattr(self, k, v)
 
-        self.restore_optimistically = argget(kw, 'restore_optimistically', False)
-
-        self.only_cpu = argget(kw, 'only_cpu', False)
-        self.gpubound = argget(kw, 'gpubound', 1)
         if self.only_cpu:
             self.session_config = tf.ConfigProto(device_count={'GPU': 0})
         else:
             if self.gpubound < 1:
-                self.session_config = tf.ConfigProto(gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=self.gpubound))
+                self.session_config = tf.ConfigProto(
+                    gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=self.gpubound))
             else:
                 self.session_config = tf.ConfigProto()
 
@@ -39,9 +46,9 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
             self.training = tf.placeholder(dtype=tf.bool)
             self.dropout = tf.placeholder(dtype=tf.float32)
             self.data = tf.placeholder(dtype=tf.float32, shape=self.trdc.get_shape())
-            if type(self.nclasses) == list:  # for location classification
+            if 'nclasses' in kw and type(kw['nclasses']) == list:  # for location classification
                 self.target = tf.placeholder(dtype=tf.float32,
-                                             shape=self.trdc.get_target_shape()[:-1] + [np.sum(self.nclasses)])
+                                             shape=self.trdc.get_target_shape()[:-1] + [np.sum(kw['nclasses'])])
             else:
                 self.target = tf.placeholder(dtype=tf.float32,
                                              shape=self.trdc.get_target_shape())
@@ -58,9 +65,10 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
                     self.test_training = tf.placeholder(dtype=tf.bool)
                     self.test_dropout = tf.placeholder(dtype=tf.float32)
                     self.test_data = tf.placeholder(dtype=tf.float32, shape=self.tedc.get_shape())
-                    if type(self.nclasses) == list:  # for location classification
+                    if 'nclasses' in kw and type(kw['nclasses']) == list:  # for location classification
                         self.test_target = tf.placeholder(dtype=tf.float32,
-                                                          shape=self.tedc.get_target_shape()[:-1] + [np.sum(self.nclasses)])
+                                                          shape=self.tedc.get_target_shape()[:-1] + [
+                                                              np.sum(kw['nclasses'])])
                     else:
                         self.test_target = tf.placeholder(dtype=tf.float32,
                                                           shape=self.tedc.get_target_shape())
@@ -146,7 +154,7 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
     def _save(self, f):
         globalstep = self.get_globalstep()
         self.saver.save(self.sess, f, global_step=self.model.global_step)
-        return f + '-{}'.format(globalstep) #checkpointfilename
+        return f + '-{}'.format(globalstep)  # checkpointfilename
 
     def _optimistic_restore(self, session, save_file):
         reader = tf.train.NewCheckpointReader(save_file)

@@ -16,7 +16,7 @@ from threading import Thread
 
 import numpy as np
 
-from helper import argget, force_symlink, notify_user
+from helper import argget, force_symlink, notify_user, compile_arguments
 
 try:
     import _pickle as pickle  # cPickle is now _pickle (TODO: CHECK)
@@ -29,15 +29,87 @@ ignore_signal = False
 
 class Runner(object):
     ignore_signal = True
+    _defaults = {
+        'test_each': {'value': 2500, 'type': int, 'help': 'validate after # training iterations', 'name': 'validate_each'},
+        'save_each': {'value': None, 'type': int, 'help': 'save after # training iterations'},
+        'plot_each': {'value': 2500, 'type': int},  # , 'help': 'plot each # training iterations'},
+        'test_size': {'value': 1},
+        'test_iters': {'value': 1, 'type': int,
+                       'help': 'number of validations to perform on random samples. Only makes sense if full_image_validation is not set',
+                       'name': 'validation_iterations'},
+        'test_first': {'value': False, 'help':'Perform validation on the untrained model as well.', 'name': 'validate_first'},
+        'perform_full_image_validation': {'value': True, 'invert_meaning': 'dont_', 'help': 'Use random samples instead of the complete validation images'},
+        'save_validation_results': {'value': True, 'invert_meaning': 'dont_', 'help': 'Do not save validation results on the disk' },
+        'notifyme': {'value': None, 'nargs':'?', 'type':str,
+                                  'help':'Experimental feature that when something goes amiss, '
+                                       'this telegram chat id will be used to inform the '
+                                       'respective user of the error. This requires a file called config.json'
+                                       ' in the same folder as this file, containing a simple dict structure as'
+                                       ' follows: {"chat_id": CHATID, "token": TOKEN}, where CHATID and TOKEN '
+                                       'have to be created with Telegrams BotFather. The chatid from config can be '
+                                       'overriden using a parameter together with this option.'},
+        'results_to_csv': {'value': True, 'help': 'Do not create csv with validation results'},
+        'checkpointfiles': {'value': None, 'help': 'provide checkpointfile for this template. If no modelname is provided, '
+                                       'we will infer one from this file. Multiple files are only allowed if '
+                                       'only_test is set. If the same number of optionnames are provided, they will '
+                                       'be used to name the different results. If only one optionname is provided, they '
+                                       'will be numbered in order and the checkpoint filename will be included in the '
+                                       'result file.', 'nargs':'+', 'name':'ckpt'},
+        'epochs': {'value': 1, 'help':'Number of times through the training dataset. Cant be used together with "iterations"'},
+        'iterations': {'value': None, 'type': int, 'help': 'Number of iterations to perform. Can only be set and makes sense if epochs is 1'},
+        'only_test': {'value': False, 'help': 'Only perform testing. Requires at least one ckpt'},
+        'only_train': {'value': False, 'help': 'Only perform training and validation.'},
+        'experimentloc': os.path.expanduser('~/experiments'),
+        'optionname': {'value': None, 'nargs':'+', 'help':'name for chosen set of options, if multiple checkpoints provided, there needs to be 1 or the same number of names here'},
+    }
+
 
     def __init__(self, evaluationinstance, **kw):
         self.origargs = copy.deepcopy(kw)
+        runner_kw, kw = compile_arguments(Runner, kw, transitive=False)
+        for k, v in runner_kw.items():
+            setattr(self, k, v)
+
+        if self.save_each is None:
+            self.save_each = self.test_each
+
+        if self.notifyme:
+            try:
+                import json
+                data = json.load(open('../config.json'))
+                nm = dict(chat_id=data['chat_id'], token=data['token'])
+                try:
+                    nm['chat_id'] = int(self.notifyme)
+                except Exception:
+                    pass
+                finally:
+                    self.notifyme = nm
+            except:
+                # we give up
+                print('notifyme id not understood')
+
         # prelogging:
-        experiments = argget(kw, 'experimentloc', os.path.expanduser('~/experiments'))
+        # experiments = argget(kw, 'experimentloc', os.path.expanduser('~/experiments'))
         self.runfile = [f[1] for f in inspect.stack() if re.search("RUN.*\.py", f[1])][0]
 
-        self.experiments_postfix = argget(kw, 'experiments_postfix', "")
-        experiments_nots = os.path.join(experiments,
+        if self.optionname is None:
+            self.optionname = [hash(self.fullparameters)]
+        elif not isinstance(self.optionname, list):
+            self.optionname = [self.optionname]
+
+        # if len(self.optionname) == 1 and len(self.checkpointfiles) > 1:
+        #     self.optionname = [self.optionname[0] for _ in self.checkpointfiles]
+        # if len(self.optionname) != len(self.checkpointfiles):
+        #     raise Exception('optionname and checkpointfiles need to be of the same length!')
+        self.estimatefilenames = self.optionname
+        if isinstance(self.optionname, list):
+            pf = "-".join(self.optionname)
+            if len(pf) > 40:
+                pf = pf[:39] + "..."
+        else:
+            pf = self.optionname
+        self.experiments_postfix = '_' + pf
+        experiments_nots = os.path.join(self.experimentloc,
                                         '{}'.format(
                                             self.runfile[self.runfile.index("RUN_") + 4:-3] + self.experiments_postfix))
         self.experiments = os.path.join(experiments_nots, str(int(time.time())))
@@ -50,7 +122,6 @@ class Runner(object):
         fh = logging.FileHandler(logfile)
         fh.setLevel(argget(kw, 'logfileloglvl', logging.DEBUG))
         fh.setFormatter(formatter)
-
 
         ch = logging.StreamHandler()
         ch.setFormatter(formatter)
@@ -73,44 +144,56 @@ class Runner(object):
             logging.getLogger('data').info('valdc arg {}:{}'.format(k, self.ev.valdc.origargs[k]))
         for k in self.ev.model.origargs:
             logging.getLogger('model').info('arg {}:{}'.format(k, self.ev.model.origargs[k]))
-
-        self.episodes = argget(kw, 'episodes', ['train', 'evaluate'])
-        self.epochs = argget(kw, 'epochs', 1)
-        self.its_per_epoch = argget(kw, 'its_per_epoch', self.ev.trdc.get_data_dims()[0] // self.ev.batch_size)
-        self.checkpointfiles = argget(kw, 'checkpointfiles', None)
-        self.estimatefilenames = argget(kw, 'estimatefilenames', None)
+        if self.only_train or (self.ev.trdc == self.ev.tedc and self.ev.valdc != self.ev.trdc):
+            self.episodes = ['train']
+        elif self.only_test or (self.ev.trdc == self.ev.tedc and self.ev.valdc == self.ev.tedc):
+            self.episodes = ['evaluate']
+        else:
+            self.episodes = ['train', 'evaluate']
+        # self.episodes = argget(kw, 'episodes', ['train', 'evaluate'])
+        # self.epochs = argget(kw, 'epochs', 1)
+        if self.iterations is None:
+            self.its_per_epoch = self.ev.trdc.get_data_dims()[0] // self.ev.batch_size
+        else:
+            self.epochs = 0
+            self.its_per_epoch = self.iterations
+        # self.its_per_epoch = argget(kw, 'its_per_epoch', self.ev.trdc.get_data_dims()[0] // self.ev.batch_size)
+        # self.checkpointfiles = argget(kw, 'checkpointfiles', None)
+        self.estimatefilenames = self.optionname#argget(kw, 'estimatefilenames', None)
         if isinstance(self.checkpointfiles, list):
             if 'train' in self.episodes and len(self.checkpointfiles) > 1:
                 logging.getLogger('runner').error('Multiple checkpoints are only allowed if only testing is performed.')
                 exit(1)
         else:
             self.checkpointfiles = [self.checkpointfiles]
-        if not isinstance(self.estimatefilenames, list):
-           self.estimatefilenames = [self.estimatefilenames]
+        # if not isinstance(self.estimatefilenames, list):
+        #     self.estimatefilenames = [self.estimatefilenames]
         if len(self.checkpointfiles) != len(self.estimatefilenames):
-           if len(self.estimatefilenames) != 1:
-               logging.getLogger('runner').error('Optionnames must match number of checkpoint files or have length 1!')
-               exit(1)
-           else:
-               self.estimatefilenames = [self.estimatefilenames[0] + "-{}-{}".format(i, os.path.basename(c))
-                                         for i, c in enumerate(self.checkpointfiles)]
+            if len(self.estimatefilenames) != 1:
+                logging.getLogger('runner').error('Optionnames must match number of checkpoint files or have length 1!')
+                exit(1)
+            else:
+                self.estimatefilenames = [self.estimatefilenames[0] + "-{}-{}".format(i, os.path.basename(c))
+                                          for i, c in enumerate(self.checkpointfiles)]
 
         self.plotfolder = os.path.join(self.experiments, 'plot')
         self.plot_scaling = argget(kw, 'plot_scaling', 1e-8)
-        self.display_each = argget(kw, 'display_each', 100)
-        self.test_each = argget(kw, 'test_each', self.display_each)
-        self.save_each = argget(kw, 'save_each', self.display_each)
-        self.plot_each = argget(kw, 'plot_each', self.display_each)
-        self.test_size = argget(kw, 'test_size', 1)  # batch_size for tests
-        self.test_iters = argget(kw, 'test_iters', 1)
-        self._test_pick_iteration = argget(kw, 'test_first', ifset=0, default=self.test_each - 1)
-        self.perform_full_image_validation = argget(kw, 'perform_full_image_validation', 1)
-        self.show_testing_results = argget(kw, 'show_testing_results', False)
+
+
+        # self.display_each = argget(kw, 'display_each', 100)
+        # self.test_each = argget(kw, 'test_each', 100)
+        # self.save_each = argget(kw, 'save_each', self.test_each)
+        # self.plot_each = argget(kw, 'plot_each', self.test_each)
+        # self.test_size = argget(kw, 'test_size', 1)  # batch_size for tests
+        # self.test_iters = argget(kw, 'test_iters', 1)
+        self._test_pick_iteration = self.test_each-1 if not self.test_first else 0
+        # self._test_pick_iteration = argget(kw, 'test_first', ifset=0, default=self.test_each - 1)
+        # self.perform_full_image_validation = argget(kw, 'perform_full_image_validation', 1)
+        # self.save_validation_results = argget(kw, 'show_testing_results', False)
         force_symlink(self.experiments, os.path.join(experiments_nots, "latest"))
         os.makedirs(self.plotfolder)
-        self.printIt = argget(kw, "print_testing_results", True)
-        self.notifyme = argget(kw, 'notifyme', None)
-        self.results_to_csv = argget(kw, 'results_to_csv', False)
+        # self.notifyme = argget(kw, 'notifyme', False)
+        # self.results_to_csv = argget(kw, 'results_to_csv', False)
 
         self.train_losses = []
         self.test_losses = []
@@ -156,7 +239,8 @@ class Runner(object):
             def save_all_res(cachefolder, rr, dc, tname):
                 for rit, r in enumerate(rr):
                     if showIt:
-                        dc.save(r[2], os.path.join(cachefolder, '{}-{}-{}-pred'.format(tname, r[0], rit)), tporigin=r[1])
+                        dc.save(r[2], os.path.join(cachefolder, '{}-{}-{}-pred'.format(tname, r[0], rit)),
+                                tporigin=r[1])
                         dc.save(np.int8(np.argmax(r[2], axis=-1)),
                                 os.path.join(cachefolder, "{}-{}-{}-am".format(tname, r[0], rit)), tporigin=r[1])
                         logging.getLogger('runner').info("saved validation test files in cache")
@@ -224,12 +308,12 @@ class Runner(object):
                 self.ev.current_iteration = it
                 a = time.time()
                 loss = self.ev.train()
-                #logging.getLogger('runner').info(
+                # logging.getLogger('runner').info(
                 #    "with img loading: {} {}".format(time.time() - a, np.asarray(loss).flatten()))
                 self.train_losses.append([epoch, it, loss])
 
                 if it % self.test_each == self._test_pick_iteration:
-                    error = self.validation(showIt=self.show_testing_results, name=it)
+                    error = self.validation(showIt=self.save_validation_results, name=it)
                     self.val_losses.append([epoch, it, [e + self.plot_scaling for k, e in error.items()]])
 
                     difftime = time.time() - starttime
@@ -259,10 +343,14 @@ class Runner(object):
 
                 globalstep = self.ev.get_globalstep()
                 currenttime = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-                ckptfile = self.checkpointfiles[0] # if self.checkpointfile is a list -> adapt ckptfile
+                ckptfile = self.checkpointfiles[0]  # if self.checkpointfile is a list -> adapt ckptfile
 
                 evaluationWriter = csv.writer(csvfile)
-                evaluationWriter.writerow(['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['checkpoint', 'iteration', 'time-stamp','score','label','min','mean','median','max'])
+                evaluationWriter.writerow(
+                    ['score', 'label'] + [errors[i][0] for i in range(0, len(errors))] + ['checkpoint', 'iteration',
+                                                                                          'time-stamp', 'score',
+                                                                                          'label', 'min', 'mean',
+                                                                                          'median', 'max'])
                 for key in sorted(errors[0][1].keys()):
                     try:
                         for label in range(0, len(errors[0][1][key])):
@@ -318,7 +406,6 @@ class Runner(object):
     def run(self, **kw):
         # save this file as txt to cachefolder:
 
-
         shutil.copyfile(self.runfile, os.path.join(self.cachefolder, 'runfile.py'))
 
         if "train" in self.episodes:
@@ -329,7 +416,7 @@ class Runner(object):
                 self.train()
 
         if "test" in self.episodes or "evaluate" in self.episodes:
-            self.use_tensorboard = False # no need, since we evaluate everything anyways.
+            self.use_tensorboard = False  # no need, since we evaluate everything anyways.
             with self.ev.get_test_session() as sess:
                 self.ev.set_session(sess, self.cachefolder)
                 for est, ckpt in zip(self.estimatefilenames, self.checkpointfiles):
@@ -338,4 +425,5 @@ class Runner(object):
                     self.ev.estimatefilename = est
                     self.test()
         if self.notifyme:
-            notify_user(self.notifyme['chat_id'], self.notifyme['token'], message='{} has/have finished'.format(" and ".join(self.episodes)))
+            notify_user(self.notifyme['chat_id'], self.notifyme['token'],
+                        message='{} has/have finished'.format(" and ".join(self.episodes)))

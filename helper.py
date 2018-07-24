@@ -87,7 +87,7 @@ def argget(dt, key, default=None, keep=False, ifset=None):
     :param ifset: value override.
     :return: chosen value for key if available. Else default or ifset override.
     """
-    if key in dt:
+    if key in dt and dt[key] is not None:
         if keep:
             val = dt[key]
         else:
@@ -189,7 +189,7 @@ def counter_generator(maxim):
         pass
 
 
-def compile_arguments(cls, kw, transitive=False):
+def compile_arguments(cls, kw, transitive=False, override_static=False):
     """Extracts valid keywords for cls from given keywords and returns the resulting two dicts.
 
     :param cls: instance or class having property or attribute "_defaults", which is a dict of default parameters.
@@ -197,7 +197,10 @@ def compile_arguments(cls, kw, transitive=False):
     :param kw: the keyword dictionary to separate into valid arguments and rest
     """
     kw = copy.copy(kw)
-    new_kw = {}
+    if hasattr(cls, 'compile_arguments') and not override_static:
+        new_kw, kw = cls.compile_arguments(kw)
+    else:
+        new_kw = {}
     if transitive:
         for b in cls.__bases__:
             if hasattr(b, '_defaults'):
@@ -244,7 +247,7 @@ def define_arguments(cls, parser):
                     kw['dest'] = key
                     kw['action'] = 'store_false'
                     if 'invert_meaning' in v and not 'name' in v:
-                        propname = kw['invert_meaning'] + key
+                        propname = v['invert_meaning'] + key
                     else:
                         propname = "no_" + key
             else:

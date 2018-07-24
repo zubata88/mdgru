@@ -62,7 +62,7 @@ class Model(th.nn.Module):
         self.dimensions = argget(kw, "dimensions", None)
 
     @staticmethod
-    def get_model_name_from_ckpt(ckpt):
+    def get_model_name_from_ckpt(_):
         """returns root node name of tensorflow graph stored in checkpoint ckpt"""
         return 'default'
 
@@ -74,11 +74,10 @@ class Model(th.nn.Module):
 
 class ClassificationModel(Model):
     """Abstract model class. """
-
     def __init__(self, data, dropout, kw):
         super(ClassificationModel, self).__init__(data, dropout, kw)
         self.dropout = dropout
-        self.learning_rate = argget(kw, "learning_rate", 0.001)
+        self.learning_rate = argget(kw, "learning_rate", 1)
         self.momentum = argget(kw, "momentum", 0.9)
         self.nclasses = argget(kw, "nclasses", 2)
 

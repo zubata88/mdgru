@@ -35,13 +35,13 @@ class MDRNN(object):
 
     """
     _defaults = {
-        "use_dropconnect_x": {'value': True, 'help': "Should dropconnect be applied to the input?", 'invert': 'dont_'},
-        "use_dropconnect_h": {'value': True, 'help': "Should DropConnect be applied to the state?", 'invert': 'dont_'},
-        "swap_memory": True,
+        "use_dropconnect_x": {'value': True, 'help': "Should dropconnect be applied to the input?", 'invert_meaning': 'dont_'},
+        "use_dropconnect_h": {'value': True, 'help': "Should DropConnect be applied to the state?", 'invert_meaning': 'dont_'},
+        "swap_memory": {'value': True, 'help': "Dont switch gpu ram with cpu ram to allow for larger volumes to allow for faster processing", 'invert_meaning' : "dont_"},
         "return_cgru_results": {'value': False, 'help': 'If provided, returns cgru results as channels instead of a sum over all cgrus', 'name': 'dontsumcgrus'},
         "use_static_rnn": False,
         "no_avg_pool": True,
-        "filter_size_x": {'value':[7, 7, 7], 'help': 'filter sizes for each dimension of the input', 'type': int},
+        "filter_size_x": {'value': [7, 7, 7], 'help': 'filter sizes for each dimension of the input', 'type': int},
         "filter_size_h": {'value': [7, 7, 7], 'help': 'filter sizes for each dimension of the state', 'type': int},
         "crnn_activation": tf.nn.tanh,
         "legacy_cgru_addition": {'value': False, 'help': "results in worse weight initialization, only use if you know what you are doing!"},

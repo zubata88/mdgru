@@ -31,8 +31,8 @@ class MDRNN(th.nn.Module):
 
     """
     _defaults = {
-        "use_dropconnect_x": {'value': True, 'help': "Should dropconnect be applied to the input?", 'invert': 'dont_'},
-        "use_dropconnect_h": {'value': True, 'help': "Should DropConnect be applied to the state?", 'invert': 'dont_'},
+        "use_dropconnect_x": {'value': True, 'help': "Should Dropconnect be applied to the input?", 'invert_meaning': 'dont_'},
+        "use_dropconnect_h": {'value': True, 'help': "Should DropConnect be applied to the state?", 'invert_meaning': 'dont_'},
         # "swap_memory": True,
         "return_cgru_results": {'value': False, 'help': "Instead of summing, individual cgru channel results are concatenated."},
         "filter_size_x": {'value': [7, 7, 7], 'help': "Convolution kernel size for input."},

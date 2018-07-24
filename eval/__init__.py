@@ -15,44 +15,70 @@ from helper import argget, compile_arguments
 
 class SupervisedEvaluation(object):
     _defaults = {
-        'dropout_rate': {'value': 0.5, 'help': '"keep rate" for weights using dropconnect. The higher the value, the closer the sampled models to the full model.'},
-        'namespace': {'value': 'default', 'help': "override default model name (if no ckpt is provided). Probably not a good idea!", 'alt': ['modelname']},
+        'dropout_rate': {'value': 0.5,
+                         'help': '"keep rate" for weights using dropconnect. The higher the value, the closer the sampled models to the full model.'},
+        'namespace': {'value': 'default',
+                      'help': "override default model name (if no ckpt is provided). Probably not a good idea!",
+                      'alt': ['modelname']},
+        'only_save_labels': {'value': False, 'help': 'save only labels and no probability distributions'},
+        # 'batch_size': {'value': 1, 'help': 'determines batch size to be used during training'}
+        'validate_same': {'value': True, 'help': 'always pick other random samples for validation!',
+                          'invert_meaning': 'dont_'},
+        'evaluate_uncertainty_times': {'value': 1, 'type': int,
+                                       'help': 'Number times we want to evaluate one volume. This only makes sense '
+                                               'using a keep rate of less than 1 during evaluation (dropout_during_evaluation '
+                                               'less than 1)', 'name': 'number_of_evaluation_samples'},
+        'evaluate_uncertainty_dropout': {'value': 1.0, 'type': float,
+                                         'help': 'Keeprate of weights during evaluation. Useful to visualize uncertainty '
+                                                 'in conjunction with a number of samples per volume',
+                                         'name': 'dropout_during_evaluation'},
+        'evaluate_uncertainty_saveall': {'value': False,
+                                         'help': 'Save each evaluation sample per volume. Without this flag, only the '
+                                                 'standard deviation and mean over all samples is kept.',
+                                         'name': 'save_individual_evaluations'},
+        'show_f05': True,
+        'show_f1': True,
+        'show_f2': True,
+        'show_l2': True,
+        'show_cross_entropy': True,
+        'print_each': {'value': 1, 'help': 'print execution time and losses each # iterations'},
+        'batch_size': {'value': 1, 'help': 'Minibatchsize', 'type': int, 'name': 'batchsize', 'short': 'b'}
     }
 
     def __init__(self, model, collectioninst, kw):
 
+        self.origargs = copy.deepcopy(kw)
         eval_kw, kw = compile_arguments(SupervisedEvaluation, kw, transitive=False)
         for k, v in eval_kw.items():
             setattr(self, k, v)
 
-        self.origargs = copy.deepcopy(kw)
         self.use_tensorboard = False
-        #self.dropout_rate = argget(kw, "dropout_rate", 0.5)
+        # self.dropout_rate = argget(kw, "dropout_rate", 0.5)
         self.current_epoch = 0
         self.current_iteration = 0
         self.trdc = collectioninst["train"]
         self.tedc = collectioninst["test"]
         self.valdc = collectioninst["validation"]
-        self.nclasses = argget(kw, "nclasses", 2, keep=True)
+        # self.nclasses = argget(kw, "nclasses", 2, keep=True) #redundant, not used anymore.
         self.currit = 0
 
-        self.only_save_labels = argget(kw, "only_save_labels", False)
-        self.batch_size = argget(kw, "batch_size", 1)
-        self.validate_same = argget(kw, "validate_same", False)
-        self.evaluate_uncertainty_times = argget(kw, "evaluate_uncertainty_times", 1)
-        self.evaluate_uncertainty_dropout = argget(kw, "evaluate_uncertainty_dropout",
-                                                   1.0)  # these standard values ensure that we dont evaluate uncertainty if nothing was provided.
-        self.evaluate_uncertainty_saveall = argget(kw, "evaluate_uncertainty_saveall", False)
-        self.f05 = argget(kw, "show_f05", True)
-        self.f1 = argget(kw, "show_f1", True)
-        self.f2 = argget(kw, "show_f2", True)
-        self.l2 = argget(kw, "show_l2_loss", True)
-        self.dice = argget(kw, "show_dice", not self.f1)
-        self.cross_entropy = argget(kw, "show_cross_entropy_loss", True)
-        self.binary_evaluation = self.dice or self.f1 or self.f05 or self.f2
+        # self.only_save_labels = argget(kw, "only_save_labels", False)
+        # self.batch_size = argget(kw, "batchsize", 1)
+        # self.validate_same = argget(kw, "validate_same", False)
+        # self.evaluate_uncertainty_times = argget(kw, "evaluate_uncertainty_times", 1)
+        # self.evaluate_uncertainty_dropout = argget(kw, "evaluate_uncertainty_dropout",
+        #                                            1.0)  # these standard values ensure that we dont evaluate uncertainty if nothing was provided.
+        # self.evaluate_uncertainty_saveall = argget(kw, "evaluate_uncertainty_saveall", False)
+        # self.show_f05 = argget(kw, "show_f05", True)
+        # self.show_f1 = argget(kw, "show_f1", True)
+        # self.show_f2 = argget(kw, "show_f2", True)
+        # self.show_l2 = argget(kw, "show_l2_loss", True)
+        self.show_dice = argget(kw, "show_dice", not self.show_f1)
+        # self.show_cross_entropy = argget(kw, "show_cross_entropy_loss", True)
+        self.binary_evaluation = self.show_dice or self.show_f1 or self.show_f05 or self.show_f2
         self.estimatefilename = argget(kw, "estimatefilename", "estimate")
-        self.print_each = argget(kw, 'print_each', 1)
-        self.gpu = argget(kw, "gpu", 0)
+        # self.print_each = argget(kw, 'print_each', 1)
+        self.gpu = argget(kw, "gpus", [0])
         self.get_train_session = lambda: self
         self.get_test_session = lambda: self
 
@@ -95,11 +121,11 @@ class SupervisedEvaluation(object):
         end_time = time.time()
         if (self.currit % self.print_each == 0):
             logging.getLogger("eval").info("it: {}, time: [i/o: {}, processing: {}, all: {}], loss: {}"
-                                       .format(self.currit,
-                                               np.round(time_after_loading - start_time, 6),
-                                               np.round(end_time - time_after_loading, 6),
-                                               np.round(end_time - start_time, 6),
-                                               loss))
+                                           .format(self.currit,
+                                                   np.round(time_after_loading - start_time, 6),
+                                                   np.round(end_time - time_after_loading, 6),
+                                                   np.round(end_time - start_time, 6),
+                                                   loss))
         return loss
 
     def test_scores(self, pred, ref):
@@ -113,29 +139,30 @@ class SupervisedEvaluation(object):
 
         res = {}
         eps = 1e-8
+        nclasses = self.model.nclasses
         if self.binary_evaluation:
             enc_ref = np.argmax(ref, -1)
-            enc_pred = self.nclasses * np.argmax(pred, -1)
+            enc_pred = nclasses * np.argmax(pred, -1)
             enc_both = enc_ref + enc_pred
-            bins = np.bincount(enc_both.flatten(), minlength=self.nclasses ** 2).reshape((self.nclasses, self.nclasses))
-        if self.dice:
+            bins = np.bincount(enc_both.flatten(), minlength=nclasses ** 2).reshape((nclasses, nclasses))
+        if self.show_dice:
             res["dice"] = [bins[c, c] * 2 / (np.sum(bins, -1)[c] + np.sum(bins, -2)[c] + eps) for c in
-                           range(self.nclasses)]
-        if self.f05 or self.f2:
-            precision = np.array([bins[c, c] / (np.sum(bins, -1)[c] + eps) for c in range(self.nclasses)])
-            recall = np.array([bins[c, c] / (np.sum(bins, -2)[c] + eps) for c in range(self.nclasses)])
-        if self.f05:
+                           range(nclasses)]
+        if self.show_f05 or self.show_f2:
+            precision = np.array([bins[c, c] / (np.sum(bins, -1)[c] + eps) for c in range(nclasses)])
+            recall = np.array([bins[c, c] / (np.sum(bins, -2)[c] + eps) for c in range(nclasses)])
+        if self.show_f05:
             beta2 = 0.5 ** 2
             res["f05"] = (1 + beta2) * precision * recall / ((beta2 * precision) + recall + eps)
-        if self.f1:
+        if self.show_f1:
             res["f1"] = [bins[c, c] * 2 / (np.sum(bins, -2)[c] + np.sum(bins, -1)[c] + eps) for c in
-                         range(self.nclasses)]
-        if self.f2:
+                         range(nclasses)]
+        if self.show_f2:
             beta2 = 2 ** 2
             res["f2"] = (1 + beta2) * precision * recall / (beta2 * precision + recall + eps)
-        if self.cross_entropy:
+        if self.show_cross_entropy:
             res["cross_entropy"] = np.mean(np.sum(ref * np.log(pred + eps), -1))
-        if self.l2:
+        if self.show_l2:
             res["l2"] = np.mean(np.sum((ref - pred) ** 2, -1))
         return res
 
@@ -170,7 +197,7 @@ class SupervisedEvaluation(object):
                 'evaluating file {} of shape {} with w {} and p {}'.format(file, shape, w, p))
             if len(shape) > 3:
                 shape = np.asarray([s for s in shape if s > 1])
-            res = np.zeros(list(shape) + [self.nclasses], dtype=np.float32)
+            res = np.zeros(list(shape) + [self.model.nclasses], dtype=np.float32)
             if self.evaluate_uncertainty_times > 1:
                 uncertres = np.zeros(res.shape)
                 if self.evaluate_uncertainty_saveall:
@@ -233,7 +260,7 @@ class SupervisedEvaluation(object):
                         dc.save(allres[j], os.path.join(file, "iter{}-".format(j) + self.estimatefilename),
                                 tporigin=file)
             if np.min(p) < 0:
-                res[np.where(np.sum(res, -1) < 1e-8)] = [1] + [0 for _ in range(self.nclasses - 1)]
+                res[np.where(np.sum(res, -1) < 1e-8)] = [1] + [0 for _ in range(self.model.nclasses - 1)]
             res /= np.sum(res, -1).reshape(list(res.shape[:-1]) + [1])
             # evaluate accuracy...
             name = os.path.split(file)
