@@ -29,11 +29,23 @@ def run_mdgru(args=None):
         from model.mdgru_classification import MDGRUClassification
         from eval.tf import SupervisedEvaluationTensorflow
         evalclass = SupervisedEvaluationTensorflow
+        from model.mdgru_classification import MDGRUClassification
+        from model.mdgru_classification import MDGRUClassificationWithDiceLoss
+        from model.mdgru_classification import MDGRUClassificationWithGeneralizedDiceLoss
 
     # Set the necessary classes
     dc = GridDataCollection
     tdc = dc if args.nonthreaded else ThreadedGridDataCollection
-    mclassification = MDGRUClassification
+    if args.dice_generalized:
+        if args.use_pytorch:
+            raise Exception('diceloss is not yet implemented for pytorch')
+        mclassification = MDGRUClassificationWithGeneralizedDiceLoss
+    elif args.dice_loss_label != None or args.dice_autoweighted:
+        if args.use_pytorch:
+            raise Exception('diceloss is not yet implemented for pytorch')
+        mclassification = MDGRUClassificationWithDiceLoss
+    else:
+        mclassification = MDGRUClassification
     if args.gpuboundfraction != 1:
         mclassification.set_allowed_gpu_memory_fraction(args.gpuboundfraction)
 
@@ -74,6 +86,7 @@ def run_mdgru(args=None):
 
     # Set up model and evaluation
     args_eval = clean_eval_args(args)
+
     args_eval["namespace"] = modelname
 
     if args_tr is not None:

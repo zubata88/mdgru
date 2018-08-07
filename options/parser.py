@@ -59,6 +59,8 @@ def get_parser():
     sampling_parameters.add_argument('--deformation', type=int, nargs='+', help="deformation array")
     sampling_parameters.add_argument('--deformSigma', type=float, nargs='+',
                                      help="standard deformation of low resolution deformation grid.")
+    sampling_parameters.add_argument('--truncated_deform', action="store_true", help="deformations with displacements of maximum 3 times gausssigma in each spatial direction")
+
     sampling_parameters.add_argument('--nonthreaded', action="store_true",
                                      help="disallow threading during training to preload data before the processing")
     sampling_parameters.add_argument('--nonlazy', action="store_true", help="throw everything into memory")
@@ -90,6 +92,10 @@ def get_parser():
     model_parameters.add_argument('--legacy_cgru_addition', action="store_true", help='allows to load old models despite new code. Only use when you know what you`re doing')
     model_parameters.add_argument('--filter_size_x', default=None, type=int, nargs="+", help='filter sizes for each dimension for the input')
     model_parameters.add_argument('--filter_size_h', default=None, type=int, nargs="+", help='filter sizes for each dimension for the previous output')
+    model_parameters.add_argument('--dice_loss_label', default=None, type=int, nargs="+", help='labels for which the dice losses shall be calculated')
+    model_parameters.add_argument('--dice_loss_weight', default=None, type=float, nargs="+", help='weights for the dice losses of the individual classes. same size as dice_loss_label or scalar if dice_autoweighted. final loss: sum(dice_loss_weight)*diceloss + (1-sum(dice_loss_weight))*crossentropy')
+    model_parameters.add_argument('--dice_autoweighted', action="store_true", help='weights the label Dices with the squared inverse gold standard area/volume; specify which labels with dice_loss_label; sum(dice_loss_weight) is used as a weighting between crossentropy and diceloss')
+    model_parameters.add_argument('--dice_generalized', action="store_true", help='total intersections of all labels over total sums of all labels, instead of linearly combined class Dices')
 
     execution_parameters = parser.add_argument_group('execution parameters')
     execution_parameters.add_argument('--nodropconnecth', action="store_true", help="dropconnect on prev output")
@@ -215,6 +221,8 @@ def clean_datacollection_args(args):
             args_tr['deformation'] = args.deformation
         if args.deformSigma is not None:
             args_tr['deformSigma'] = args.deformSigma
+        if args.truncated_deform is not None:
+            args_tr['truncated_deform'] = args.truncated_deform
         if args.each_with_labels is not None:
             args_tr['each_with_labels'] = args.each_with_labels
         if args.rotate is not None:
@@ -299,7 +307,11 @@ def clean_eval_args(args):
                  'filter_size_x': filter_size_x,
                  'filter_size_h': filter_size_h,
                  'model_seed': args.model_seed,
-                 'gpu': args.gpu
+                 'gpu': args.gpu,
+                 "dice_loss_label": args.dice_loss_label,
+                 "dice_loss_weight": args.dice_loss_weight,
+                 "dice_autoweighted": args.dice_autoweighted,
+                 "dice_generalized": args.dice_generalized,
                  }
 
     if not args.dont_use_tensorboard and args.image_summaries_each is not None:

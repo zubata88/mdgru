@@ -110,6 +110,7 @@ class GridDataCollection(DataCollection):
         self.sample_counter = 0
         self.minlabel = argget(kw, 'minlabel', 1)
         self.channels_last = argget(kw, 'channels_last', True)
+        self.truncated_deform = argget(kw, "truncated_deform", False)
 
         if self.lazy == False and argget(kw, 'preloadall', False):
             self.preload_all()
@@ -579,14 +580,24 @@ class GridDataCollection(DataCollection):
         adr = [w // d + 4 for w, d in zip(self.w, self.deform)]
         deformshape = [len(self.w)] + adr
         tmp = np.zeros([4] * (len(self.w) - 1) + [len(self.w)] + self.w)
+
         if np.isscalar(self.deformSigma):
-            tdf = np.float32(self.deformrandomstate.normal(0, self.deformSigma,
-                                                           deformshape) * self.deformationStrength)  # we need 2 at least
+            myDeformSigma = np.array(len(self.w), self.deformSigma)
         else:
-            strngs = [self.deformrandomstate.normal(0, self.deformSigma[i], deformshape[1:]) * self.deformationStrength
-                      for i in range(len(self.deformSigma))]
-            strngs = np.asarray(strngs)
-            tdf = np.float32(np.asarray(strngs))
+            myDeformSigma = np.asarray(self.deformSigma)
+
+        strngs = [self.deformrandomstate.normal(0, myDeformSigma[i], deformshape[1:]) * self.deformationStrength
+                  for i in range(len(myDeformSigma))]
+        tdf = np.asarray(strngs, dtype=np.float32)
+
+        if self.truncated_deform:
+            upperBound = 3 * myDeformSigma
+            for i in range(len(myDeformSigma)):
+                overshoot_coordinates = np.where(np.abs(tdf[i]) > upperBound[i])
+                while len(overshoot_coordinates[0]):
+                    tdf[i][overshoot_coordinates] = np.float32(self.deformrandomstate.normal(0, myDeformSigma[i], len(overshoot_coordinates[0])) * self.deformationStrength)
+                    overshoot_coordinates = np.where(np.abs(tdf[i]) > upperBound[i])
+        # logging.getLogger('data').info('truncated deformation field')
 
         def cint(x, pnm1, pn, pnp1, pnp2):
             return 0.5 * (
