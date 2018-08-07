@@ -42,23 +42,60 @@ class SupervisedEvaluation(object):
         'show_l2': True,
         'show_cross_entropy': True,
         'print_each': {'value': 1, 'help': 'print execution time and losses each # iterations'},
-        'batch_size': {'value': 1, 'help': 'Minibatchsize', 'type': int, 'name': 'batchsize', 'short': 'b'}
+        'batch_size': {'value': 1, 'help': 'Minibatchsize', 'type': int, 'name': 'batchsize', 'short': 'b'},
+        'datapath': {
+            'help': 'path where training, validation and testing folders lie. Can also be some other path, as long as the other locations are provided as absolute paths. An experimentsfolder will be created in this folder, where all runs and checkpoint files will be saved.'},
+        'locationtraining': {'value': None,
+                             'help': 'absolute or relative path to datapath to the training data. Either a list of paths to the sample folders or one path to a folder where samples should be automatically determined.',
+                             'nargs': '+'},
+        'locationtesting': {'value': None,
+                            'help': 'absolute or relative path to datapath to the testing data. Either a list of paths to the sample folders or one path to a folder where samples should be automatically determined.',
+                            'nargs': '+'},
+        'locationvalidation': {'value': None,
+                               'help': 'absolute or relative path to datapath to the validation data. Either a list of paths to the sample folders or one path to a folder where samples should be automatically determined.',
+                               'nargs': '+'},
+        'output_dims': {'help': 'number of output channels, e.g. number of classes the model needs to create a probability distribution over.','type': int, 'alt': ['nclasses']},
+        'windowsize': {'type':int, 'short':'w','help': 'window size to be used during training, validation and testing, if not specified otherwise', 'nargs':'+'},
+        'padding': {'help': 'padding to be used during training, validation and testing, if not specified otherwise. During training, the padding specifies the amount a patch is allowed to reach outside of the image along all dimensions, during testing, it specifies also the amount of overlap needed between patches.', 'value': [0], 'nargs':'+', 'short':'p', 'type':int},
+        'windowsizetesting': {'value':None, 'help': 'override windowsize for testing','nargs':'+', 'type':int},
+        'windowsizevalidation': None,#{'value':None, 'help': 'override windowsize for validation','nargs':'+'},
+        'paddingtesting': {'value':None, 'help': 'override padding for testing', 'nargs':'+', 'type':int},
+        'paddingvalidation': None,#{'value':None, 'help': 'override padding for validation', 'nargs':'+'},
+        'testbatchsize': {'value': 1, 'help': 'batchsize for testing'}
     }
 
-    def __init__(self, model, collectioninst, kw):
+    def __init__(self, modelcls, datacls, kw):
 
-        self.origargs = copy.deepcopy(kw)
+        self.origargs = copy.copy(kw)
         eval_kw, kw = compile_arguments(SupervisedEvaluation, kw, transitive=False)
         for k, v in eval_kw.items():
             setattr(self, k, v)
-
+        self.w = self.windowsize
+        self.p = self.padding
         self.use_tensorboard = False
         # self.dropout_rate = argget(kw, "dropout_rate", 0.5)
         self.current_epoch = 0
         self.current_iteration = 0
-        self.trdc = collectioninst["train"]
-        self.tedc = collectioninst["test"]
-        self.valdc = collectioninst["validation"]
+        # create datasets for training, validation and testing:
+        locs = [[None, l] if l is None or len(l) > 1 else [os.path.join(self.datapath, l[0]), None] for l in
+                [self.locationtraining, self.locationvalidation, self.locationtesting]]
+
+        paramstraining = [self.w, self.p] + locs[0]
+        paramsvalidation = [self.windowsizevalidation if self.windowsizevalidation is not None else self.w,
+                            self.paddingvalidation if self.paddingvalidation is not None else self.p] + locs[1]
+        paramstesting = [self.windowsizetesting if self.windowsizetesting is not None else self.w,
+                            self.paddingtesting if self.paddingtesting is not None else self.p] + locs[2]
+        kwcopy = copy.copy(kw)
+        kwcopy['nclasses'] = self.output_dims
+        kwcopy['batch_size'] = self.batch_size
+        self.trdc = datacls(*paramstraining, kw=copy.copy(kwcopy))
+        testkw = copy.copy(kwcopy)
+        testkw['batch_size'] = testkw['batch_size'] if not self.testbatchsize else self.testbatchsize
+        self.tedc = datacls(*paramstesting, kw=copy.copy(testkw))
+        self.valdc = datacls(*paramsvalidation, kw=copy.copy(testkw))
+        # self.trdc = collectioninst["train"]
+        # self.tedc = collectioninst["test"]
+        # self.valdc = collectioninst["validation"]
         # self.nclasses = argget(kw, "nclasses", 2, keep=True) #redundant, not used anymore.
         self.currit = 0
 
@@ -273,7 +310,7 @@ class SupervisedEvaluation(object):
                         errs.append([name, self.test_scores(res, mf)])
             except Exception as e:
                 logging.getLogger('eval').warning(
-                    'was not able to save test scores, even though ground truth was available.')
+                    'was not able to save test scores, is ground truth available?')
                 logging.getLogger('eval').warning('{}'.format(e))
             if return_results:
                 full_vols.append([name, file, res])

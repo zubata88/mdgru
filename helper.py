@@ -207,8 +207,10 @@ def compile_arguments(cls, kw, transitive=False, override_static=False):
                 temp_kw, kw = compile_arguments(b, kw, transitive=True)
                 new_kw.update(temp_kw)
     # compile defaults array from complex _defaults dict:
-    defaults = {k: v['value'] if isinstance(v, dict) else v for k, v in cls._defaults.items()}
+    defaults = {k: v['value'] if isinstance(v, dict) else v for k, v in cls._defaults.items() if not isinstance(v, dict) or 'value' in v}
+    required = [k for k, v in cls._defaults.items() if isinstance(v, dict) and not 'value' in v]
     new_kw.update({k: argget(kw, k, v) for k, v in defaults.items()})
+    new_kw.update({k: argget(kw, k) for k in required})
     return new_kw, kw
 
 
@@ -252,7 +254,9 @@ def define_arguments(cls, parser):
                         propname = "no_" + key
             else:
                 kw['default'] = v['value']
-
+        else:
+            # we do not provide a default, this value is required!
+            kw['required'] = True
         if 'name' in v: #overrides invert_meaning!
             propname = v['name']
             kw['dest'] = key

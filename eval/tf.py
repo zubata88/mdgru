@@ -27,8 +27,8 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
                               'help': 'manage how much of the memory of the gpu can be used', 'type': float}
                  }
 
-    def __init__(self, model, collectioninst, kw):
-        super(SupervisedEvaluationTensorflow, self).__init__(model, collectioninst, kw)
+    def __init__(self, modelcls, collectioninst, kw):
+        super(SupervisedEvaluationTensorflow, self).__init__(modelcls, collectioninst, kw)
         eval_kw, kw = compile_arguments(SupervisedEvaluationTensorflow, kw, transitive=False)
         for k, v in eval_kw.items():
             setattr(self, k, v)
@@ -46,15 +46,16 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
             self.training = tf.placeholder(dtype=tf.bool)
             self.dropout = tf.placeholder(dtype=tf.float32)
             self.data = tf.placeholder(dtype=tf.float32, shape=self.trdc.get_shape())
-            if 'nclasses' in kw and type(kw['nclasses']) == list:  # for location classification
+            if type(self.output_dims) == list:  # for location classification
                 self.target = tf.placeholder(dtype=tf.float32,
-                                             shape=self.trdc.get_target_shape()[:-1] + [np.sum(kw['nclasses'])])
+                                             shape=self.trdc.get_target_shape()[:-1] + [np.sum(self.output_dims)])
             else:
                 self.target = tf.placeholder(dtype=tf.float32,
                                              shape=self.trdc.get_target_shape())
-            kw_copy = copy.deepcopy(kw)
+            kw_copy = copy.copy(kw)
             kw['training'] = self.training
-            self.model = model(self.data, self.target, self.dropout, kw)
+            kw['nclasses'] = self.output_dims
+            self.model = modelcls(self.data, self.target, self.dropout, kw)
             self.model.optimize
         self.saver = tf.train.Saver(max_to_keep=None)
         # in the case we have a different testing set, we can construct 2 graphs, one for training and testing case
@@ -65,15 +66,16 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
                     self.test_training = tf.placeholder(dtype=tf.bool)
                     self.test_dropout = tf.placeholder(dtype=tf.float32)
                     self.test_data = tf.placeholder(dtype=tf.float32, shape=self.tedc.get_shape())
-                    if 'nclasses' in kw and type(kw['nclasses']) == list:  # for location classification
+                    if type(self.output_dims) == list:  # for location classification
                         self.test_target = tf.placeholder(dtype=tf.float32,
                                                           shape=self.tedc.get_target_shape()[:-1] + [
-                                                              np.sum(kw['nclasses'])])
+                                                              np.sum(self.output_dims)])
                     else:
                         self.test_target = tf.placeholder(dtype=tf.float32,
                                                           shape=self.tedc.get_target_shape())
                     kw_copy['test_training'] = self.test_training
-                    self.test_model = model(self.test_data, self.test_target, self.test_dropout, kw_copy)
+                    kw_copy['nclasses'] = self.output_dims
+                    self.test_model = modelcls(self.test_data, self.test_target, self.test_dropout, kw_copy)
                     self.test_model.prediction
                     self.test_model.cost
                 self.test_saver = tf.train.Saver(max_to_keep=None)

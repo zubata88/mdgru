@@ -16,29 +16,29 @@ GPUBOUNDFRACTION_DEFAULT = 1
 
 def clean_datacollection_args(args):
 
-    w = np.asarray(args.windowsize)
-    if args.windowsizetesting:
-        wt = np.asarray(args.windowsizetesting)
-    else:
-        wt = w
-
-    if args.windowsizevalidation:
-        raise NotImplementedError('Unfortunately, windowsizevalidation can not yet be used!')
-        wv = np.asarray(args.windowsizevalidation)
-    else:
-        wv = w
-
-    p = np.asarray(args.padding)
-    if args.paddingtesting:
-        pt = np.asarray(args.paddingtesting)
-    else:
-        pt = p
-
-    if args.paddingvalidation:
-        raise NotImplementedError('Unfortunately, paddingvalidation can not yet be used!')
-        pv = np.asarray(args.paddingvalidation)
-    else:
-        pv = p
+    # w = np.asarray(args.windowsize)
+    # if args.windowsizetesting:
+    #     wt = np.asarray(args.windowsizetesting)
+    # else:
+    #     wt = w
+    #
+    # if args.windowsizevalidation:
+    #     raise NotImplementedError('Unfortunately, windowsizevalidation can not yet be used!')
+    #     wv = np.asarray(args.windowsizevalidation)
+    # else:
+    #     wv = w
+    #
+    # p = np.asarray(args.padding)
+    # if args.paddingtesting:
+    #     pt = np.asarray(args.paddingtesting)
+    # else:
+    #     pt = p
+    #
+    # if args.paddingvalidation:
+    #     raise NotImplementedError('Unfortunately, paddingvalidation can not yet be used!')
+    #     pv = np.asarray(args.paddingvalidation)
+    # else:
+    #     pv = p
     args_data = {
         "featurefiles": args.features,
         "maskfiles": args.mask,

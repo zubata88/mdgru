@@ -18,7 +18,7 @@ from scipy.misc import imsave, imread
 from scipy.ndimage.filters import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
 
-from helper import argget, counter_generator
+from helper import argget, counter_generator, compile_arguments
 from . import DataCollection
 
 
@@ -27,92 +27,160 @@ class GridDataCollection(DataCollection):
     pixdim = np.asarray([1, 1, 1, 1, 1, 1, 1])
     affine = np.eye(4)
     labellist = None
+    _defaults = {
+        'featurefiles': {'help': 'Filenames of featurefiles.', 'nargs': '+', 'short': 'f'},
+        'maskfiles': {'value': [], 'help': 'Filenames of mask file(s) to be used as reference', 'short': 'm',
+                      'nargs': '+'},
+        'subtractGaussSigma': {'value': [5], 'type':int,
+                               'help': 'Standard deviations to use for gaussian filtered image during highpass filtering data augmentation step. No arguments deactivates the feature. Can have 1 or nfeatures entries',
+                               'nargs': '*'},
+        'nooriginal': {'value': False, 'help': 'Do not use original data, only gauss filtered'},
+        'correct_nifti_orientation': {'value': True, 'invert_meaning': 'dont_',
+                                      'help': 'Do not correct for the nifti orientation (for example, if header information cannot be trusted but all data arrays are correctly aligned'},
+        'deform': {'value': [0], 'help': 'Deformation grid spacing in pixels. If zero, no deformation will be applied','type':int},
+        'deformSigma': {'value': [0], 'help': 'Given a deformation grid spacing, this determines the standard deviations for each dimension of the random deformation vectors.', 'type':float},
+        'mirror': {'value': [0], 'help': 'Activate random mirroring along the specified axes during training', 'type':bool},
+        'gaussiannoise': {'value': False, 'help': 'Random multiplicative Gaussian noise on the input data with given std and mean 1'},
+        'scaling': {'value': [0], 'help': 'Amount ot randomly scale images, per dimension, or for all dimensions, as a factor (e.g. 1.25)', 'type':float},
+        'rotation': {'value': 0, 'help': 'Amount in radians to randomly rotate the input around a randomly drawn vector', 'type':float},
+        'shift': {'value': [0], 'help': 'In order to sample outside of discrete coordinates, this can be set to 1 on the relevant axes', 'type':float},
+        'vary_mean': 0,
+        'vary_stddev': 0,
+        'interpolate_always':  {'value': False, 'help': 'Should we also interpolate when using no deformation grids (forces to use same pathways).'},
+        'deformseed': {'value': 1234, 'help': 'defines the random seed used for the deformation variables', 'type': int},
+        'interpolation_order': {'value': 3, 'help': 'Spline order interpolation. Values lower than 3 are: 0: nearest, 1: linear, 2: cubic.'},
+        'padding_rule': {'value': 'constant', 'help': 'Rule on how to add values outside the image boundaries. options are: (‘constant’, ‘nearest’, ‘reflect’ or ‘wrap’'},
+        'regression': False,
+        'softlabels': False,
+        'whiten': {'value': True, 'invert_meaning': 'dont_', 'help': 'Dont whiten data to mean 0 and std 1.'},
+        'whiten_subvolumes': {'value': False, 'help':'Whiten subvolumes to mean 0 and std 1 (usually it makes more sense to do so on whole volumes)'},
+        'each_with_labels':{'value': 0, 'type': int, 'help': 'Force each n-th sample to contain labelled data'},
+        'presize_for_normalization': {'value': [None], 'help': 'Supply fixed sizes for the calculation of mean and stddev (only suitable with option whiten set)'},
+        'half_gaussian_clip': False,
+        'pyramid_sampling': False,
+        'choose_mask_at_random': {'value': False, 'help': 'if multiple masks are provided, we select one at random for each sample'},
+        'zero_out_label': None,
+        'lazy': {'value': True, 'help': 'Do not load values lazily', 'invert_meaning': 'non'},
+        'perform_one_hot_encoding': {'value': True, 'help': 'Do not one hot encode target', 'invert_meaning': 'dont_'},
+        'minlabel': {'value': 1, 'type': int, 'help': 'Minimum label to count for each_with_label functionality'},
+        'channels_first': False,#{'value': True, 'help': 'Channels first or last? First is needed for nchw format (e.g. pytorch) and last is used by tensorflow'}
+        'preloadall': False,
+    }
 
-    def __init__(self, featurefiles, maskfiles=[], location=None, tps=None, **kw):
+    def __init__(self, w, p, location=None, tps=None, kw={}):
         super(GridDataCollection, self).__init__(**kw)
-        self.origargs.update({"featurefiles": featurefiles, "maskfiles": maskfiles, "location": location, "tps": tps})
+        self.origargs.update({"location": location, "tps": tps})
+        self.w = np.ndarray.tolist(w) if not isinstance(w, list) else w
+        self.p = p
 
-        if not isinstance(featurefiles, list):
-            featurefiles = [featurefiles]
-        if not isinstance(maskfiles, list):
-            maskfiles = [maskfiles]
+        data_kw, kw = compile_arguments(GridDataCollection, kw, transitive=False)
+        for k, v in data_kw.items():
+            setattr(self, k, v)
+        #
+        # if not isinstance(featurefiles, list):
+        #     featurefiles = [featurefiles]
+        # if not isinstance(maskfiles, list):
+        #     maskfiles = [maskfiles]
         if tps is not None:
             self.tps = tps
         elif location is not None:
             if callable(location):
                 self.tps = [location]
             else:
-                self.tps = DataCollection.get_all_tps(location, featurefiles, maskfiles)
+                self.tps = DataCollection.get_all_tps(location, self.featurefiles, self.maskfiles)
             if len(self.tps) == 0:
                 raise Exception(
-                    'no timepoints at location {} containing both {} and {}'.format(location, maskfiles, featurefiles))
+                    'no timepoints at location {} containing both {} and {}'.format(location, self.maskfiles,
+                                                                                    self.featurefiles))
         else:
             raise Exception('either tps or location has to be set')
 
         if len(self.tps) == 0:
             raise Exception('there were no timepoints provided and location was not set')
 
-        self.featurefiles = featurefiles
-        self.maskfiles = maskfiles
-        w = argget(kw, 'w', self.w)
-        if not isinstance(w, list):
-            w = np.ndarray.tolist(w)
-        self.w = w
-        self.p = argget(kw, 'padding', np.zeros(np.shape(w)))
+        # self.subtractGaussSigma != len(self.w)
 
-        self.deform = argget(kw, 'deformation', np.zeros(np.shape(w)))
-        self.interpolate_always = argget(kw, 'interpolate_always', False)
-        self.deformrandomstate = np.random.RandomState(argget(kw, 'deformseed', 1234))
-        self.deformSigma = argget(kw, 'deformSigma', 5)
-        if not np.isscalar(self.deformSigma) and len(self.deformSigma) != len(w):
-            raise Exception(
-                'we need the same sized deformsigma as w (hence, if we provide an array, it has to be the exact correct size)')
-        self.deformpadding = 2
-        self.datainterpolation = argget(kw, 'datainterpolation', 3)
-        self.dataextrapolation = argget(kw, 'dataextrapolation', 'constant')
+        # self.featurefiles = featurefiles
+        # self.maskfiles = maskfiles
+        # w = argget(kw, 'w', self.w)
+        # if not isinstance(w, list):
+        #     w = np.ndarray.tolist(w)
+        # self.w = w
+        # self.p = argget(kw, 'padding', np.zeros(np.shape(w)))
 
-        self.scaling = np.float32(argget(kw, 'scaling', np.zeros(np.shape(w))))
-        self.rotation = np.float32(argget(kw, 'rotation', 0))
-        self.shift = np.float32(argget(kw, 'shift', np.zeros(np.shape(w))))
-        self.mirror = np.float32(argget(kw, 'mirror', np.zeros(np.shape(w))))
-        self.gaussiannoise = np.float32(argget(kw, 'gaussiannoise', 0.0))
-        self.vary_mean = np.float32(argget(kw, 'vary_mean', 0))
-        self.vary_stddev = np.float32(argget(kw, 'vary_stddev', 0))
-        self.regression = argget(kw, 'regression', False)
-        self.softlabels = argget(kw, 'softlabels', True)
-        self.whiten = argget(kw, "whiten", True)
-        self.each_with_labels = argget(kw, "each_with_labels", 0)
-        if self.each_with_labels > 0 and len(self.maskfiles) == 0:
-            raise Exception(
-                'need to provide at leas tone mask file, otherwise we cant make sure we have labels set obviously')
-        self.whiten_subvolumes = argget(kw, "whiten_subvolumes", False)
-        self.presize_for_normalization = argget(kw, 'presize_for_normalization', [None for w in self.w])
-        self.half_gaussian_clip = argget(kw, 'half_gaussian_clip', False)
-        self.pyramid_sampling = argget(kw, 'pyramid_sampling', False)
-        self.subtractGauss = argget(kw, "subtractGauss", False)
-        self.nooriginal = argget(kw, 'nooriginal', False)
-        self.subtractGaussSigma = np.float32(argget(kw, "sigma", 5))
-        self.choose_mask_at_random = argget(kw, "choose_mask_at_random", False)
+        # self.deform = argget(kw, 'deformation', np.zeros(np.shape(w)))
+        # self.interpolate_always = argget(kw, 'interpolate_always', False)
+        # self.deformrandomstate = np.random.RandomState(argget(kw, 'deformseed', 1234))
+        # self.deformSigma = argget(kw, 'deformSigma', 5)
+
+        # harmonize listshaped attributes:
+        def oneorn(paramname):
+            t = getattr(self, paramname)
+            if len(t) == 1:
+                setattr(self, paramname, t*len(self.w))
+            elif len(t) == len(self.w) or len(t) == 0:
+                return
+            else:
+                raise Exception('Parameter {} needs to have the same amount of entries as windowsize'.format(paramname))
+
+        oneorn('p')
+        oneorn('subtractGaussSigma')
+        oneorn('deform')
+        oneorn('deformSigma')
+        oneorn('mirror')
+        oneorn('scaling')
+        oneorn('shift')
+        oneorn('presize_for_normalization')
+
+
+        # if not np.isscalar(self.deformSigma) and len(self.deformSigma) != len(w):
+        #     raise Exception(
+        #         'we need the same sized deformsigma as w (hence, if we provide an array, it has to be the exact correct size)')
+        # self.interpolation_order = argget(kw, 'datainterpolation', 3)
+        # self.padding_rule = argget(kw, 'dataextrapolation', 'constant')
+
+        # self.scaling = np.float32(argget(kw, 'scaling', np.zeros(np.shape(w))))
+        # self.rotation = np.float32(argget(kw, 'rotation', 0))
+        # self.shift = np.float32(argget(kw, 'shift', np.zeros(np.shape(w))))
+        # self.mirror = np.float32(argget(kw, 'mirror', np.zeros(np.shape(w))))
+        # self.gaussiannoise = np.float32(argget(kw, 'gaussiannoise', 0.0))
+        # self.vary_mean = np.float32(argget(kw, 'vary_mean', 0))
+        # self.vary_stddev = np.float32(argget(kw, 'vary_stddev', 0))
+        # self.regression = argget(kw, 'regression', False)
+        # self.softlabels = argget(kw, 'softlabels', True)
+        # self.whiten = argget(kw, "whiten", True)
+        # self.each_with_labels = argget(kw, "each_with_labels", 0)
+        # if self.each_with_labels > 0 and len(self.maskfiles) == 0:
+        #     raise Exception(
+        #         'need to provide at leas tone mask file, otherwise we cant make sure we have labels set obviously')
+        # self.whiten_subvolumes = argget(kw, "whiten_subvolumes", False)
+        # self.presize_for_normalization = argget(kw, 'presize_for_normalization', [None for w in self.w])
+        # self.half_gaussian_clip = argget(kw, 'half_gaussian_clip', False)
+        # self.pyramid_sampling = argget(kw, 'pyramid_sampling', False)
+        # self.subtractGauss = argget(kw, "subtractGauss", False)
+        # self.nooriginal = argget(kw, 'nooriginal', False)
+        # self.subtractGaussSigma = np.float32(argget(kw, "sigma", 5))
+        # self.choose_mask_at_random = argget(kw, "choose_mask_at_random", False)
         if self.choose_mask_at_random:
             self.random_mask_state = np.random.RandomState(argget(kw, 'randommaskseed', 1337))
-        self.zero_out_label = argget(kw, 'zero_out_label', None)
-        self.running_mean = 0
-        self.running_num = 0
-        self.running_var = 0
-        self.lazy = argget(kw, 'lazy', True)
+        # self.zero_out_label = argget(kw, 'zero_out_label', None)
+        # self.running_mean = 0
+        # self.running_num = 0
+        # self.running_var = 0
+        # self.lazy = argget(kw, 'lazy', True)
         self.imagedict = {}
-        self.perform_one_hot_encoding = argget(kw, 'perform_one_hot_encoding', True)
-        self.correct_nifti_orientation = argget(kw, 'correct_nifti_orientation', len(self.w) == 3)
-        if self.correct_nifti_orientation and len(self.w) != 3:
-            self.correct_nifti_orientation = False
-            logging.getLogger('data').warning('Can only correct for orientation for 3d data so far!')
+        # self.perform_one_hot_encoding = argget(kw, 'perform_one_hot_encoding', True)
+        # self.correct_nifti_orientation = argget(kw, 'correct_nifti_orientation', len(self.w) == 3)
+        # if self.correct_nifti_orientation and len(self.w) != 3:
+        #     self.correct_nifti_orientation = False
+        #     logging.getLogger('data').warning('Can only correct for orientation for 3d data so far!')
         self.numoffeatures = argget(kw, 'numoffeatures', len(self._get_features_and_masks(self.tps[0])[0]))
         self.sample_counter = 0
-        self.minlabel = argget(kw, 'minlabel', 1)
-        self.channels_last = argget(kw, 'channels_last', True)
+        # self.minlabel = argget(kw, 'minlabel', 1)
+        # self.channels_last = argget(kw, 'channels_last', True)
 
-        if self.lazy == False and argget(kw, 'preloadall', False):
-            self.preload_all()
+        # if self.lazy == False and argget(kw, 'preloadall', False):
+        #     self.preload_all()
 
     def load(self, file, lazy=True):
 
@@ -206,8 +274,9 @@ class GridDataCollection(DataCollection):
                     ni.save_volume(filename + ".nii.gz", aligned_data, True)
             else:
                 if self.correct_nifti_orientation:
-                    logging.getLogger('data').warning('could not correct orientation for file {} since tporigin is None: {}'
-                                                  .format(filename, tporigin))
+                    logging.getLogger('data').warning(
+                        'could not correct orientation for file {} since tporigin is None: {}'
+                        .format(filename, tporigin))
                 nib.save(nib.Nifti1Image(data, self.affine), filename + ".nii.gz")
         else:
             if np.max(data) <= 1.0 and np.min(data) >= 0:
@@ -247,13 +316,13 @@ class GridDataCollection(DataCollection):
         return states
 
     def get_shape(self):
-        if self.channels_last:
+        if not self.channels_first:
             return [None] + self.w + [self.numoffeatures]
         else:
             return [None] + [self.numoffeatures] + self.w
 
     def get_target_shape(self):
-        if self.channels_last:
+        if not self.channels_first:
             return [None] + self.w + [self.nclasses]
         else:
             return [None] + [self.nclasses] + self.w
@@ -263,7 +332,7 @@ class GridDataCollection(DataCollection):
 
     def subtract_gauss(self, data):
         return data - gaussian_filter(np.float32(data),
-                                      self.subtractGaussSigma * 1.0 / np.asarray(self.pixdim[:len(data.shape)]))
+                                      np.asarray(self.subtractGaussSigma) * 1.0 / np.asarray(self.pixdim[:len(data.shape)]))
 
     def _get_features_and_masks(self, folder, featurefiles=None, maskfiles=None):
         if callable(folder):
@@ -273,16 +342,20 @@ class GridDataCollection(DataCollection):
         if maskfiles is None:
             maskfiles = self.maskfiles
         features = [self.load(os.path.join(folder, i), lazy=self.lazy).squeeze() for i in featurefiles]
-        if self.subtractGauss:
+        if len(self.subtractGaussSigma):
             if self.nooriginal:
                 print("nooriginal")
                 features = [self.subtract_gauss(f) for f in features]
             else:
                 features.extend([self.subtract_gauss(f) for f in features])
-        if self.choose_mask_at_random and len(maskfiles) > 1:  # chooses one of the masks at random
-            m = self.random_mask_state.randint(0, len(maskfiles))
-            maskfiles = [maskfiles[m]]
-        masks = [self.load(os.path.join(folder, i), lazy=self.lazy) for i in maskfiles]
+        try:
+            if self.choose_mask_at_random and len(maskfiles) > 1:  # chooses one of the masks at random
+                m = self.random_mask_state.randint(0, len(maskfiles))
+                maskfiles = [maskfiles[m]]
+            masks = [self.load(os.path.join(folder, i), lazy=self.lazy) for i in maskfiles]
+        except Exception:
+            logging.getLogger('data').warning('Could not load mask files for sample {}'.format(folder))
+            masks = []
         return features, masks
 
     def random_sample(self, batch_size=1, dtype=None, tp=None, **kw):
@@ -353,9 +426,9 @@ class GridDataCollection(DataCollection):
         #     order.pop(1)
         #     order.append(1)
         #     labels = np.transpose(labels, order)
-        if not self.channels_last:
+        if self.channels_first:
             ndims = len(batch.shape)
-            neworder = [0, ndims-1] + [i for i in range(1, ndims-1)]
+            neworder = [0, ndims - 1] + [i for i in range(1, ndims - 1)]
             batch = np.transpose(batch, neworder)
             if self.perform_one_hot_encoding:
                 labels = np.transpose(labels, neworder)
@@ -511,8 +584,8 @@ class GridDataCollection(DataCollection):
                     if needslabels:
                         if np.sum(templabels >= self.minlabel) == 0:
                             return [], []
-            tempdata = [map_coordinates(np.float32(f).squeeze(), coords, mode=self.dataextrapolation,
-                                        order=self.datainterpolation) for f in features]
+            tempdata = [map_coordinates(np.float32(f).squeeze(), coords, mode=self.padding_rule,
+                                        order=self.interpolation_order) for f in features]
         tempdata = [x.reshape((self.w + [1])) for x in tempdata]  # FIXME: maybe we can just use expand_dims?
         if self.whiten:
             if self.whiten_subvolumes:
@@ -528,7 +601,7 @@ class GridDataCollection(DataCollection):
                 tempdata = [(x - means[i]) / stddevs[i] for i, x in enumerate(tempdata)]
         if self.vary_mean > 0 or self.vary_stddev > 0:
             tempdata = [x * ((self.deformrandomstate.rand() - 0.5) * self.vary_stddev + 1) + (
-            self.deformrandomstate.rand() - 0.5) * self.vary_mean for x in tempdata]
+                    self.deformrandomstate.rand() - 0.5) * self.vary_mean for x in tempdata]
         tempdata = np.concatenate(tempdata, -1)
 
         if np.sum(self.mirror):
@@ -558,9 +631,9 @@ class GridDataCollection(DataCollection):
                 subf, subm = self._extract_sample(features, masks, copy.deepcopy(start), copy.deepcopy(end), shape)
                 ma = np.asarray([subm])
                 fe = np.asarray([subf])
-                if not self.channels_last:
+                if self.channels_first:
                     ndims = len(fe.shape)
-                    neworder = [0, ndims-1] + [i for i in range(1, ndims-1)]
+                    neworder = [0, ndims - 1] + [i for i in range(1, ndims - 1)]
                     fe = np.transpose(fe, neworder)
                     ma = np.transpose(ma, neworder)
                 yield fe, ma, start, end
@@ -590,8 +663,8 @@ class GridDataCollection(DataCollection):
 
         def cint(x, pnm1, pn, pnp1, pnp2):
             return 0.5 * (
-            x * ((2 - x) * x - 1) * pnm1 + (x * x * (3 * x - 5) + 2) * pn + x * ((4 - 3 * x) * x + 1) * pnp1 + (
-            x - 1) * x * x * pnp2)
+                    x * ((2 - x) * x - 1) * pnm1 + (x * x * (3 * x - 5) + 2) * pn + x * ((4 - 3 * x) * x + 1) * pnp1 + (
+                    x - 1) * x * x * pnp2)
 
         r = [np.asarray([x * 1.0 / self.deform[i] - x // self.deform[i] for x in range(self.w[i])]).reshape(
             [self.w[i] if t == i + 1 else 1 for t in range(len(self.w) + 1)]) for i in range(len(self.w))]
@@ -622,15 +695,25 @@ class GridDataCollection(DataCollection):
 
 
 class ThreadedGridDataCollection(GridDataCollection):
+    _defaults = {'batch_size': 1,
+                 'num_threads': {
+                     'help': 'Determines how many threads are used to prefetch data, such that io operations do not cause delay.',
+                     'value': 3, 'type': int},
+
+                 }
+
     def __init__(self, featurefiles, maskfiles=[], location=None, tps=None, **kw):
         super(ThreadedGridDataCollection, self).__init__(featurefiles, maskfiles, location, tps, **kw)
+        data_kw, kw = compile_arguments(ThreadedGridDataCollection, kw, transitive=False)
+        for k, v in data_kw.items():
+            setattr(self, k, v)
 
-        self._batchsize = argget(kw, 'batchsize', 1)
-        self.num_threads = argget(kw, 'num_threads', 1)
+        # self.batch_size = argget(kw, 'batchsize', 1)
+        # self.num_threads = argget(kw, 'num_threads', 3)
         self.curr_thread = 0
         self._batch = [None for _ in range(self.num_threads)]
         self._batchlabs = [None for _ in range(self.num_threads)]
-        self._preloadthreads = [Thread(target=self._preload_random_sample, args=(self._batchsize, it,)) for it in
+        self._preloadthreads = [Thread(target=self._preload_random_sample, args=(self.batch_size, it,)) for it in
                                 range(self.num_threads)]
         for t in self._preloadthreads:
             t.start()
@@ -642,20 +725,20 @@ class ThreadedGridDataCollection(GridDataCollection):
                     batch_size, dtype, tp, ",".join(kw) + "(" + ",".join(kw.values()) + ")"))
         if self._preloadthreads[self.curr_thread] is not None:
             self._preloadthreads[self.curr_thread].join()
-        if batch_size != self._batchsize:
+        if batch_size != self.batch_size:
             logging.getLogger('data').warning(
                 'fetched wrong number of samples, need to fetch it now in order to get correct number of samples. updated batchsize accordingly')
             logging.getLogger('data').warning(
                 'Did you forget to provide the threaded class with the correct batchsize at initialization?')
-            self._batchsize = batch_size
+            self.batch_size = batch_size
             self._preloadthreads[self.curr_thread] = Thread(target=self._preload_random_sample,
-                                                            args=(self._batchsize, self.curr_thread,))
+                                                            args=(self.batch_size, self.curr_thread,))
             self._preloadthreads[self.curr_thread].start()
             self._preloadthreads[self.curr_thread].join()
         batch = np.copy(self._batch[self.curr_thread])
         batchlabs = np.copy(self._batchlabs[self.curr_thread])
         self._preloadthreads[self.curr_thread] = Thread(target=self._preload_random_sample,
-                                                        args=(self._batchsize, self.curr_thread,))
+                                                        args=(self.batch_size, self.curr_thread,))
         self._preloadthreads[self.curr_thread].start()
         self.curr_thread = (self.curr_thread + 1) % self.num_threads
         return batch, batchlabs
@@ -663,4 +746,3 @@ class ThreadedGridDataCollection(GridDataCollection):
     def _preload_random_sample(self, batchsize, container_id):
         self._batch[container_id], self._batchlabs[container_id] = super(ThreadedGridDataCollection,
                                                                          self).random_sample(batch_size=batchsize)
-

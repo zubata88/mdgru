@@ -19,10 +19,11 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
 
     '''
 
-    def __init__(self, model, collectioninst, kw):
-        super(SupervisedEvaluationTorch, self).__init__(model, collectioninst, kw)
+    def __init__(self, modelcls, collectioninst, kw):
+        super(SupervisedEvaluationTorch, self).__init__(modelcls, collectioninst, kw)
         data_shape = self.trdc.get_shape()
-        self.model = model(data_shape, self.dropout_rate, kw)
+        kw['nclasses'] = self.output_dims
+        self.model = modelcls(data_shape, self.dropout_rate, kw)
         self.model.initialize()
         if len(self.gpu):
             self.model.model.cuda(self.gpu[0])

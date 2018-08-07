@@ -7,7 +7,8 @@ import os
 import subprocess
 import sys
 import numpy as np
-from helper import argget
+from helper import argget, compile_arguments
+
 
 class DataCollection(object):
     '''Abstract class for all data handling classes. 
@@ -16,11 +17,17 @@ class DataCollection(object):
             fetch_fresh_data (bool): Switch to determine if we need to fetch 
                 fresh data from the server
     '''
+    _defaults = {'seed': {'help': 'Seed to be used for deterministic random sampling, given no threading is used', 'value': 1234},
+                 'nclasses': None,
+                 }
 
     def __init__(self, **kw):
-        self.origargs = copy.deepcopy(kw)
-        self.randomstate = np.random.RandomState(argget(kw, "seed", 12345678))
-        self.nclasses = argget(kw, 'nclasses', 2)
+        data_kw, kw = compile_arguments(DataCollection, kw, transitive=False)
+        for k, v in data_kw.items():
+            setattr(self, k, v)
+        self.origargs = copy.copy(kw)
+        self.randomstate = np.random.RandomState(self.seed)
+        # self.nclasses = argget(kw, 'nclasses', 2)
 
     def set_states(self, states):
         if states is None:
@@ -68,7 +75,6 @@ class DataCollection(object):
         '''
         raise Exception("get_data_dims not implemented in {}"
                         .format(self.__class__))
-
 
     def _one_hot_vectorize(self, indexlabels, nclasses=None, zero_out_label=None):
         '''
