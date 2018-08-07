@@ -147,11 +147,7 @@ class MDGRUClassificationWithGeneralizedDiceLoss(MDGRUClassification):
         shape = self.prediction.get_shape()
         ndim = len(shape)
         batch_size = tf.shape(self.prediction)[0]
-        # batch_size = shape[0]
-
         eps = 1e-8
-
-        # print("sum(self.dice_loss_weight)", sum(self.dice_loss_weight))
 
         # calc soft dice loss, loop over all declared dice loss labels
         diceLoss = 0
@@ -164,13 +160,11 @@ class MDGRUClassificationWithGeneralizedDiceLoss(MDGRUClassification):
                 w_all_batches = 1 / (tf.square(sum_target) + 1) # to prevent infty if label is not in the sample
                 total_sum += w_all_batches * (sum_prediction + sum_target)
                 total_intersection += w_all_batches * tf.reduce_sum(self.prediction[..., l] * self.target[..., l], [i for i in range(1, ndim - 1)])
-                # print(w_all_batches)
-                # print(total_sum)
             diceLoss = - sum(self.dice_loss_weight) * tf.reduce_mean((2 * total_intersection + eps) / (total_sum + eps))
         elif sum(self.dice_loss_weight) > 0:
             for w, l in zip(self.dice_loss_weight, self.dice_loss_label):
                 total_intersection +=     w * tf.reduce_sum(self.prediction[..., l] * self.target[..., l], [i for i in range(1, ndim - 1)])
                 total_sum +=    w * (tf.reduce_sum(self.target[..., l], [i for i in range(1, ndim - 1)]) + tf.reduce_sum(self.prediction[..., l], [i for i in range(1, ndim - 1)]))
-            diceLoss = - tf.reduce_mean((2 * total_intersection + eps) / (total_sum + eps))
+            diceLoss = -tf.reduce_mean((2 * total_intersection + eps) / (total_sum + eps))
 
         return diceLoss + (1 - sum(self.dice_loss_weight)) * crossEntropyLoss
