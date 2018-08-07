@@ -103,3 +103,87 @@ class MDGRUClassification(ClassificationModel, MDGRUNet):
         new_kw.update(mdrnn_kw)
         # new_kw.update(block_kw)
         return new_kw, kw
+
+class MDGRUClassificationWithDiceLoss(MDGRUClassification):
+    def __init__(self, data, target, dropout, kw):
+        super(MDGRUClassificationWithDiceLoss, self).__init__(data, target, dropout, kw)
+        self.dice_loss_label = argget(kw, "dice_loss_label", [])
+        self.dice_loss_weight = argget(kw, "dice_loss_weight", [])
+        self.dice_autoweighted = argget(kw, "dice_autoweighted", False)
+
+        if len(self.dice_loss_label) != len(self.dice_loss_weight) and not self.dice_autoweighted:
+            raise Exception("dice_loss_label and dice_loss_weight need to be of the same length")
+
+    @lazy_property
+    def costs(self):
+        # get standard entropy loss
+        crossEntropyLoss = super(MDGRUClassificationWithDiceLoss, self).costs
+
+        shape = self.prediction.get_shape()
+        ndim = len(shape)
+        area = np.prod(shape[1:ndim - 1])
+        batch_size = tf.shape(self.prediction)[0]
+        eps = 1e-8
+
+        # calc soft dice loss, loop over all declared dice loss labels
+        diceLoss = 0
+        if self.dice_autoweighted:
+            batchDiceLoss = tf.zeros([batch_size])
+            batchtotalWeight = tf.zeros([batch_size])
+            for l in self.dice_loss_label:
+                intersection =      tf.reduce_sum(self.prediction[..., l] * self.target[..., l], [i for i in range(1, ndim - 1)])
+                sum_prediction =    tf.reduce_sum(self.prediction[..., l], [i for i in range(1, ndim - 1)])
+                sum_target =        tf.reduce_sum(self.target[..., l], [i for i in range(1, ndim - 1)])
+                w_all_batches = 1 / (tf.square(sum_target) + 1) # to prevent infty if label is not in the sample
+                batchtotalWeight += w_all_batches
+                batchDiceLoss += w_all_batches * (2 * intersection + eps) / (sum_prediction + sum_target + eps)
+            diceLoss = - sum(self.dice_loss_weight) * tf.reduce_mean(batchDiceLoss / batchtotalWeight)
+        elif sum(self.dice_loss_weight) > 0:
+            for w, l in zip(self.dice_loss_weight, self.dice_loss_label):
+                intersection =      tf.reduce_sum(self.prediction[..., l] * self.target[..., l], [i for i in range(1, ndim - 1)])
+                sum_prediction =    tf.reduce_sum(self.target[..., l], [i for i in range(1, ndim - 1)])
+                sum_target =        tf.reduce_sum(self.prediction[..., l], [i for i in range(1, ndim - 1)])
+                diceLoss -= w * tf.reduce_mean((2 * intersection + eps) / (sum_prediction + sum_target + eps))
+
+        return diceLoss + (1 - sum(self.dice_loss_weight)) * crossEntropyLoss
+
+
+class MDGRUClassificationWithGeneralizedDiceLoss(MDGRUClassification):
+    def __init__(self, data, target, dropout, kw):
+        super(MDGRUClassificationWithGeneralizedDiceLoss, self).__init__(data, target, dropout, kw)
+        self.dice_loss_label = argget(kw, "dice_loss_label", [])
+        self.dice_loss_weight = argget(kw, "dice_loss_weight", [])
+        self.dice_autoweighted = argget(kw, "dice_autoweighted", False)
+
+        if len(self.dice_loss_label) != len(self.dice_loss_weight) and not self.dice_autoweighted:
+            raise Exception("dice_loss_label and dice_loss_weight need to be of the same length")
+
+    @lazy_property
+    def costs(self):
+        # get standard entropy loss
+        crossEntropyLoss = super(MDGRUClassificationWithGeneralizedDiceLoss, self).costs
+
+        shape = self.prediction.get_shape()
+        ndim = len(shape)
+        batch_size = tf.shape(self.prediction)[0]
+        eps = 1e-8
+
+        # calc soft dice loss, loop over all declared dice loss labels
+        diceLoss = 0
+        total_intersection = tf.zeros([batch_size])
+        total_sum = tf.zeros([batch_size])
+        if self.dice_autoweighted:
+            for l in self.dice_loss_label:
+                sum_prediction =        tf.reduce_sum(self.prediction[..., l], [i for i in range(1, ndim - 1)])
+                sum_target =            tf.reduce_sum(self.target[..., l], [i for i in range(1, ndim - 1)])
+                w_all_batches = 1 / (tf.square(sum_target) + 1) # to prevent infty if label is not in the sample
+                total_sum += w_all_batches * (sum_prediction + sum_target)
+                total_intersection += w_all_batches * tf.reduce_sum(self.prediction[..., l] * self.target[..., l], [i for i in range(1, ndim - 1)])
+            diceLoss = - sum(self.dice_loss_weight) * tf.reduce_mean((2 * total_intersection + eps) / (total_sum + eps))
+        elif sum(self.dice_loss_weight) > 0:
+            for w, l in zip(self.dice_loss_weight, self.dice_loss_label):
+                total_intersection +=     w * tf.reduce_sum(self.prediction[..., l] * self.target[..., l], [i for i in range(1, ndim - 1)])
+                total_sum +=    w * (tf.reduce_sum(self.target[..., l], [i for i in range(1, ndim - 1)]) + tf.reduce_sum(self.prediction[..., l], [i for i in range(1, ndim - 1)]))
+            diceLoss = -tf.reduce_mean((2 * total_intersection + eps) / (total_sum + eps))
+
+        return diceLoss + (1 - sum(self.dice_loss_weight)) * crossEntropyLoss

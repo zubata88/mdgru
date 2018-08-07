@@ -65,6 +65,7 @@ class GridDataCollection(DataCollection):
         'minlabel': {'value': 1, 'type': int, 'help': 'Minimum label to count for each_with_label functionality'},
         'channels_first': False,#{'value': True, 'help': 'Channels first or last? First is needed for nchw format (e.g. pytorch) and last is used by tensorflow'}
         'preloadall': False,
+        'truncated_deform': {'value': False, 'help': 'deformations with displacements of maximum 3 times gausssigma in each spatial direction'},
     }
 
     def __init__(self, w, p, location=None, tps=None, kw={}):
@@ -176,8 +177,7 @@ class GridDataCollection(DataCollection):
         #     logging.getLogger('data').warning('Can only correct for orientation for 3d data so far!')
         self.numoffeatures = argget(kw, 'numoffeatures', len(self._get_features_and_masks(self.tps[0])[0]))
         self.sample_counter = 0
-        # self.minlabel = argget(kw, 'minlabel', 1)
-        # self.channels_last = argget(kw, 'channels_last', True)
+        # self.truncated_deform = argget(kw, "truncated_deform", False)
 
         # if self.lazy == False and argget(kw, 'preloadall', False):
         #     self.preload_all()
@@ -652,14 +652,24 @@ class GridDataCollection(DataCollection):
         adr = [w // d + 4 for w, d in zip(self.w, self.deform)]
         deformshape = [len(self.w)] + adr
         tmp = np.zeros([4] * (len(self.w) - 1) + [len(self.w)] + self.w)
+
         if np.isscalar(self.deformSigma):
-            tdf = np.float32(self.deformrandomstate.normal(0, self.deformSigma,
-                                                           deformshape) * self.deformationStrength)  # we need 2 at least
+            myDeformSigma = np.array(len(self.w), self.deformSigma)
         else:
-            strngs = [self.deformrandomstate.normal(0, self.deformSigma[i], deformshape[1:]) * self.deformationStrength
-                      for i in range(len(self.deformSigma))]
-            strngs = np.asarray(strngs)
-            tdf = np.float32(np.asarray(strngs))
+            myDeformSigma = np.asarray(self.deformSigma)
+
+        strngs = [self.deformrandomstate.normal(0, myDeformSigma[i], deformshape[1:]) * self.deformationStrength
+                  for i in range(len(myDeformSigma))]
+        tdf = np.asarray(strngs, dtype=np.float32)
+
+        if self.truncated_deform:
+            upperBound = 3 * myDeformSigma
+            for i in range(len(myDeformSigma)):
+                overshoot_coordinates = np.where(np.abs(tdf[i]) > upperBound[i])
+                while len(overshoot_coordinates[0]):
+                    tdf[i][overshoot_coordinates] = np.float32(self.deformrandomstate.normal(0, myDeformSigma[i], len(overshoot_coordinates[0])) * self.deformationStrength)
+                    overshoot_coordinates = np.where(np.abs(tdf[i]) > upperBound[i])
+        # logging.getLogger('data').info('truncated deformation field')
 
         def cint(x, pnm1, pn, pnp1, pnp2):
             return 0.5 * (

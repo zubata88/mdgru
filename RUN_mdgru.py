@@ -9,7 +9,7 @@ import os
 import numpy as np
 import sys
 from data.grid_collection import GridDataCollection, ThreadedGridDataCollection
-from options.parser import clean_datacollection_args
+# from options.parser import clean_datacollection_args
 from runner import Runner
 from helper import compile_arguments
 import argparse
@@ -28,6 +28,11 @@ def run_mdgru(args=None):
     pre_parameter.add_argument('--gpu', type=int, nargs='+', default=[0], help='set gpu ids')
     pre_parameter.add_argument('--nonthreaded', action="store_true",
                                      help="disallow threading during training to preload data before the processing")
+    pre_parameter.add_argument('--dice_loss_label', default=None, type=int, nargs="+", help='labels for which the dice losses shall be calculated')
+    pre_parameter.add_argument('--dice_loss_weight', default=None, type=float, nargs="+", help='weights for the dice losses of the individual classes. same size as dice_loss_label or scalar if dice_autoweighted. final loss: sum(dice_loss_weight)*diceloss + (1-sum(dice_loss_weight))*crossentropy')
+    pre_parameter.add_argument('--dice_autoweighted', action="store_true", help='weights the label Dices with the squared inverse gold standard area/volume; specify which labels with dice_loss_label; sum(dice_loss_weight) is used as a weighting between crossentropy and diceloss')
+    pre_parameter.add_argument('--dice_generalized', action="store_true", help='total intersections of all labels over total sums of all labels, instead of linearly combined class Dices')
+
     pre_args, _ = parser.parse_known_args()
     parser.add_argument('-h','--help', action='store_true', help='print this help message')
 
@@ -37,8 +42,14 @@ def run_mdgru(args=None):
         from model_pytorch.mdgru_classification import MDGRUClassification as modelcls
         from eval.torch import SupervisedEvaluationTorch as evalcls
     else:
-        from model.mdgru_classification import MDGRUClassification as modelcls
+        if args.dice_generalized:
+            from model.mdgru_classification import MDGRUClassificationWithGeneralizedDiceLoss as modelcls
+        elif args.dice_loss_label != None or args.dice_autoweighted:
+            from model.mdgru_classification import MDGRUClassificationWithDiceLoss as modelcls
+        else:
+            from model.mdgru_classification import MDGRUClassification as modelcls
         from eval.tf import SupervisedEvaluationTensorflow as evalcls
+
 
     # Set the necessary classes
     # dc = GridDataCollection
@@ -55,9 +66,9 @@ def run_mdgru(args=None):
         parser.print_help()
         return
     if not args.use_pytorch:
-
         if args.gpubound != 1:
             modelcls.set_allowed_gpu_memory_fraction(args.gpubound)
+
 
     # Set up datacollections
 
@@ -74,6 +85,7 @@ def run_mdgru(args=None):
         if args.checkpointfiles is not None:
             args_eval['namespace'] = modelcls.get_model_name_from_ckpt(args.checkpointfiles[0])
     args_eval['channels_first'] = args.use_pytorch
+
 
     # if args_tr is not None:
     #     traindc = tdc(**args_tr)
