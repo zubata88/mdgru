@@ -33,7 +33,7 @@ def run_mdgru(args=None):
     pre_parameter.add_argument('--dice_autoweighted', action="store_true", help='weights the label Dices with the squared inverse gold standard area/volume; specify which labels with dice_loss_label; sum(dice_loss_weight) is used as a weighting between crossentropy and diceloss')
     pre_parameter.add_argument('--dice_generalized', action="store_true", help='total intersections of all labels over total sums of all labels, instead of linearly combined class Dices')
 
-    pre_args, _ = parser.parse_known_args()
+    pre_args, _ = parser.parse_known_args(args=args)
     parser.add_argument('-h','--help', action='store_true', help='print this help message')
 
     # Set environment flag(s) and finally import the classes that depend upon them
@@ -42,9 +42,9 @@ def run_mdgru(args=None):
         from model_pytorch.mdgru_classification import MDGRUClassification as modelcls
         from eval.torch import SupervisedEvaluationTorch as evalcls
     else:
-        if args.dice_generalized:
+        if pre_args.dice_generalized:
             from model.mdgru_classification import MDGRUClassificationWithGeneralizedDiceLoss as modelcls
-        elif args.dice_loss_label != None or args.dice_autoweighted:
+        elif pre_args.dice_loss_label != None or pre_args.dice_autoweighted:
             from model.mdgru_classification import MDGRUClassificationWithDiceLoss as modelcls
         else:
             from model.mdgru_classification import MDGRUClassification as modelcls
