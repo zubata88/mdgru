@@ -17,7 +17,7 @@ import skimage.io as skio
 from scipy.misc import imsave, imread
 from scipy.ndimage.filters import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
-
+from scipy.ndimage.measurements import label
 from helper import argget, counter_generator, compile_arguments
 from . import DataCollection
 
@@ -66,6 +66,7 @@ class GridDataCollection(DataCollection):
         'channels_first': False,#{'value': True, 'help': 'Channels first or last? First is needed for nchw format (e.g. pytorch) and last is used by tensorflow'}
         'preloadall': False,
         'truncated_deform': {'value': False, 'help': 'deformations with displacements of maximum 3 times gausssigma in each spatial direction'},
+        'connected_components': {'value': False, 'help': 'return labels of connected components for each pixel belonging to a component instead of its label. Only works for binary segmentation and if no one hot encoding is used (with pytorch).'}
     }
 
     def __init__(self, w, p, location=None, tps=None, kw={}):
@@ -432,6 +433,8 @@ class GridDataCollection(DataCollection):
             batch = np.transpose(batch, neworder)
             if self.perform_one_hot_encoding:
                 labels = np.transpose(labels, neworder)
+            elif self.connected_components:
+                labels = label(labels)[0] #only the labelled map, without number of components
 
         return batch, labels
 

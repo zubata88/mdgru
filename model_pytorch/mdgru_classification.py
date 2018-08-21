@@ -27,9 +27,11 @@ class MDGRUClassification(ClassificationModel):
     :param strides: list of list defining the strides per dimension per MDGRU layer. None means strides of 1
     :param data_shape: subvolume size
     """
-
     def __init__(self, data_shape, dropout, kw):
         super(MDGRUClassification, self).__init__(data_shape, dropout, kw)
+        my_kw, kw = compile_arguments(MDGRUClassification, kw, transitive=False)
+        for k, v in my_kw.items():
+            setattr(self, k, v)
         self.fc_channels = argget(kw, "fc_channels", [25, 45, self.nclasses])
         self.mdgru_channels = argget(kw, "mdgru_channels", [16, 32, 64])
         self.strides = argget(kw, "strides", [None for _ in self.mdgru_channels])
@@ -76,3 +78,24 @@ class MDGRUClassification(ClassificationModel):
         new_kw.update(mdrnn_kw)
         new_kw.update(block_kw)
         return new_kw, kw
+
+
+class MDGRUClassificationCC(MDGRUClassification):
+
+    # _defaults = {'use_connected_component_dice_loss': {'value': False, 'help': 'Use connected component dice loss, needs connected component labelling in griddatacollection to be performed. experimental', 'type': int}}
+
+    def __init__(self, data_shape, dropout, kw):
+        super(MDGRUClassificationCC, self).__init__(data_shape, dropout, kw)
+        my_kw, kw = compile_arguments(MDGRUClassificationCC, kw, transitive=False)
+        for k, v in my_kw.items():
+            setattr(self, k, v)
+        self.ce = th.nn.modules.CrossEntropyLoss()
+
+    def loss(self, prediction, labels):
+        tp = 0
+        nlabs = labels.max().cpu().item()
+        for i in range(1, labels.max().cpu().data[0]):
+            mask = labels == i
+            tp += th.sum(prediction[:, 1] * mask)/th.sum(mask)
+        fp = th.sum(prediction[:, 0] * (labels == 0))/th.sum(labels == 0)
+        return 2*tp/(tp+nlabs+fp)
