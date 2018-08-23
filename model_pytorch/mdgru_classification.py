@@ -69,10 +69,10 @@ class MDGRUClassification(ClassificationModel):
         return args
 
     @staticmethod
-    def compile_arguments(kw):
-        block_kw, kw = compile_arguments(MDGRUBlock, kw, transitive=True)
-        mdrnn_kw, kw = compile_arguments(MDRNN, kw, transitive=True)
-        crnn_kw, kw = compile_arguments(MDRNN._defaults['crnn_class']['value'], kw, transitive=True)
+    def compile_arguments(kw, keep_entries=True):
+        block_kw, kw = compile_arguments(MDGRUBlock, kw, transitive=True, keep_entries=keep_entries)
+        mdrnn_kw, kw = compile_arguments(MDRNN, kw, transitive=True, keep_entries=keep_entries)
+        crnn_kw, kw = compile_arguments(MDRNN._defaults['crnn_class']['value'], kw, transitive=True, keep_entries=keep_entries)
         new_kw = {}
         new_kw.update(crnn_kw)
         new_kw.update(mdrnn_kw)
@@ -86,6 +86,8 @@ class MDGRUClassificationCC(MDGRUClassification):
 
     def __init__(self, data_shape, dropout, kw):
         super(MDGRUClassificationCC, self).__init__(data_shape, dropout, kw)
+        # self.dice_loss_label = argget(kw, "dice_loss_label", [])
+        self.dice_loss_weight = argget(kw, "dice_loss_weight", []) #here, this should contain one value!
         my_kw, kw = compile_arguments(MDGRUClassificationCC, kw, transitive=False)
         for k, v in my_kw.items():
             setattr(self, k, v)
@@ -98,4 +100,5 @@ class MDGRUClassificationCC(MDGRUClassification):
             mask = labels == i
             tp += th.sum(prediction[:, 1] * mask)/th.sum(mask)
         fp = th.sum(prediction[:, 0] * (labels == 0))/th.sum(labels == 0)
-        return 2*tp/(tp+nlabs+fp)
+        diceLoss = 2*tp/(tp+nlabs+fp)
+        return np.sum(self.dice_loss_weight) * diceLoss + (1-np.sum(self.dice_loss_weight)) * self.ce(prediction, labels > 0)

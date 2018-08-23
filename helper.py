@@ -189,22 +189,23 @@ def counter_generator(maxim):
         pass
 
 
-def compile_arguments(cls, kw, transitive=False, override_static=False):
+def compile_arguments(cls, kw, transitive=False, override_static=False,keep_entries=True):
     """Extracts valid keywords for cls from given keywords and returns the resulting two dicts.
 
     :param cls: instance or class having property or attribute "_defaults", which is a dict of default parameters.
     :param transitive: determines if parent classes should also be consulted
     :param kw: the keyword dictionary to separate into valid arguments and rest
     """
-    kw = copy.copy(kw)
+    if keep_entries:
+        kw = copy.copy(kw)
     if hasattr(cls, 'compile_arguments') and not override_static:
-        new_kw, kw = cls.compile_arguments(kw)
+        new_kw, kw = cls.compile_arguments(kw, keep_entries=keep_entries)
     else:
         new_kw = {}
     if transitive:
         for b in cls.__bases__:
             if hasattr(b, '_defaults'):
-                temp_kw, kw = compile_arguments(b, kw, transitive=True)
+                temp_kw, kw = compile_arguments(b, kw, transitive=True, keep_entries=keep_entries)
                 new_kw.update(temp_kw)
     # compile defaults array from complex _defaults dict:
     defaults = {k: v['value'] if isinstance(v, dict) else v for k, v in cls._defaults.items() if not isinstance(v, dict) or 'value' in v}

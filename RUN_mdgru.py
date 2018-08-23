@@ -32,14 +32,17 @@ def run_mdgru(args=None):
     pre_parameter.add_argument('--dice_loss_weight', default=None, type=float, nargs="+", help='weights for the dice losses of the individual classes. same size as dice_loss_label or scalar if dice_autoweighted. final loss: sum(dice_loss_weight)*diceloss + (1-sum(dice_loss_weight))*crossentropy')
     pre_parameter.add_argument('--dice_autoweighted', action="store_true", help='weights the label Dices with the squared inverse gold standard area/volume; specify which labels with dice_loss_label; sum(dice_loss_weight) is used as a weighting between crossentropy and diceloss')
     pre_parameter.add_argument('--dice_generalized', action="store_true", help='total intersections of all labels over total sums of all labels, instead of linearly combined class Dices')
-
+    pre_parameter.add_argument('--dice_cc', action='store_true', help='dice loss for binary segmentation per true component')
     pre_args, _ = parser.parse_known_args(args=args)
     parser.add_argument('-h','--help', action='store_true', help='print this help message')
 
     # Set environment flag(s) and finally import the classes that depend upon them
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in pre_args.gpu])
     if pre_args.use_pytorch:
-        from model_pytorch.mdgru_classification import MDGRUClassification as modelcls
+        if pre_args.dice_cc:
+            from model_pytorch.mdgru_classification import MDGRUClassificationCC as modelcls
+        else:
+            from model_pytorch.mdgru_classification import MDGRUClassification as modelcls
         from eval.torch import SupervisedEvaluationTorch as evalcls
     else:
         if pre_args.dice_generalized:
@@ -76,9 +79,9 @@ def run_mdgru(args=None):
 
     # Set up model and evaluation
     kw = vars(args)
-    args_eval, _ = compile_arguments(evalcls, kw, True)
-    args_model, _ = compile_arguments(modelcls, kw, True)
-    args_data, _ = compile_arguments(tdc, kw, True)
+    args_eval, _ = compile_arguments(evalcls, kw, True, keep_entries=True)
+    args_model, _ = compile_arguments(modelcls, kw, True, keep_entries=True)
+    args_data, _ = compile_arguments(tdc, kw, True, keep_entries=True)
     args_eval.update(args_model)
     args_eval.update(args_data)
     if not args.use_pytorch:
@@ -103,7 +106,7 @@ def run_mdgru(args=None):
     ev = evalcls(modelcls, tdc, args_eval)
 
     # Set up runner
-    args_runner, _ = compile_arguments(Runner, kw, True)
+    args_runner, _ = compile_arguments(Runner, kw, True, keep_entries=True)
     args_runner.update({
         "experimentloc": os.path.join(args.datapath, 'experiments'),
         "fullparameters": fullparameters,

@@ -52,8 +52,12 @@ class CRNNCell(th.nn.Module):
     def state_size(self):
         return self._num_units
 
-    def _get_dropconnect(self, t, keep_rate):
+    def _get_dropconnect(self, t, keep_rate_training, keep_rate_testing=1):
         """Creates factors to be applied to filters to achieve either Bernoulli or Gaussian dropconnect."""
+        if self.training:
+            keep_rate = keep_rate_training
+        else:
+            keep_rate = keep_rate_testing
         if keep_rate is None:
             raise Exception('keeprate cannot be none if this is called')
         if self.use_bernoulli:

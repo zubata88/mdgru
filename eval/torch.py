@@ -7,7 +7,7 @@ import numpy as np
 import copy
 import time
 from torch.autograd import Variable
-
+from helper import compile_arguments
 
 class SupervisedEvaluationTorch(SupervisedEvaluation):
     '''Base class for all evaluation classes. Child classes implement various
@@ -18,12 +18,16 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         saver: tensorflow saver to save or load the model data.
 
     '''
-
+    _defaults = {}
     def __init__(self, modelcls, collectioninst, kw):
         super(SupervisedEvaluationTorch, self).__init__(modelcls, collectioninst, kw)
+        eval_kw, kw = compile_arguments(SupervisedEvaluationTorch, kw, transitive=False)
+        for k, v in eval_kw.items():
+            setattr(self, k, v)
         data_shape = self.trdc.get_shape()
         kw['nclasses'] = self.output_dims
-        self.model = modelcls(data_shape, self.dropout_rate, kw)
+        modelkw, kw = compile_arguments(modelcls, kw, True, keep_entries=True)
+        self.model = modelcls(data_shape, self.dropout_rate, modelkw)
         self.model.initialize()
         if len(self.gpu):
             self.model.model.cuda(self.gpu[0])
@@ -37,7 +41,7 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
             self.batch = self.batch.cuda(self.gpu[0])
             self.batchlabs = self.batchlabs.cuda(self.gpu[0])
 
-        check_if_kw_empty(self.__class__.__name__, kw, 'eval')
+        # check_if_kw_empty(self.__class__.__name__, kw, 'eval')
 
     def check_input(self, batch, batchlabs=None):
         batch = th.from_numpy(batch)
@@ -56,6 +60,7 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         """set inputs and run torch training iteration"""
         self.check_input(batch, batchlabs)
         self.optimizer.zero_grad()
+        self.model.train(True)
         loss = self.model.loss(self.model.model(self.batch), self.batchlabs)
         loss.backward()
         self.optimizer.step()
@@ -65,6 +70,7 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
     def _predict_with_loss(self, batch, batchlabs):
         """run evaluation and calculate loss"""
         self.check_input(batch, batchlabs)
+        self.model.train(False)
         result = self.model.model(self.batch)
         prediction = th.nn.softmax(result)
         return self.model.loss(result, self.batchlabs).data[0], prediction.data.cpu().numpy()
@@ -76,6 +82,7 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         batch_shape = batch.shape
         reorder = [0] + [i for i in range(2, len(batch_shape))] + [1]
         self.check_input(batch)
+        self.model.train(False)
         return self.model.prediction(self.batch).data.cpu().numpy().transpose(reorder)
 
 

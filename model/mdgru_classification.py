@@ -94,10 +94,10 @@ class MDGRUClassification(ClassificationModel, MDGRUNet):
         return args
 
     @staticmethod
-    def compile_arguments(kw):
+    def compile_arguments(kw, keep_entries=True):
         # block_kw, kw = compile_arguments(MDGRUBlock, kw, transitive=True)
-        mdrnn_kw, kw = compile_arguments(MDRNN, kw, transitive=True)
-        crnn_kw, kw = compile_arguments(MDRNN._defaults['crnn_class'], kw, transitive=True)
+        mdrnn_kw, kw = compile_arguments(MDRNN, kw, transitive=True, keep_entries=keep_entries)
+        crnn_kw, kw = compile_arguments(MDRNN._defaults['crnn_class'], kw, transitive=True, keep_entries=keep_entries)
         new_kw = {}
         new_kw.update(crnn_kw)
         new_kw.update(mdrnn_kw)

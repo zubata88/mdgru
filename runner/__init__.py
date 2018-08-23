@@ -135,15 +135,15 @@ class Runner(object):
             logging.getLogger('runner').info('arg {}:{}'.format(k, self.origargs[k]))
         self.ev = evaluationinstance
         for k in self.ev.origargs:
-            logging.getLogger('eval').info('arg {}:{}'.format(k, self.ev.origargs[k]))
-        for k in self.ev.trdc.origargs:
-            logging.getLogger('data').info(' trdc arg {}:{}'.format(k, self.ev.trdc.origargs[k]))
-        for k in self.ev.tedc.origargs:
-            logging.getLogger('data').info(' tedc arg {}:{}'.format(k, self.ev.tedc.origargs[k]))
-        for k in self.ev.valdc.origargs:
-            logging.getLogger('data').info('valdc arg {}:{}'.format(k, self.ev.valdc.origargs[k]))
-        for k in self.ev.model.origargs:
-            logging.getLogger('model').info('arg {}:{}'.format(k, self.ev.model.origargs[k]))
+            logging.getLogger('eval/data/model').info('arg {}:{}'.format(k, self.ev.origargs[k]))
+        # for k in self.ev.trdc.origargs:
+        #     logging.getLogger('data').info(' trdc arg {}:{}'.format(k, self.ev.trdc.origargs[k]))
+        # for k in self.ev.tedc.origargs:
+        #     logging.getLogger('data').info(' tedc arg {}:{}'.format(k, self.ev.tedc.origargs[k]))
+        # for k in self.ev.valdc.origargs:
+        #     logging.getLogger('data').info('valdc arg {}:{}'.format(k, self.ev.valdc.origargs[k]))
+        # for k in self.ev.model.origargs:
+        #     logging.getLogger('model').info('arg {}:{}'.format(k, self.ev.model.origargs[k]))
         if self.only_train or (self.ev.trdc == self.ev.tedc and self.ev.valdc != self.ev.trdc):
             self.episodes = ['train']
         elif self.only_test or (self.ev.trdc == self.ev.tedc and self.ev.valdc == self.ev.tedc):

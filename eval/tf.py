@@ -90,7 +90,7 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
         self.get_train_session = lambda: tf.Session(config=self.session_config)
         self.get_test_session = lambda: tf.Session(config=self.session_config, graph=self.test_graph)
 
-        check_if_kw_empty(self.__class__.__name__, kw, 'eval')
+        # check_if_kw_empty(self.__class__.__name__, kw, 'eval')
 
     def _train(self, batch, batchlabs):
         tasks = [self.model.optimize, self.model.cost]

@@ -79,13 +79,13 @@ class SupervisedEvaluation(object):
         # create datasets for training, validation and testing:
         locs = [[None, l] if l is None or len(l) > 1 else [os.path.join(self.datapath, l[0]), None] for l in
                 [self.locationtraining, self.locationvalidation, self.locationtesting]]
-
         paramstraining = [self.w, self.p] + locs[0]
         paramsvalidation = [self.windowsizevalidation if self.windowsizevalidation is not None else self.w,
                             self.paddingvalidation if self.paddingvalidation is not None else self.p] + locs[1]
         paramstesting = [self.windowsizetesting if self.windowsizetesting is not None else self.w,
                             self.paddingtesting if self.paddingtesting is not None else self.p] + locs[2]
-        kwcopy = copy.copy(kw)
+        kwdata, kw = compile_arguments(datacls, kw, True, keep_entries=True)
+        kwcopy = copy.copy(kwdata)
         kwcopy['nclasses'] = self.output_dims
         kwcopy['batch_size'] = self.batch_size
         self.trdc = datacls(*paramstraining, kw=copy.copy(kwcopy))
