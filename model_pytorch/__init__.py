@@ -54,7 +54,7 @@ class Model(th.nn.Module):
         self.origargs = copy.copy(kw)
 
         if argget(kw, "whiten", False):
-            raise Exception('parameter whiten not supported with pytorch version')
+            print('parameter whiten not supported with pytorch version')
             # self.data = batch_norm(data, "bn", self.training, m=32)
         else:
             self.data = data

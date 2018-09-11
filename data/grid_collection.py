@@ -31,46 +31,68 @@ class GridDataCollection(DataCollection):
         'featurefiles': {'help': 'Filenames of featurefiles.', 'nargs': '+', 'short': 'f'},
         'maskfiles': {'value': [], 'help': 'Filenames of mask file(s) to be used as reference', 'short': 'm',
                       'nargs': '+'},
-        'subtractGaussSigma': {'value': [5], 'type':int,
+        'subtractGaussSigma': {'value': [5], 'type': int,
                                'help': 'Standard deviations to use for gaussian filtered image during highpass filtering data augmentation step. No arguments deactivates the feature. Can have 1 or nfeatures entries',
                                'nargs': '*'},
         'nooriginal': {'value': False, 'help': 'Do not use original data, only gauss filtered'},
         'correct_nifti_orientation': {'value': True, 'invert_meaning': 'dont_',
                                       'help': 'Do not correct for the nifti orientation (for example, if header information cannot be trusted but all data arrays are correctly aligned'},
-        'deform': {'value': [0], 'help': 'Deformation grid spacing in pixels. If zero, no deformation will be applied','type':int},
-        'deformSigma': {'value': [0], 'help': 'Given a deformation grid spacing, this determines the standard deviations for each dimension of the random deformation vectors.', 'type':float},
-        'mirror': {'value': [0], 'help': 'Activate random mirroring along the specified axes during training', 'type':bool},
-        'gaussiannoise': {'value': False, 'help': 'Random multiplicative Gaussian noise on the input data with given std and mean 1'},
-        'scaling': {'value': [0], 'help': 'Amount ot randomly scale images, per dimension, or for all dimensions, as a factor (e.g. 1.25)', 'type':float},
-        'rotation': {'value': 0, 'help': 'Amount in radians to randomly rotate the input around a randomly drawn vector', 'type':float},
-        'shift': {'value': [0], 'help': 'In order to sample outside of discrete coordinates, this can be set to 1 on the relevant axes', 'type':float},
+        'deform': {'value': [0], 'help': 'Deformation grid spacing in pixels. If zero, no deformation will be applied',
+                   'type': int},
+        'deformSigma': {'value': [0],
+                        'help': 'Given a deformation grid spacing, this determines the standard deviations for each dimension of the random deformation vectors.',
+                        'type': float},
+        'mirror': {'value': [0], 'help': 'Activate random mirroring along the specified axes during training',
+                   'type': bool},
+        'gaussiannoise': {'value': False,
+                          'help': 'Random multiplicative Gaussian noise on the input data with given std and mean 1'},
+        'scaling': {'value': [0],
+                    'help': 'Amount ot randomly scale images, per dimension, or for all dimensions, as a factor (e.g. 1.25)',
+                    'type': float},
+        'rotation': {'value': 0,
+                     'help': 'Amount in radians to randomly rotate the input around a randomly drawn vector',
+                     'type': float},
+        'shift': {'value': [0],
+                  'help': 'In order to sample outside of discrete coordinates, this can be set to 1 on the relevant axes',
+                  'type': float},
         'vary_mean': 0,
         'vary_stddev': 0,
-        'interpolate_always':  {'value': False, 'help': 'Should we also interpolate when using no deformation grids (forces to use same pathways).'},
-        'deformseed': {'value': 1234, 'help': 'defines the random seed used for the deformation variables', 'type': int},
-        'interpolation_order': {'value': 3, 'help': 'Spline order interpolation. Values lower than 3 are: 0: nearest, 1: linear, 2: cubic.'},
-        'padding_rule': {'value': 'constant', 'help': 'Rule on how to add values outside the image boundaries. options are: (‘constant’, ‘nearest’, ‘reflect’ or ‘wrap’'},
+        'interpolate_always': {'value': False,
+                               'help': 'Should we also interpolate when using no deformation grids (forces to use same pathways).'},
+        'deformseed': {'value': 1234, 'help': 'defines the random seed used for the deformation variables',
+                       'type': int},
+        'interpolation_order': {'value': 3,
+                                'help': 'Spline order interpolation. Values lower than 3 are: 0: nearest, 1: linear, 2: cubic.'},
+        'padding_rule': {'value': 'constant',
+                         'help': 'Rule on how to add values outside the image boundaries. options are: (‘constant’, ‘nearest’, ‘reflect’ or ‘wrap’'},
         'regression': False,
         'softlabels': False,
         'whiten': {'value': True, 'invert_meaning': 'dont_', 'help': 'Dont whiten data to mean 0 and std 1.'},
-        'whiten_subvolumes': {'value': False, 'help':'Whiten subvolumes to mean 0 and std 1 (usually it makes more sense to do so on whole volumes)'},
-        'each_with_labels':{'value': 0, 'type': int, 'help': 'Force each n-th sample to contain labelled data'},
-        'presize_for_normalization': {'value': [None], 'help': 'Supply fixed sizes for the calculation of mean and stddev (only suitable with option whiten set)'},
+        'whiten_subvolumes': {'value': False,
+                              'help': 'Whiten subvolumes to mean 0 and std 1 (usually it makes more sense to do so on whole volumes)'},
+        'each_with_labels': {'value': 0, 'type': int, 'help': 'Force each n-th sample to contain labelled data'},
+        'presize_for_normalization': {'value': [None],
+                                      'help': 'Supply fixed sizes for the calculation of mean and stddev (only suitable with option whiten set)'},
         'half_gaussian_clip': False,
         'pyramid_sampling': False,
-        'choose_mask_at_random': {'value': False, 'help': 'if multiple masks are provided, we select one at random for each sample'},
+        'choose_mask_at_random': {'value': False,
+                                  'help': 'if multiple masks are provided, we select one at random for each sample'},
         'zero_out_label': None,
         'lazy': {'value': True, 'help': 'Do not load values lazily', 'invert_meaning': 'non'},
         'perform_one_hot_encoding': {'value': True, 'help': 'Do not one hot encode target', 'invert_meaning': 'dont_'},
         'minlabel': {'value': 1, 'type': int, 'help': 'Minimum label to count for each_with_label functionality'},
-        'channels_first': False,#{'value': True, 'help': 'Channels first or last? First is needed for nchw format (e.g. pytorch) and last is used by tensorflow'}
+        'channels_first': False,
+        # {'value': True, 'help': 'Channels first or last? First is needed for nchw format (e.g. pytorch) and last is used by tensorflow'}
         'preloadall': False,
-        'truncated_deform': {'value': False, 'help': 'deformations with displacements of maximum 3 times gausssigma in each spatial direction'},
-        'connected_components': {'value': False, 'help': 'return labels of connected components for each pixel belonging to a component instead of its label. Only works for binary segmentation and if no one hot encoding is used (with pytorch).'}
+        'truncated_deform': {'value': False,
+                             'help': 'deformations with displacements of maximum 3 times gausssigma in each spatial direction'},
+        'connected_components': {'value': False,
+                                 'help': 'return labels of connected components for each pixel belonging to a component instead of its label. Only works for binary segmentation and if no one hot encoding is used (with pytorch).'},
+        'ignore_missing_mask': False,
     }
 
     def __init__(self, w, p, location=None, tps=None, kw={}):
-        super(GridDataCollection, self).__init__(**kw)
+        super(GridDataCollection, self).__init__(kw)
         self.origargs.update({"location": location, "tps": tps})
         self.w = np.ndarray.tolist(w) if not isinstance(w, list) else w
         self.p = p
@@ -84,12 +106,13 @@ class GridDataCollection(DataCollection):
         # if not isinstance(maskfiles, list):
         #     maskfiles = [maskfiles]
         if tps is not None:
-            self.tps = tps
+            self.tps = []
+            [self.tps.extend(DataCollection.get_all_tps(t, self.featurefiles, self.maskfiles if not self.ignore_missing_mask else [])) for t in tps]
         elif location is not None:
             if callable(location):
                 self.tps = [location]
             else:
-                self.tps = DataCollection.get_all_tps(location, self.featurefiles, self.maskfiles)
+                self.tps = DataCollection.get_all_tps(location, self.featurefiles, self.maskfiles if not self.ignore_missing_mask else [])
             if len(self.tps) == 0:
                 raise Exception(
                     'no timepoints at location {} containing both {} and {}'.format(location, self.maskfiles,
@@ -119,7 +142,7 @@ class GridDataCollection(DataCollection):
         def oneorn(paramname):
             t = getattr(self, paramname)
             if len(t) == 1:
-                setattr(self, paramname, t*len(self.w))
+                setattr(self, paramname, t * len(self.w))
             elif len(t) == len(self.w) or len(t) == 0:
                 return
             else:
@@ -133,7 +156,6 @@ class GridDataCollection(DataCollection):
         oneorn('scaling')
         oneorn('shift')
         oneorn('presize_for_normalization')
-
 
         # if not np.isscalar(self.deformSigma) and len(self.deformSigma) != len(w):
         #     raise Exception(
@@ -277,7 +299,7 @@ class GridDataCollection(DataCollection):
                 if self.correct_nifti_orientation:
                     logging.getLogger('data').warning(
                         'could not correct orientation for file {} since tporigin is None: {}'
-                        .format(filename, tporigin))
+                            .format(filename, tporigin))
                 nib.save(nib.Nifti1Image(data, self.affine), filename + ".nii.gz")
         else:
             if np.max(data) <= 1.0 and np.min(data) >= 0:
@@ -333,7 +355,8 @@ class GridDataCollection(DataCollection):
 
     def subtract_gauss(self, data):
         return data - gaussian_filter(np.float32(data),
-                                      np.asarray(self.subtractGaussSigma) * 1.0 / np.asarray(self.pixdim[:len(data.shape)]))
+                                      np.asarray(self.subtractGaussSigma) * 1.0 / np.asarray(
+                                          self.pixdim[:len(data.shape)]))
 
     def _get_features_and_masks(self, folder, featurefiles=None, maskfiles=None):
         if callable(folder):
@@ -434,7 +457,7 @@ class GridDataCollection(DataCollection):
             if self.perform_one_hot_encoding:
                 labels = np.transpose(labels, neworder)
             elif self.connected_components:
-                labels = label(labels)[0] #only the labelled map, without number of components
+                labels = label(labels)[0]  # only the labelled map, without number of components
 
         return batch, labels
 
@@ -670,8 +693,10 @@ class GridDataCollection(DataCollection):
             for i in range(len(myDeformSigma)):
                 overshoot_coordinates = np.where(np.abs(tdf[i]) > upperBound[i])
                 while len(overshoot_coordinates[0]):
-                    tdf[i][overshoot_coordinates] = np.float32(self.deformrandomstate.normal(0, myDeformSigma[i], len(overshoot_coordinates[0])) * self.deformationStrength)
+                    tdf[i][overshoot_coordinates] = np.float32(self.deformrandomstate.normal(0, myDeformSigma[i], len(
+                        overshoot_coordinates[0])) * self.deformationStrength)
                     overshoot_coordinates = np.where(np.abs(tdf[i]) > upperBound[i])
+
         # logging.getLogger('data').info('truncated deformation field')
 
         def cint(x, pnm1, pn, pnp1, pnp2):
@@ -715,8 +740,8 @@ class ThreadedGridDataCollection(GridDataCollection):
 
                  }
 
-    def __init__(self, featurefiles, maskfiles=[], location=None, tps=None, **kw):
-        super(ThreadedGridDataCollection, self).__init__(featurefiles, maskfiles, location, tps, **kw)
+    def __init__(self, featurefiles, maskfiles=[], location=None, tps=None, kw={}):
+        super(ThreadedGridDataCollection, self).__init__(featurefiles, maskfiles, location, tps, kw)
         data_kw, kw = compile_arguments(ThreadedGridDataCollection, kw, transitive=False)
         for k, v in data_kw.items():
             setattr(self, k, v)

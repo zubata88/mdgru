@@ -61,10 +61,13 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         self.check_input(batch, batchlabs)
         self.optimizer.zero_grad()
         self.model.train(True)
-        loss = self.model.loss(self.model.model(self.batch), self.batchlabs)
+        losses = self.model.losses(self.model.model(self.batch), self.batchlabs)
+        loss = 0
+        for l in losses:
+            loss+=l
         loss.backward()
         self.optimizer.step()
-        return loss.item()
+        return [loss.item() for loss in losses]
 
 
     def _predict_with_loss(self, batch, batchlabs):
@@ -73,7 +76,7 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         self.model.train(False)
         result = self.model.model(self.batch)
         prediction = th.nn.softmax(result)
-        return self.model.loss(result, self.batchlabs).data[0], prediction.data.cpu().numpy()
+        return [loss.item() for loss in self.model.losses(result, self.batchlabs)], prediction.data.cpu().numpy()
 
 
 

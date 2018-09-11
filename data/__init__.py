@@ -21,11 +21,11 @@ class DataCollection(object):
                  'nclasses': None,
                  }
 
-    def __init__(self, **kw):
+    def __init__(self, kw):
+        self.origargs = copy.copy(kw)
         data_kw, kw = compile_arguments(DataCollection, kw, transitive=False)
         for k, v in data_kw.items():
             setattr(self, k, v)
-        self.origargs = copy.copy(kw)
         self.randomstate = np.random.RandomState(self.seed)
         # self.nclasses = argget(kw, 'nclasses', 2)
 
@@ -114,6 +114,7 @@ class DataCollection(object):
             comm += " -a -e {}/" + i
         comm += " \\; -print\n"
         res, err = subprocess.Popen(comm, stdout=subprocess.PIPE, shell=True).communicate()
+        # print(comm)
         if (sys.version_info > (3, 0)):
             # Python 3 code in this block
             return sorted([str(r, 'utf-8') for r in res.split() if r])

@@ -41,7 +41,7 @@ class SupervisedEvaluation(object):
         'show_f2': True,
         'show_l2': True,
         'show_cross_entropy': True,
-        'print_each': {'value': 1, 'help': 'print execution time and losses each # iterations'},
+        'print_each': {'value': 1, 'help': 'print execution time and losses each # iterations', 'type': int},
         'batch_size': {'value': 1, 'help': 'Minibatchsize', 'type': int, 'name': 'batchsize', 'short': 'b'},
         'datapath': {
             'help': 'path where training, validation and testing folders lie. Can also be some other path, as long as the other locations are provided as absolute paths. An experimentsfolder will be created in this folder, where all runs and checkpoint files will be saved.'},
@@ -91,8 +91,10 @@ class SupervisedEvaluation(object):
         self.trdc = datacls(*paramstraining, kw=copy.copy(kwcopy))
         testkw = copy.copy(kwcopy)
         testkw['batch_size'] = testkw['batch_size'] if not self.testbatchsize else self.testbatchsize
-        self.tedc = datacls(*paramstesting, kw=copy.copy(testkw))
-        self.valdc = datacls(*paramsvalidation, kw=copy.copy(testkw))
+        valkw = copy.copy(testkw)
+        testkw['ignore_missing_mask'] = True
+        self.tedc = datacls(*paramstesting, kw=testkw)
+        self.valdc = datacls(*paramsvalidation, kw=valkw)
         # self.trdc = collectioninst["train"]
         # self.tedc = collectioninst["test"]
         # self.valdc = collectioninst["validation"]

@@ -23,6 +23,8 @@ try:
 except Exception:
     import pickle
 import copy
+import hashlib
+import json
 
 ignore_signal = False
 
@@ -61,6 +63,7 @@ class Runner(object):
         'only_train': {'value': False, 'help': 'Only perform training and validation.'},
         'experimentloc': os.path.expanduser('~/experiments'),
         'optionname': {'value': None, 'nargs':'+', 'help':'name for chosen set of options, if multiple checkpoints provided, there needs to be 1 or the same number of names here'},
+        'fullparameters': None,
     }
 
 
@@ -75,7 +78,7 @@ class Runner(object):
 
         if self.notifyme:
             try:
-                import json
+                # import json
                 data = json.load(open('../config.json'))
                 nm = dict(chat_id=data['chat_id'], token=data['token'])
                 try:
@@ -93,7 +96,7 @@ class Runner(object):
         self.runfile = [f[1] for f in inspect.stack() if re.search("RUN.*\.py", f[1])][0]
 
         if self.optionname is None:
-            self.optionname = [hash(self.fullparameters)]
+            self.optionname = [hashlib.sha256(json.dumps(self.fullparameters).encode('utf8')).hexdigest()]
         elif not isinstance(self.optionname, list):
             self.optionname = [self.optionname]
 
@@ -102,6 +105,7 @@ class Runner(object):
         # if len(self.optionname) != len(self.checkpointfiles):
         #     raise Exception('optionname and checkpointfiles need to be of the same length!')
         self.estimatefilenames = self.optionname
+        print(self.optionname)
         if isinstance(self.optionname, list):
             pf = "-".join(self.optionname)
             if len(pf) > 40:
@@ -200,7 +204,7 @@ class Runner(object):
         self.val_losses = []
 
         # remove full parameters since it would not be an ignored parameter and confuse us
-        kw.pop('fullparameters')
+        # kw.pop('fullparameters')
         if kw:
             logging.getLogger('runner').warning('the following args were ignored: {}'.format(kw))
 
