@@ -1,7 +1,8 @@
 #!/usr/bin/python
-
+import sys
+sys.path.insert(0,'../')
 import nibabel as nib
-from helper import argget
+from mdgru.helper import argget
 import shutil
 import os.path
 import numpy as np
