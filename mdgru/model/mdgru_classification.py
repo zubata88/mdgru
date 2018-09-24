@@ -68,7 +68,7 @@ class MDGRUClassification(ClassificationModel, MDGRUNet):
             ignore = self.target[..., self.ignore_label]
             self.logits *= (1 - tf.expand_dims(ignore, -1))  # this will set all to zero that are going to be ignored
             self.logits[..., self.ignore_label] += ignore * 1e30
-        loss = tf.nn.softmax_cross_entropy_with_logits(logits=self.logits,
+        loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=self.logits,
                                                        labels=self.target)
         if self.ignore_label is not None:
             loss *= tf.size(ignore) / tf.reduce_sum(1 - ignore)

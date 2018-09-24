@@ -244,12 +244,14 @@ class SupervisedEvaluation(object):
             certainty = np.ones(w)
             for ind, pp in enumerate(p):
                 if pp > 0:
-                    slicesa = tuple([slice(None) for _ in range(len(p))])
-                    slicesb = tuple([slice(None) for _ in range(len(p))])
+                    slicesa = [slice(None) for _ in range(len(p))]
+                    slicesb = [slice(None) for _ in range(len(p))]
                     reshapearr = [1 for _ in range(len(p))]
                     reshapearr[ind] = pp
                     slicesa[ind] = slice(None, pp)
                     slicesb[ind] = slice(-pp, None)
+                    slicesa = tuple(slicesa)
+                    slicesb = tuple(slicesb)
                     certainty[slicesa] *= np.arange(1.0 / (pp + 1), 1, 1.0 / (pp + 1)).reshape(reshapearr)
                     certainty[slicesb] *= np.arange(1.0 / (pp + 1), 1, 1.0 / (pp + 1))[::-1].reshape(reshapearr)
 
@@ -275,11 +277,13 @@ class SupervisedEvaluation(object):
                 wrongmax = [int(x) if x < 0 else None for x in (shape - imax)]
                 mimin = np.asarray(np.maximum(0, imin), dtype=np.int32)
                 mimax = np.asarray(np.minimum(shape, imax), dtype=np.int32)
-                slicesaa = tuple([slice(mimina, miminb) for mimina, miminb in zip(mimin, mimax)])
+                slicesaa = [slice(mimina, miminb) for mimina, miminb in zip(mimin, mimax)]
                 slicesaa.append(slice(None))
+                slicesaa = tuple(slicesaa)
                 slicesbb = [0]
                 slicesbb.extend(slice(wrongmina, wrongminb) for wrongmina, wrongminb in zip(wrongmin, wrongmax))
                 slicesbb.append(slice(None))
+                slicesbb = tuple(slicesbb)
 
                 res[slicesaa] += pred[slicesbb]
                 if self.evaluate_uncertainty_times > 1:

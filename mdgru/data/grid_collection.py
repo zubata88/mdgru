@@ -10,6 +10,9 @@ from threading import Thread
 
 import nibabel as nib
 import mvloader.nifti as ni
+import mvloader.nrrd as nr
+import mvloader.dicom as dm
+import dicom
 from mvloader.volume import Volume
 import nrrd
 import numpy as np
@@ -35,8 +38,8 @@ class GridDataCollection(DataCollection):
                                'help': 'Standard deviations to use for gaussian filtered image during highpass filtering data augmentation step. No arguments deactivates the feature. Can have 1 or nfeatures entries',
                                'nargs': '*'},
         'nooriginal': {'value': False, 'help': 'Do not use original data, only gauss filtered'},
-        'correct_nifti_orientation': {'value': True, 'invert_meaning': 'dont_',
-                                      'help': 'Do not correct for the nifti orientation (for example, if header information cannot be trusted but all data arrays are correctly aligned'},
+        'correct_orientation': {'value': True, 'invert_meaning': 'dont_',
+                                'help': 'Do not correct for the nifti orientation (for example, if header information cannot be trusted but all data arrays are correctly aligned'},
         'deform': {'value': [0], 'help': 'Deformation grid spacing in pixels. If zero, no deformation will be applied',
                    'type': int},
         'deformSigma': {'value': [0],
@@ -107,12 +110,15 @@ class GridDataCollection(DataCollection):
         #     maskfiles = [maskfiles]
         if tps is not None:
             self.tps = []
-            [self.tps.extend(DataCollection.get_all_tps(t, self.featurefiles, self.maskfiles if not self.ignore_missing_mask else [])) for t in tps]
+            [self.tps.extend(DataCollection.get_all_tps(t, self.featurefiles,
+                                                        self.maskfiles if not self.ignore_missing_mask else [])) for t
+             in tps]
         elif location is not None:
             if callable(location):
                 self.tps = [location]
             else:
-                self.tps = DataCollection.get_all_tps(location, self.featurefiles, self.maskfiles if not self.ignore_missing_mask else [])
+                self.tps = DataCollection.get_all_tps(location, self.featurefiles,
+                                                      self.maskfiles if not self.ignore_missing_mask else [])
             if len(self.tps) == 0:
                 raise Exception(
                     'no timepoints at location {} containing both {} and {}'.format(location, self.maskfiles,
@@ -218,22 +224,33 @@ class GridDataCollection(DataCollection):
             # individual files for each slice
             if isdir(file):
                 # try loading each image and concatenating stuff.
-                arr = []
-                for f in [f for f in sorted(listdir(file), key=str.lower) if isfile(join(file, f))]:
-                    fi = join(file, f)
-                    if splitext(f)[-1].lower() in ['.png', '.pgm', '.pnm', '.tif']:
-                        arr.append(imread(fi))
-                    else:
-                        raise Exception(
-                            'we implemented folderwise image volume reading only for the here listed types, not {}. feel free to contribute!'.format(
-                                splitext(f)))
-                return np.stack(arr)
+                files = [f for f in sorted(listdir(file), key=str.lower) if isfile(join(file, f))]
+                images = ['.png', '.pgm', '.pnm', '.tif', '.jpeg', '.jpg', '.tiff']
+                if splitext(files[0])[-1].lower() in images:
+                    # we assume we have natural image files which compose to a big volume
+                    arr = []
+                    for f in files:
+                        fi = join(file, f)
+                        if splitext(f)[-1].lower() in images:
+                            arr.append(imread(fi))
+                        else:
+                            raise Exception(
+                                'we implemented folderwise image volume reading only for the here listed types, not {}. feel free to contribute!'.format(
+                                    splitext(f)))
+                    return np.stack(arr)
+                else:
+                    # lets try to load this folder as a dicom folder. We assume, that all images related to the first
+                    # image belong to the volume!
+                    vol = dm.open_stack(file)
+                    self.affine = vol.get_aligned_transformation("RAS")
+                    f = vol.aligned_volume
+                    return f
 
             else:
                 # we got one file, nice!
                 ending = splitext(file)[-1].lower()
                 if ending in ['.nii', '.hdr', '.nii.gz', '.gz']:
-                    if self.correct_nifti_orientation:
+                    if self.correct_orientation:
                         vol = ni.open_image(file, verbose=False)
                         self.affine = vol.get_aligned_transformation("RAS")
                         data = vol.aligned_volume
@@ -244,13 +261,21 @@ class GridDataCollection(DataCollection):
                         data = f.get_data()
                     return data
                 elif ending in ['.nrrd', '.nhdr']:
-                    try:
-                        f, h = nrrd.read(file)
-                    except:
-                        print('could not read file {}'.format(file))
-                        logging.getLogger('data').error('could not read file {}'.format(file))
-                        raise Exception('could not read file {}'.format(file))
-                    self.affine = np.eye(4)
+                    if self.correct_orientation:
+                        vol = nr.open_image(file, verbose=False)
+                        self.affine = vol.get_aligned_transformation("RAS")
+                        f = vol.aligned_volume
+                    else:
+                        try:
+                            f, h = nrrd.read(file)
+                        except:
+                            print('could not read file {}'.format(file))
+                            logging.getLogger('data').error('could not read file {}'.format(file))
+                            raise Exception('could not read file {}'.format(file))
+                        self.affine = np.eye(4)
+                    return f
+                elif ending in ['.dcm']:
+                    f = dicom.read_file(file).pixel_array
                     return f
                 elif ending in ['.mha']:
                     f = skio.imread(file, plugin='simpleitk')
@@ -273,7 +298,7 @@ class GridDataCollection(DataCollection):
             ending = os.path.splitext(self.featurefiles[0])[-1]
 
         if ending in ['.nii', '.hdr', '.nii.gz', '.gz'] or len(data.squeeze().shape) > 2:
-            if self.correct_nifti_orientation and tporigin is not None:
+            if self.correct_orientation and tporigin is not None:
                 # we corrected the orientation and we have the information to undo our wrongs, lets go:
                 aligned_data = Volume(data, np.eye(4), "RAS")  # dummy initialisation if everything else fails
                 try:
@@ -296,7 +321,7 @@ class GridDataCollection(DataCollection):
                 finally:
                     ni.save_volume(filename + ".nii.gz", aligned_data, True)
             else:
-                if self.correct_nifti_orientation:
+                if self.correct_orientation:
                     logging.getLogger('data').warning(
                         'could not correct orientation for file {} since tporigin is None: {}'
                             .format(filename, tporigin))
@@ -522,10 +547,10 @@ class GridDataCollection(DataCollection):
 
     def _extract_sample(self, features, masks, imin, imax, shapev, needslabels=False, one_hot=True):
         '''
-        returns for one sample in the batch the extracted features and mask(s). 
-        the required output has shape [wx,wy,wz,f],[wx,wy,wz,c] with wxyz being 
-        the subvolumesize and f,c the features and classes respectively. Use 
-        onehot in here if onehot is used, optionally, if at all no one hot 
+        returns for one sample in the batch the extracted features and mask(s).
+        the required output has shape [wx,wy,wz,f],[wx,wy,wz,c] with wxyz being
+        the subvolumesize and f,c the features and classes respectively. Use
+        onehot in here if onehot is used, optionally, if at all no one hot
         vector encoded data is used, the flag can be set to False
         '''
 
@@ -558,8 +583,8 @@ class GridDataCollection(DataCollection):
                     ranges[i, 1] -= ((imax[i] - shapev[i]))
                     imax[i] -= ((imax[i] - shapev[i]))
             # now index accordingly:
-            targetindex = [slice(None)] + [slice(np.int32(r[0]), np.int32(r[1])) for r in ranges]
-            sourcesindex = [slice(np.int32(mi), np.int32(ma)) for mi, ma in zip(imin, imax)]
+            targetindex = tuple([slice(None)] + [slice(np.int32(r[0]), np.int32(r[1])) for r in ranges])
+            sourcesindex = tuple([slice(np.int32(mi), np.int32(ma)) for mi, ma in zip(imin, imax)])
             tempdata[targetindex] = np.asarray([f[sourcesindex] for f in featuredata])
 
             if len(masks):
