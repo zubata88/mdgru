@@ -18,7 +18,7 @@ from scipy.misc import imsave, imread
 from scipy.ndimage.filters import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.measurements import label
-from helper import argget, counter_generator, compile_arguments
+from mdgru.helper import argget, counter_generator, compile_arguments
 from . import DataCollection
 
 
