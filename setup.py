@@ -11,10 +11,10 @@ setup(
     author="Simon Andermatt",
     author_email="simon.andermatt@unibas.ch",
     url="https://github.com/zubata88/mdgru",
-    packages=find_packages('.'),
+    packages=find_packages('mdgru'),
     license="LGPL",
     python_requires='>=3.5',
-    install_requires=["nibabel", "numpy", "scipy", "pydicom", "matplotlib", "scikit-image", "tensorflow-gpu>=1.8"],
+    install_requires=["nibabel", "numpy", "scipy", "pydicom", "matplotlib", "scikit-image", "tensorflow-gpu>=1.8", "git+https://github.com/spezold/mvloader.git"],
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)',
