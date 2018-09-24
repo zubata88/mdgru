@@ -11,7 +11,7 @@ setup(
     author="Simon Andermatt",
     author_email="simon.andermatt@unibas.ch",
     url="https://github.com/zubata88/mdgru",
-    packages=find_packages('.') + ['__main__'],
+    packages=find_packages('.') + ['__main__.py'],
     license="LGPL",
     python_requires='>=3.5',
     install_requires=["nibabel", "numpy", "scipy", "pydicom", "matplotlib", "scikit-image", "tensorflow-gpu>=1.8", "torch", "torchvision"],
