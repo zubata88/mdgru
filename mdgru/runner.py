@@ -66,7 +66,6 @@ class Runner(object):
         'fullparameters': None,
     }
 
-
     def __init__(self, evaluationinstance, **kw):
         self.origargs = copy.deepcopy(kw)
         runner_kw, kw = compile_arguments(Runner, kw, transitive=False)
@@ -100,12 +99,7 @@ class Runner(object):
         elif not isinstance(self.optionname, list):
             self.optionname = [self.optionname]
 
-        # if len(self.optionname) == 1 and len(self.checkpointfiles) > 1:
-        #     self.optionname = [self.optionname[0] for _ in self.checkpointfiles]
-        # if len(self.optionname) != len(self.checkpointfiles):
-        #     raise Exception('optionname and checkpointfiles need to be of the same length!')
         self.estimatefilenames = self.optionname
-        print(self.optionname)
         if isinstance(self.optionname, list):
             pf = "-".join(self.optionname)
             if len(pf) > 40:
@@ -316,7 +310,7 @@ class Runner(object):
                 #    "with img loading: {} {}".format(time.time() - a, np.asarray(loss).flatten()))
                 self.train_losses.append([epoch, it, loss])
 
-                if it % self.test_each == self._test_pick_iteration:
+                if it % self.test_each == self.test_each - 1 or (self.test_first and it == 0):
                     error = self.validation(showIt=self.save_validation_results, name=it)
                     self.val_losses.append([epoch, it, [e + self.plot_scaling for k, e in error.items()]])
 
@@ -372,7 +366,9 @@ class Runner(object):
                                                   + [ckptfile, str(globalstep), currenttime, key, 'all_labels']
                                                   + [str(minerrors[key]), str(avgerrors[key]),
                                                      str(medianerrors[key]), str(maxerrors[key])])
-        except:
+        except Exception as e:
+            print(e)
+            logging.getLogger('runner').warning(e)
             logging.getLogger('runner').warning('could not write error to ' + filename)
 
     def calc_min_mean_median_max_errors(self, errors):

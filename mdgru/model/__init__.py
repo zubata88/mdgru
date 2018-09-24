@@ -201,7 +201,6 @@ class Model(object):
 
     def __init__(self, data, target, dropout, kw):
         self.origargs = copy.copy(kw)
-        print("model")
         model_kw, kw = compile_arguments(Model, kw, transitive=False)
         for k, v in model_kw.items():
             setattr(self, k, v)
@@ -257,7 +256,6 @@ class Model(object):
 class ClassificationModel(Model):
     """Abstract model class. """
     def __init__(self, data, target, dropout, kw):
-        print("classificationmodel")
         super(ClassificationModel, self).__init__(data, target, dropout, kw)
         self.target = target
         self.dropout = dropout

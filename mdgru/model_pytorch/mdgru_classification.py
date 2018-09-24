@@ -51,7 +51,7 @@ class MDGRUClassification(ClassificationModel):
             logits += [MDGRUBlock(num_spatial_dims, self.dropout, last_output_channel_size, mdgru, fcc, mdgru_kw)]
             last_output_channel_size = fcc if fcc is not None else mdgru
         self.model = th.nn.Sequential(*logits)
-        self.losses = (th.nn.modules.CrossEntropyLoss())
+        self.losses = th.nn.modules.CrossEntropyLoss()
         print(self.model)
 
     def prediction(self, batch):
@@ -125,7 +125,6 @@ class MDGRUClassificationCC(MDGRUClassification):
                 vals.append(1)
             refmask = labels
             diceLossnp = 0
-            print(vals)
             for it in range(len(vals)-1):
                 segmask, numsegs = label(nppred >= vals[it+1])
                 # overlap = False
@@ -148,7 +147,6 @@ class MDGRUClassificationCC(MDGRUClassification):
                 diceLosst += [0 for _ in range(np.sum(segs))]
                 diceLossnp += np.mean(diceLosst)*(vals[it+1]-vals[it])
                 # print(diceLossnp, diceLosst)
-            print(diceLosst)
 
 
         return float(np.sum(self.dice_loss_weight)) * diceLoss, float((1 - np.sum(self.dice_loss_weight))) * self.ce(

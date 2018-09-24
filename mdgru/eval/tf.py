@@ -151,7 +151,14 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
         logging.getLogger('eval').info('initialized all variables')
 
     def get_globalstep(self):
-        return self.sess.run(self.model.global_step)
+        try:
+            return self.sess.run(self.model.global_step)
+        except:
+            try:
+                return self.sess.run(self.test_model.global_step)
+            except:
+                logging.getLogger('eval').warning('could not restore global step information')
+                return "[global_step]"
 
     def _save(self, f):
         globalstep = self.get_globalstep()

@@ -302,10 +302,10 @@ class GridDataCollection(DataCollection):
                 # we corrected the orientation and we have the information to undo our wrongs, lets go:
                 aligned_data = Volume(data, np.eye(4), "RAS")  # dummy initialisation if everything else fails
                 try:
-                    tporigin_vol = ni.open_image(os.path.join(tporigin, self.maskfiles[0]))
+                    tporigin_vol = ni.open_image(os.path.join(tporigin, self.maskfiles[0]), verbose=False)
                 except:
                     try:
-                        tporigin_vol = ni.open_image(os.path.join(tporigin, self.featurefiles[0]))
+                        tporigin_vol = ni.open_image(os.path.join(tporigin, self.featurefiles[0]), verbose=False)
                     except Exception as e:
                         logging.getLogger('data').warning('could not correct orientation for file {} from {}'
                                                           .format(filename, tporigin))

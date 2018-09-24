@@ -63,7 +63,7 @@ def run_mdgru(args=None):
     define_arguments(Runner, parser.add_argument_group('Runner Parameters'))
     define_arguments(tdc, parser.add_argument_group('Data Parameters'))
     args = parser.parse_args(args=args)
-    print(args)
+    # print(args)
 
     if args.help:
         parser.print_help()

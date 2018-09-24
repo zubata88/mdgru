@@ -9,6 +9,7 @@ import time
 from torch.autograd import Variable
 from mdgru.helper import compile_arguments
 
+
 class SupervisedEvaluationTorch(SupervisedEvaluation):
     '''Base class for all evaluation classes. Child classes implement various
         test_* methods to test modeldependent aspects.
@@ -19,6 +20,7 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
 
     '''
     _defaults = {}
+
     def __init__(self, modelcls, collectioninst, kw):
         super(SupervisedEvaluationTorch, self).__init__(modelcls, collectioninst, kw)
         eval_kw, kw = compile_arguments(SupervisedEvaluationTorch, kw, transitive=False)
@@ -62,13 +64,17 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         self.optimizer.zero_grad()
         self.model.train(True)
         losses = self.model.losses(self.model.model(self.batch), self.batchlabs)
-        loss = 0
-        for l in losses:
-            loss+=l
-        loss.backward()
-        self.optimizer.step()
-        return [loss.item() for loss in losses]
-
+        if isinstance(losses, list):
+            loss = 0
+            for l in losses:
+                loss += l
+            loss.backward()
+            self.optimizer.step()
+            return [loss.item() for loss in losses]
+        else:
+            losses.backward()
+            self.optimizer.step()
+            return (losses.item(),)
 
     def _predict_with_loss(self, batch, batchlabs):
         """run evaluation and calculate loss"""
@@ -78,8 +84,6 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         prediction = th.nn.softmax(result)
         return [loss.item() for loss in self.model.losses(result, self.batchlabs)], prediction.data.cpu().numpy()
 
-
-
     def _predict(self, batch, dropout, testing):
         """ predict given our graph for batch. Be careful as this method returns results always in NHWC or NDHWC"""
         batch_shape = batch.shape
@@ -88,16 +92,15 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         self.model.train(False)
         return self.model.prediction(self.batch).data.cpu().numpy().transpose(reorder)
 
-
     def get_globalstep(self):
-        return next(iter(self.optimizer.state_dict().values()))['step']
+        return next(iter(self.optimizer.state_dict()['state'].values()))['step']
 
     def _save(self, f):
         """Save model"""
         modelstate = self.model.state_dict()
         optimizerstate = self.optimizer.state_dict()
         globalstep = next(iter(optimizerstate['state'].values()))['step']
-        th.save({'model': modelstate, 'optimizer': optimizerstate}, f + "-{}".format(globalstep))
+        th.save({'model': modelstate, 'optimizer': optimizerstate, 'globalstep': globalstep}, f + "-{}".format(globalstep))
         return f + '-{}'.format(globalstep)
 
     def _load(self, f):
@@ -105,4 +108,3 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         state = th.load(f)
         self.model.load_state_dict(state["model"])
         self.optimizer.load_state_dict(state["optimizer"])
-
