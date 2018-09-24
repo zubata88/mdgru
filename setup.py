@@ -3,6 +3,7 @@
 
 from setuptools import setup, find_packages
 
+print(find_packages('.'))
 setup(
     name="mdgru",
     version="0.1.20180924",
