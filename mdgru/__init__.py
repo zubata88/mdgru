@@ -1,4 +1,4 @@
-from helper import define_arguments
+from mdgru.helper import define_arguments
 
 __author__ = "Simon Andermatt"
 __copyright__ = "Copyright (C) 2017 Simon Andermatt"
@@ -8,10 +8,10 @@ logging.basicConfig(level=logging.INFO)
 import os
 import numpy as np
 import sys
-from data.grid_collection import GridDataCollection, ThreadedGridDataCollection
+from mdgru.data.grid_collection import GridDataCollection, ThreadedGridDataCollection
 # from options.parser import clean_datacollection_args
-from runner import Runner
-from helper import compile_arguments
+from mdgru.runner import Runner
+from mdgru.helper import compile_arguments
 import argparse
 
 
@@ -40,18 +40,18 @@ def run_mdgru(args=None):
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(g) for g in pre_args.gpu])
     if pre_args.use_pytorch:
         if pre_args.dice_cc:
-            from model_pytorch.mdgru_classification import MDGRUClassificationCC as modelcls
+            from mdgru.model_pytorch.mdgru_classification import MDGRUClassificationCC as modelcls
         else:
-            from model_pytorch.mdgru_classification import MDGRUClassification as modelcls
-        from eval.torch import SupervisedEvaluationTorch as evalcls
+            from mdgru.model_pytorch.mdgru_classification import MDGRUClassification as modelcls
+        from mdgru.eval.torch import SupervisedEvaluationTorch as evalcls
     else:
         if pre_args.dice_generalized:
-            from model.mdgru_classification import MDGRUClassificationWithGeneralizedDiceLoss as modelcls
+            from mdgru.model.mdgru_classification import MDGRUClassificationWithGeneralizedDiceLoss as modelcls
         elif pre_args.dice_loss_label != None or pre_args.dice_autoweighted:
-            from model.mdgru_classification import MDGRUClassificationWithDiceLoss as modelcls
+            from mdgru.model.mdgru_classification import MDGRUClassificationWithDiceLoss as modelcls
         else:
-            from model.mdgru_classification import MDGRUClassification as modelcls
-        from eval.tf import SupervisedEvaluationTensorflow as evalcls
+            from mdgru.model.mdgru_classification import MDGRUClassification as modelcls
+        from mdgru.eval.tf import SupervisedEvaluationTensorflow as evalcls
 
 
     # Set the necessary classes
