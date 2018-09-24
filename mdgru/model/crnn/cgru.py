@@ -7,9 +7,9 @@ from copy import deepcopy
 import tensorflow as tf
 from tensorflow.python.ops import variable_scope as vs
 
-from helper import compile_arguments
-from model import batch_norm
-from model.crnn import CRNNCell
+from mdgru.helper import compile_arguments
+from mdgru.model import batch_norm
+from mdgru.model.crnn import CRNNCell
 
 
 class CGRUCell(CRNNCell):

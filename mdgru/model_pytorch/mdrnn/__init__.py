@@ -2,8 +2,8 @@ __author__ = "Simon Andermatt"
 __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import torch as th
-from helper import argget
-from helper import compile_arguments
+from mdgru.helper import argget
+from mdgru.helper import compile_arguments
 from .mdgru import MDRNN
 
 

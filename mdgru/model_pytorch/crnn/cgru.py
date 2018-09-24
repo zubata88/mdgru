@@ -3,8 +3,8 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import logging
 from copy import deepcopy
-from helper import compile_arguments
-from model_pytorch.crnn import CRNNCell
+from mdgru.helper import compile_arguments
+from mdgru.model_pytorch.crnn import CRNNCell
 import torch as th
 from torch.nn.parameter import Parameter
 from torch.nn import init

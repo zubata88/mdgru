@@ -4,12 +4,12 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 import numpy as np
 import tensorflow as tf
 
-from helper import argget
-from helper import compile_arguments
-from model import batch_norm, get_modified_xavier_method
+from mdgru.helper import argget
+from mdgru.helper import compile_arguments
+from mdgru.model import batch_norm, get_modified_xavier_method
 # CaffeMDGRU is not supported anymore, uncomment at own risk:
 # from .caffe_mdgru import CaffeMDGRU
-from .mdgru import MDRNN
+from mdgru.model.mdrnn.mdgru import MDRNN
 
 
 class MDGRUNet(object):

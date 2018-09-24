@@ -10,7 +10,7 @@ from abc import abstractmethod
 
 import numpy as np
 
-from helper import argget, compile_arguments
+from mdgru.helper import argget, compile_arguments
 
 
 class SupervisedEvaluation(object):

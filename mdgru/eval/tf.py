@@ -1,10 +1,10 @@
-from eval import SupervisedEvaluation
+from mdgru.eval import SupervisedEvaluation
 import tensorflow as tf
 import logging
 import os
 import pickle
 from tensorflow.python import pywrap_tensorflow
-from helper import argget, check_if_kw_empty, compile_arguments
+from mdgru.helper import argget, check_if_kw_empty, compile_arguments
 import numpy as np
 import copy
 

@@ -3,13 +3,13 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import tensorflow as tf
 import numpy as np
-from helper import argget, compile_arguments
+from mdgru.helper import argget, compile_arguments
 import copy
 from tensorflow.python import pywrap_tensorflow
 import logging
 from tensorflow.python.ops import random_ops
 import math
-from helper import np_arr_backward, initializer_W, lazy_property
+from mdgru.helper import np_arr_backward, initializer_W, lazy_property
 
 def _save_summary_for_2d_image(name, grid, num_channels, collections=[]):
     """ Helper to summarize 2d images in tensorboard, by saving one for each channel.

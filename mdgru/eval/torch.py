@@ -1,13 +1,13 @@
-from eval import SupervisedEvaluation
+from mdgru.eval import SupervisedEvaluation
 import logging
 import os
-from helper import argget, check_if_kw_empty
+from mdgru.helper import argget, check_if_kw_empty
 import torch as th
 import numpy as np
 import copy
 import time
 from torch.autograd import Variable
-from helper import compile_arguments
+from mdgru.helper import compile_arguments
 
 class SupervisedEvaluationTorch(SupervisedEvaluation):
     '''Base class for all evaluation classes. Child classes implement various

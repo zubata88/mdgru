@@ -5,8 +5,8 @@ from copy import copy, deepcopy
 
 import numpy as np
 import tensorflow as tf
-from model import convolution_helper_padding_same
-from helper import compile_arguments, harmonize_filter_size
+from mdgru.model import convolution_helper_padding_same
+from mdgru.helper import compile_arguments, harmonize_filter_size
 from ..crnn.cgru import CGRUCell
 
 

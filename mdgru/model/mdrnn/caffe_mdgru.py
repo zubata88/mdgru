@@ -3,7 +3,7 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 # Warning: this file is obsolete and not maintained anymore.
 
-from helper import argget
+from mdgru.helper import argget
 import copy
 import tensorflow as tf
 from tensorflow_extra_ops import CaffeBiCGRU3D

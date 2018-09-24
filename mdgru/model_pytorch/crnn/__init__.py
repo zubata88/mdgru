@@ -7,7 +7,7 @@ from copy import deepcopy
 import numpy as np
 import torch as th
 
-from helper import argget, compile_arguments
+from mdgru.helper import argget, compile_arguments
 
 
 class CRNNCell(th.nn.Module):

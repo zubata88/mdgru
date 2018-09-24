@@ -5,7 +5,7 @@ from copy import copy, deepcopy
 
 import torch as th
 
-from helper import compile_arguments, harmonize_filter_size
+from mdgru.helper import compile_arguments, harmonize_filter_size
 from ..crnn.cgru import CGRUCell
 
 

@@ -3,13 +3,13 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import numpy as np
 
-from helper import argget, compile_arguments
-from model_pytorch.mdrnn import MDGRUBlock
-from model_pytorch.mdrnn.mdgru import MDRNN
-from helper import collect_parameters, define_arguments
+from mdgru.helper import argget, compile_arguments
+from mdgru.model_pytorch.mdrnn import MDGRUBlock
+from mdgru.model_pytorch.mdrnn.mdgru import MDRNN
+from mdgru.helper import collect_parameters, define_arguments
 from . import ClassificationModel
 import torch as th
-from model_pytorch import init_weights
+from mdgru.model_pytorch import init_weights
 import torch.nn.functional as F
 from scipy.ndimage.measurements import label
 

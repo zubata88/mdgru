@@ -4,12 +4,12 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 import numpy as np
 import tensorflow as tf
 
-from helper import argget, collect_parameters, define_arguments, compile_arguments
-from model import save_summary_for_nd_images
-from model.mdrnn import MDGRUNet
-from model.mdrnn.mdgru import MDRNN
-from . import ClassificationModel
-from . import lazy_property
+from mdgru.helper import argget, collect_parameters, define_arguments, compile_arguments
+from mdgru.model import save_summary_for_nd_images
+from mdgru.model.mdrnn import MDGRUNet
+from mdgru.model.mdrnn.mdgru import MDRNN
+from mdgru.model import ClassificationModel
+from mdgru.model import lazy_property
 
 
 class MDGRUClassification(ClassificationModel, MDGRUNet):

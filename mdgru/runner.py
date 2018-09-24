@@ -16,7 +16,7 @@ from threading import Thread
 
 import numpy as np
 
-from helper import argget, force_symlink, notify_user, compile_arguments
+from mdgru.helper import argget, force_symlink, notify_user, compile_arguments
 
 try:
     import _pickle as pickle  # cPickle is now _pickle (TODO: CHECK)
