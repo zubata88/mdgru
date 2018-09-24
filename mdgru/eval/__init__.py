@@ -244,8 +244,8 @@ class SupervisedEvaluation(object):
             certainty = np.ones(w)
             for ind, pp in enumerate(p):
                 if pp > 0:
-                    slicesa = [slice(None) for _ in range(len(p))]
-                    slicesb = [slice(None) for _ in range(len(p))]
+                    slicesa = tuple([slice(None) for _ in range(len(p))])
+                    slicesb = tuple([slice(None) for _ in range(len(p))])
                     reshapearr = [1 for _ in range(len(p))]
                     reshapearr[ind] = pp
                     slicesa[ind] = slice(None, pp)
@@ -275,7 +275,7 @@ class SupervisedEvaluation(object):
                 wrongmax = [int(x) if x < 0 else None for x in (shape - imax)]
                 mimin = np.asarray(np.maximum(0, imin), dtype=np.int32)
                 mimax = np.asarray(np.minimum(shape, imax), dtype=np.int32)
-                slicesaa = [slice(mimina, miminb) for mimina, miminb in zip(mimin, mimax)]
+                slicesaa = tuple([slice(mimina, miminb) for mimina, miminb in zip(mimin, mimax)])
                 slicesaa.append(slice(None))
                 slicesbb = [0]
                 slicesbb.extend(slice(wrongmina, wrongminb) for wrongmina, wrongminb in zip(wrongmin, wrongmax))

@@ -105,7 +105,7 @@ class CGRUCell(CRNNCell):
             # Compute candidate \tilde{h}
             with vs.variable_scope("Candidate"):  # Proposal or Candidate.
                 if self.put_r_back:
-                    state *= r
+                    state = state * r
                 usedx = self.dropconnectx if self.use_dropconnect_on_state else None
                 usedh = self.dropconnecth if self.use_dropconnect_on_state else None
                 htx, hth, htb = self._convlinear([inputs, state],
