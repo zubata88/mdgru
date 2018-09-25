@@ -103,11 +103,7 @@ class GridDataCollection(DataCollection):
         data_kw, kw = compile_arguments(GridDataCollection, kw, transitive=False)
         for k, v in data_kw.items():
             setattr(self, k, v)
-        #
-        # if not isinstance(featurefiles, list):
-        #     featurefiles = [featurefiles]
-        # if not isinstance(maskfiles, list):
-        #     maskfiles = [maskfiles]
+
         if tps is not None:
             self.tps = []
             [self.tps.extend(DataCollection.get_all_tps(t, self.featurefiles,
@@ -129,22 +125,6 @@ class GridDataCollection(DataCollection):
         if len(self.tps) == 0:
             raise Exception('there were no timepoints provided and location was not set')
 
-        # self.subtractGaussSigma != len(self.w)
-
-        # self.featurefiles = featurefiles
-        # self.maskfiles = maskfiles
-        # w = argget(kw, 'w', self.w)
-        # if not isinstance(w, list):
-        #     w = np.ndarray.tolist(w)
-        # self.w = w
-        # self.p = argget(kw, 'padding', np.zeros(np.shape(w)))
-
-        # self.deform = argget(kw, 'deformation', np.zeros(np.shape(w)))
-        # self.interpolate_always = argget(kw, 'interpolate_always', False)
-        # self.deformrandomstate = np.random.RandomState(argget(kw, 'deformseed', 1234))
-        # self.deformSigma = argget(kw, 'deformSigma', 5)
-
-        # harmonize listshaped attributes:
         def oneorn(paramname):
             t = getattr(self, paramname)
             if len(t) == 1:
@@ -163,53 +143,11 @@ class GridDataCollection(DataCollection):
         oneorn('shift')
         oneorn('presize_for_normalization')
 
-        # if not np.isscalar(self.deformSigma) and len(self.deformSigma) != len(w):
-        #     raise Exception(
-        #         'we need the same sized deformsigma as w (hence, if we provide an array, it has to be the exact correct size)')
-        # self.interpolation_order = argget(kw, 'datainterpolation', 3)
-        # self.padding_rule = argget(kw, 'dataextrapolation', 'constant')
-
-        # self.scaling = np.float32(argget(kw, 'scaling', np.zeros(np.shape(w))))
-        # self.rotation = np.float32(argget(kw, 'rotation', 0))
-        # self.shift = np.float32(argget(kw, 'shift', np.zeros(np.shape(w))))
-        # self.mirror = np.float32(argget(kw, 'mirror', np.zeros(np.shape(w))))
-        # self.gaussiannoise = np.float32(argget(kw, 'gaussiannoise', 0.0))
-        # self.vary_mean = np.float32(argget(kw, 'vary_mean', 0))
-        # self.vary_stddev = np.float32(argget(kw, 'vary_stddev', 0))
-        # self.regression = argget(kw, 'regression', False)
-        # self.softlabels = argget(kw, 'softlabels', True)
-        # self.whiten = argget(kw, "whiten", True)
-        # self.each_with_labels = argget(kw, "each_with_labels", 0)
-        # if self.each_with_labels > 0 and len(self.maskfiles) == 0:
-        #     raise Exception(
-        #         'need to provide at leas tone mask file, otherwise we cant make sure we have labels set obviously')
-        # self.whiten_subvolumes = argget(kw, "whiten_subvolumes", False)
-        # self.presize_for_normalization = argget(kw, 'presize_for_normalization', [None for w in self.w])
-        # self.half_gaussian_clip = argget(kw, 'half_gaussian_clip', False)
-        # self.pyramid_sampling = argget(kw, 'pyramid_sampling', False)
-        # self.subtractGauss = argget(kw, "subtractGauss", False)
-        # self.nooriginal = argget(kw, 'nooriginal', False)
-        # self.subtractGaussSigma = np.float32(argget(kw, "sigma", 5))
-        # self.choose_mask_at_random = argget(kw, "choose_mask_at_random", False)
         if self.choose_mask_at_random:
             self.random_mask_state = np.random.RandomState(argget(kw, 'randommaskseed', 1337))
-        # self.zero_out_label = argget(kw, 'zero_out_label', None)
-        # self.running_mean = 0
-        # self.running_num = 0
-        # self.running_var = 0
-        # self.lazy = argget(kw, 'lazy', True)
         self.imagedict = {}
-        # self.perform_one_hot_encoding = argget(kw, 'perform_one_hot_encoding', True)
-        # self.correct_nifti_orientation = argget(kw, 'correct_nifti_orientation', len(self.w) == 3)
-        # if self.correct_nifti_orientation and len(self.w) != 3:
-        #     self.correct_nifti_orientation = False
-        #     logging.getLogger('data').warning('Can only correct for orientation for 3d data so far!')
         self.numoffeatures = argget(kw, 'numoffeatures', len(self._get_features_and_masks(self.tps[0])[0]))
         self.sample_counter = 0
-        # self.truncated_deform = argget(kw, "truncated_deform", False)
-
-        # if self.lazy == False and argget(kw, 'preloadall', False):
-        #     self.preload_all()
 
     def load(self, file, lazy=True):
 

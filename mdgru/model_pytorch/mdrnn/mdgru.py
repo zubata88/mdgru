@@ -35,8 +35,8 @@ class MDRNN(th.nn.Module):
         "use_dropconnect_h": {'value': True, 'help': "Should DropConnect be applied to the state?", 'invert_meaning': 'dont_'},
         # "swap_memory": True,
         "return_cgru_results": {'value': False, 'help': "Instead of summing, individual cgru channel results are concatenated."},
-        "filter_size_x": {'value': [7, 7, 7], 'help': "Convolution kernel size for input."},
-        "filter_size_h": {'value': [7, 7, 7], 'help': "Convolution kernel size for state."},
+        "filter_size_x": {'value': [7], 'help': "Convolution kernel size for input."},
+        "filter_size_h": {'value': [7], 'help': "Convolution kernel size for state."},
         "crnn_activation": {'value': th.nn.Tanh, 'help': "Activation function to be used for the CRNN."},
         "legacy_cgru_addition": {'value': False, 'help': "results in worse weight initialization, only use if you know what you are doing!"},
         "crnn_class": {'value': CGRUCell, 'help': 'CRNN class to be used in the MDRNN'}, #this is silly as we wont be able to ever display the correct help message if this is changed....
