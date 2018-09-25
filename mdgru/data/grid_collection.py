@@ -12,7 +12,7 @@ import nibabel as nib
 import mvloader.nifti as ni
 import mvloader.nrrd as nr
 import mvloader.dicom as dm
-import dicom
+import pydicom
 from mvloader.volume import Volume
 import nrrd
 import numpy as np
@@ -275,7 +275,7 @@ class GridDataCollection(DataCollection):
                         self.affine = np.eye(4)
                     return f
                 elif ending in ['.dcm']:
-                    f = dicom.read_file(file).pixel_array
+                    f = pydicom.dcmread(file).pixel_array
                     return f
                 elif ending in ['.mha']:
                     f = skio.imread(file, plugin='simpleitk')

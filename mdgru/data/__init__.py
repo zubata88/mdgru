@@ -30,15 +30,22 @@ class DataCollection(object):
         # self.nclasses = argget(kw, 'nclasses', 2)
 
     def set_states(self, states):
+        ''' reset random state generators given the states in "states"
+
+        :param states:
+        :return:
+        '''
         if states is None:
             logging.getLogger('eval').warning('could not reproduce state, setting unreproducable random seed')
             self.randomstate.set_seed(np.random.randint(0, 1000000))
         self.randomstate.set_state(states)
 
     def get_states(self):
+        ''' Get states of this data collection'''
         return self.randomstate.get_state()
 
     def reset_seed(self, seed=12345678):
+        ''' reset main random number generator with given seed '''
         self.randomstate = np.random.RandomState(seed)
 
     def random_sample(self, **kw):
