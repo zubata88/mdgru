@@ -170,7 +170,7 @@
 <dl class="class">
 <dt id="mdgru.model.mdrnn.MDGRUNet">
 <em class="property">class </em><code class="descclassname">mdgru.model.mdrnn.</code><code class="descname">MDGRUNet</code><span class="sig-paren">(</span><em>data</em>, <em>target</em>, <em>dropout</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdrnn.html#MDGRUNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdrnn.MDGRUNet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Convenience class combining attributes to be used for multiple MDRNN and voxel-wise fully connected layers.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -179,7 +179,7 @@
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kw</strong> (<em>dict containing the following options.</em>) – <ul class="simple">
 <li><strong>add_e_bn</strong> [default: False]</li>
 <li><strong>resmdgru</strong> [default: False] Add a residual connection around an MDGRU block</li>
-<li><strong>vwfc_activation</strong> [default: function tanh at 0x7f7df881e488]</li>
+<li><strong>vwfc_activation</strong> [default: function tanh at 0x7f790f886c80]</li>
 </ul>
 </td>
 </tr>
@@ -217,7 +217,7 @@
 <span class="target" id="module-mdgru.model.mdrnn.mdgru"></span><dl class="class">
 <dt id="mdgru.model.mdrnn.mdgru.MDRNN">
 <em class="property">class </em><code class="descclassname">mdgru.model.mdrnn.mdgru.</code><code class="descname">MDRNN</code><span class="sig-paren">(</span><em>inputarr</em>, <em>dropout</em>, <em>dimensions</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdrnn/mdgru.html#MDRNN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdrnn.mdgru.MDRNN" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>MDRNN class originally designed to handle the sum of cGRU computations resulting in one MDGRU.</p>
 <p>_defaults contains initial values for most class attributes.
 :param use_dropconnect_x: Flag if dropconnect regularization should be applied to input weights
@@ -232,7 +232,7 @@
 <li><strong>no_avg_pool</strong> [default: True]</li>
 <li><strong>filter_size_x</strong> [default: [7]] filter sizes for each dimension of the input</li>
 <li><strong>filter_size_h</strong> [default: [7]] filter sizes for each dimension of the state</li>
-<li><strong>crnn_activation</strong> [default: function tanh at 0x7f7df881e488]</li>
+<li><strong>crnn_activation</strong> [default: function tanh at 0x7f790f886c80]</li>
 <li><strong>legacy_cgru_addition</strong> [default: False] results in worse weight initialization, only use if you know what you are doing!</li>
 <li><strong>crnn_class</strong> [default: class ‘mdgru.model.crnn.cgru.CGRUCell’]</li>
 <li><strong>strides</strong> [default: None]</li>

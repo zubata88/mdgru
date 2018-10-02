@@ -228,6 +228,12 @@
         <li><a href="crnn_tf.html#mdgru.model.crnn.CRNNCell._deferred_dependencies">(mdgru.model.crnn.CRNNCell attribute)</a>
 </li>
       </ul></li>
+      <li><a href="data.html#mdgru.data.grid_collection.GridDataCollection._extract_sample">_extract_sample() (mdgru.data.grid_collection.GridDataCollection method)</a>
+
+      <ul>
+        <li><a href="data.html#mdgru.data.grid_collection.ThreadedGridDataCollection._extract_sample">(mdgru.data.grid_collection.ThreadedGridDataCollection method)</a>
+</li>
+      </ul></li>
       <li><a href="crnn_tf.html#mdgru.model.crnn.cgru.CGRUCell._gather_saveables_for_checkpoint">_gather_saveables_for_checkpoint() (mdgru.model.crnn.cgru.CGRUCell method)</a>
 
       <ul>
@@ -313,7 +319,13 @@
 </li>
       </ul></li>
       <li><a href="data.html#mdgru.data.DataCollection._one_hot_vectorize">_one_hot_vectorize() (mdgru.data.DataCollection method)</a>
+
+      <ul>
+        <li><a href="data.html#mdgru.data.grid_collection.GridDataCollection._one_hot_vectorize">(mdgru.data.grid_collection.GridDataCollection method)</a>
 </li>
+        <li><a href="data.html#mdgru.data.grid_collection.ThreadedGridDataCollection._one_hot_vectorize">(mdgru.data.grid_collection.ThreadedGridDataCollection method)</a>
+</li>
+      </ul></li>
       <li><a href="crnn_tf.html#mdgru.model.crnn.cgru.CGRUCell._paddata">_paddata() (mdgru.model.crnn.cgru.CGRUCell method)</a>
 
       <ul>
@@ -356,8 +368,12 @@
         <li><a href="crnn_tf.html#mdgru.model.crnn.CRNNCell._track_checkpointable">(mdgru.model.crnn.CRNNCell method)</a>
 </li>
       </ul></li>
-      <li><a href="eval.html#mdgru.eval.torch.SupervisedEvaluationTorch._train">_train() (mdgru.eval.torch.SupervisedEvaluationTorch method)</a>
+      <li><a href="eval.html#mdgru.eval.tf.SupervisedEvaluationTensorflow._train">_train() (mdgru.eval.tf.SupervisedEvaluationTensorflow method)</a>
+
+      <ul>
+        <li><a href="eval.html#mdgru.eval.torch.SupervisedEvaluationTorch._train">(mdgru.eval.torch.SupervisedEvaluationTorch method)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -446,6 +462,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="model.html#mdgru.model.batch_norm">batch_norm() (in module mdgru.model)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="crnn_tf.html#mdgru.model.crnn.cgru.CGRUCell.build">build() (mdgru.model.crnn.cgru.CGRUCell method)</a>
+
+      <ul>
+        <li><a href="crnn_tf.html#mdgru.model.crnn.CRNNCell.build">(mdgru.model.crnn.CRNNCell method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -713,6 +737,12 @@
 </li>
         <li><a href="crnn_th.html#mdgru.model_pytorch.crnn.CRNNCell.forward">(mdgru.model_pytorch.crnn.CRNNCell method)</a>
 </li>
+        <li><a href="crnn_th.html#mdgru.model_pytorch.crnn.cgru.CGRUCell.forward">(mdgru.model_pytorch.crnn.cgru.CGRUCell method)</a>
+</li>
+        <li><a href="mdrnn_th.html#mdgru.model_pytorch.mdrnn.MDGRUBlock.forward">(mdgru.model_pytorch.mdrnn.MDGRUBlock method)</a>
+</li>
+        <li><a href="mdrnn_th.html#mdgru.model_pytorch.mdrnn.mdgru.MDRNN.forward">(mdgru.model_pytorch.mdrnn.mdgru.MDRNN method)</a>
+</li>
       </ul></li>
   </ul></td>
 </tr></table>
@@ -731,9 +761,21 @@
       <li><a href="helper.html#mdgru.helper.generate_defaults_info">generate_defaults_info() (in module mdgru.helper)</a>
 </li>
       <li><a href="data.html#mdgru.data.DataCollection.get_all_tps">get_all_tps() (mdgru.data.DataCollection static method)</a>
+
+      <ul>
+        <li><a href="data.html#mdgru.data.grid_collection.GridDataCollection.get_all_tps">(mdgru.data.grid_collection.GridDataCollection static method)</a>
 </li>
+        <li><a href="data.html#mdgru.data.grid_collection.ThreadedGridDataCollection.get_all_tps">(mdgru.data.grid_collection.ThreadedGridDataCollection static method)</a>
+</li>
+      </ul></li>
       <li><a href="data.html#mdgru.data.DataCollection.get_data_dims">get_data_dims() (mdgru.data.DataCollection method)</a>
+
+      <ul>
+        <li><a href="data.html#mdgru.data.grid_collection.GridDataCollection.get_data_dims">(mdgru.data.grid_collection.GridDataCollection method)</a>
 </li>
+        <li><a href="data.html#mdgru.data.grid_collection.ThreadedGridDataCollection.get_data_dims">(mdgru.data.grid_collection.ThreadedGridDataCollection method)</a>
+</li>
+      </ul></li>
       <li><a href="crnn_tf.html#mdgru.model.crnn.cgru.CGRUCell.get_input_at">get_input_at() (mdgru.model.crnn.cgru.CGRUCell method)</a>
 
       <ul>
@@ -752,26 +794,26 @@
         <li><a href="crnn_tf.html#mdgru.model.crnn.CRNNCell.get_losses_for">(mdgru.model.crnn.CRNNCell method)</a>
 </li>
       </ul></li>
-      <li><a href="model.html#mdgru.model.ClassificationModel.get_model_name_from_ckpt">get_model_name_from_ckpt() (mdgru.model.ClassificationModel method)</a>
+      <li><a href="model.html#mdgru.model.ClassificationModel.get_model_name_from_ckpt">get_model_name_from_ckpt() (mdgru.model.ClassificationModel static method)</a>
 
       <ul>
-        <li><a href="model.html#mdgru.model.GANModel.get_model_name_from_ckpt">(mdgru.model.GANModel method)</a>
+        <li><a href="model.html#mdgru.model.GANModel.get_model_name_from_ckpt">(mdgru.model.GANModel static method)</a>
 </li>
         <li><a href="model.html#mdgru.model.Model.get_model_name_from_ckpt">(mdgru.model.Model static method)</a>
 </li>
-        <li><a href="model.html#mdgru.model.ReconstructionModel.get_model_name_from_ckpt">(mdgru.model.ReconstructionModel method)</a>
+        <li><a href="model.html#mdgru.model.ReconstructionModel.get_model_name_from_ckpt">(mdgru.model.ReconstructionModel static method)</a>
 </li>
-        <li><a href="model.html#mdgru.model.RegressionModel.get_model_name_from_ckpt">(mdgru.model.RegressionModel method)</a>
+        <li><a href="model.html#mdgru.model.RegressionModel.get_model_name_from_ckpt">(mdgru.model.RegressionModel static method)</a>
 </li>
-        <li><a href="model_pytorch.html#mdgru.model_pytorch.ClassificationModel.get_model_name_from_ckpt">(mdgru.model_pytorch.ClassificationModel method)</a>
+        <li><a href="model_pytorch.html#mdgru.model_pytorch.ClassificationModel.get_model_name_from_ckpt">(mdgru.model_pytorch.ClassificationModel static method)</a>
 </li>
-        <li><a href="model_pytorch.html#mdgru.model_pytorch.GANModel.get_model_name_from_ckpt">(mdgru.model_pytorch.GANModel method)</a>
+        <li><a href="model_pytorch.html#mdgru.model_pytorch.GANModel.get_model_name_from_ckpt">(mdgru.model_pytorch.GANModel static method)</a>
 </li>
         <li><a href="model_pytorch.html#mdgru.model_pytorch.Model.get_model_name_from_ckpt">(mdgru.model_pytorch.Model static method)</a>
 </li>
-        <li><a href="model_pytorch.html#mdgru.model_pytorch.ReconstructionModel.get_model_name_from_ckpt">(mdgru.model_pytorch.ReconstructionModel method)</a>
+        <li><a href="model_pytorch.html#mdgru.model_pytorch.ReconstructionModel.get_model_name_from_ckpt">(mdgru.model_pytorch.ReconstructionModel static method)</a>
 </li>
-        <li><a href="model_pytorch.html#mdgru.model_pytorch.RegressionModel.get_model_name_from_ckpt">(mdgru.model_pytorch.RegressionModel method)</a>
+        <li><a href="model_pytorch.html#mdgru.model_pytorch.RegressionModel.get_model_name_from_ckpt">(mdgru.model_pytorch.RegressionModel static method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -793,13 +835,21 @@
       <li><a href="model.html#mdgru.model.get_pseudo_orthogonal_block_circulant_initialization">get_pseudo_orthogonal_block_circulant_initialization() (in module mdgru.model)</a>
 </li>
       <li><a href="data.html#mdgru.data.DataCollection.get_states">get_states() (mdgru.data.DataCollection method)</a>
+
+      <ul>
+        <li><a href="data.html#mdgru.data.grid_collection.GridDataCollection.get_states">(mdgru.data.grid_collection.GridDataCollection method)</a>
 </li>
+        <li><a href="data.html#mdgru.data.grid_collection.ThreadedGridDataCollection.get_states">(mdgru.data.grid_collection.ThreadedGridDataCollection method)</a>
+</li>
+      </ul></li>
       <li><a href="crnn_tf.html#mdgru.model.crnn.cgru.CGRUCell.get_updates_for">get_updates_for() (mdgru.model.crnn.cgru.CGRUCell method)</a>
 
       <ul>
         <li><a href="crnn_tf.html#mdgru.model.crnn.CRNNCell.get_updates_for">(mdgru.model.crnn.CRNNCell method)</a>
 </li>
       </ul></li>
+      <li><a href="data.html#mdgru.data.grid_collection.GridDataCollection">GridDataCollection (class in mdgru.data.grid_collection)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1090,6 +1140,12 @@
         <li><a href="crnn_tf.html#mdgru.model.crnn.CRNNCell.output_shape">(mdgru.model.crnn.CRNNCell attribute)</a>
 </li>
       </ul></li>
+      <li><a href="crnn_tf.html#mdgru.model.crnn.cgru.CGRUCell.output_size">output_size (mdgru.model.crnn.cgru.CGRUCell attribute)</a>
+
+      <ul>
+        <li><a href="crnn_tf.html#mdgru.model.crnn.CRNNCell.output_size">(mdgru.model.crnn.CRNNCell attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -1137,7 +1193,13 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="data.html#mdgru.data.DataCollection.random_sample">random_sample() (mdgru.data.DataCollection method)</a>
+
+      <ul>
+        <li><a href="data.html#mdgru.data.grid_collection.GridDataCollection.random_sample">(mdgru.data.grid_collection.GridDataCollection method)</a>
 </li>
+        <li><a href="data.html#mdgru.data.grid_collection.ThreadedGridDataCollection.random_sample">(mdgru.data.grid_collection.ThreadedGridDataCollection method)</a>
+</li>
+      </ul></li>
       <li><a href="model.html#mdgru.model.ReconstructionModel">ReconstructionModel (class in mdgru.model)</a>
 
       <ul>
@@ -1257,7 +1319,13 @@
       <li><a href="model_pytorch.html#mdgru.model_pytorch.RegressionModel.to">RegressionModel.to() (in module mdgru.model_pytorch)</a>, <a href="model_pytorch.html#mdgru.model_pytorch.RegressionModel.to">[1]</a>, <a href="model_pytorch.html#mdgru.model_pytorch.RegressionModel.to">[2]</a>
 </li>
       <li><a href="data.html#mdgru.data.DataCollection.reset_seed">reset_seed() (mdgru.data.DataCollection method)</a>
+
+      <ul>
+        <li><a href="data.html#mdgru.data.grid_collection.GridDataCollection.reset_seed">(mdgru.data.grid_collection.GridDataCollection method)</a>
 </li>
+        <li><a href="data.html#mdgru.data.grid_collection.ThreadedGridDataCollection.reset_seed">(mdgru.data.grid_collection.ThreadedGridDataCollection method)</a>
+</li>
+      </ul></li>
       <li><a href="RUN_mdgru.html#module-RUN_mdgru">RUN_mdgru (module)</a>
 </li>
       <li><a href="RUN_mdgru.html#RUN_mdgru.run_mdgru">run_mdgru() (in module RUN_mdgru)</a>
@@ -1289,7 +1357,13 @@
 </li>
       </ul></li>
       <li><a href="data.html#mdgru.data.DataCollection.set_states">set_states() (mdgru.data.DataCollection method)</a>
+
+      <ul>
+        <li><a href="data.html#mdgru.data.grid_collection.GridDataCollection.set_states">(mdgru.data.grid_collection.GridDataCollection method)</a>
 </li>
+        <li><a href="data.html#mdgru.data.grid_collection.ThreadedGridDataCollection.set_states">(mdgru.data.grid_collection.ThreadedGridDataCollection method)</a>
+</li>
+      </ul></li>
       <li><a href="model_pytorch.html#mdgru.model_pytorch.ClassificationModel.state_dict">state_dict() (mdgru.model_pytorch.ClassificationModel method)</a>
 
       <ul>
@@ -1312,6 +1386,12 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="crnn_tf.html#mdgru.model.crnn.cgru.CGRUCell.state_size">state_size (mdgru.model.crnn.cgru.CGRUCell attribute)</a>
+
+      <ul>
+        <li><a href="crnn_tf.html#mdgru.model.crnn.CRNNCell.state_size">(mdgru.model.crnn.CRNNCell attribute)</a>
+</li>
+      </ul></li>
       <li><a href="eval.html#mdgru.eval.tf.SupervisedEvaluationTensorflow">SupervisedEvaluationTensorflow (class in mdgru.eval.tf)</a>
 </li>
       <li><a href="eval.html#mdgru.eval.torch.SupervisedEvaluationTorch">SupervisedEvaluationTorch (class in mdgru.eval.torch)</a>
@@ -1328,6 +1408,8 @@
         <li><a href="eval.html#mdgru.eval.torch.SupervisedEvaluationTorch.test_scores">(mdgru.eval.torch.SupervisedEvaluationTorch method)</a>
 </li>
       </ul></li>
+      <li><a href="data.html#mdgru.data.grid_collection.ThreadedGridDataCollection">ThreadedGridDataCollection (class in mdgru.data.grid_collection)</a>
+</li>
       <li><a href="model_pytorch.html#mdgru.model_pytorch.ClassificationModel.to">to() (mdgru.model_pytorch.ClassificationModel method)</a>
 
       <ul>

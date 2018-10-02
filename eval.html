@@ -164,7 +164,7 @@
 <span class="target" id="module-mdgru.eval.tf"></span><dl class="class">
 <dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow">
 <em class="property">class </em><code class="descclassname">mdgru.eval.tf.</code><code class="descname">SupervisedEvaluationTensorflow</code><span class="sig-paren">(</span><em>modelcls</em>, <em>collectioninst</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">mdgru.eval.SupervisedEvaluation</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mdgru.eval.SupervisedEvaluation</span></code></p>
 <dl class="docutils">
 <dt>Base class for all evaluation classes. Child classes implement various</dt>
 <dd>test_* methods to test modeldependent aspects.</dd>
@@ -203,6 +203,12 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow._train">
+<code class="descname">_train</code><span class="sig-paren">(</span><em>batch</em>, <em>batchlabs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow._train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow._train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs one training iteration in respective framework and returns loss(es)</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow.load">
 <code class="descname">load</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>loads model at location f from disk</p>
@@ -231,7 +237,7 @@
 <span class="target" id="module-mdgru.eval.torch"></span><dl class="class">
 <dt id="mdgru.eval.torch.SupervisedEvaluationTorch">
 <em class="property">class </em><code class="descclassname">mdgru.eval.torch.</code><code class="descname">SupervisedEvaluationTorch</code><span class="sig-paren">(</span><em>modelcls</em>, <em>collectioninst</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/torch.html#SupervisedEvaluationTorch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">mdgru.eval.SupervisedEvaluation</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mdgru.eval.SupervisedEvaluation</span></code></p>
 <dl class="docutils">
 <dt>Base class for all evaluation classes. Child classes implement various</dt>
 <dd>test_* methods to test modeldependent aspects.</dd>
