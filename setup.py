@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 print(find_packages('.'))
 setup(
     name="mdgru",
-    version="0.1.20180924",
+    version="0.2.20181002",
     description="Segmentation Suite for multi-dimensional gated recurrent units (MDGRU)",
     long_description="Details can be found in the Readme file",
     author="Simon Andermatt",
