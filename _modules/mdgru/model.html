@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mdgru.model &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>mdgru.model</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mdgru.model</h1><div class="highlight"><pre>
+<span></span><span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Simon Andermatt&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2017 Simon Andermatt&quot;</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">argget</span><span class="p">,</span> <span class="n">compile_arguments</span><span class="p">,</span> <span class="n">generate_defaults_info</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python</span> <span class="k">import</span> <span class="n">pywrap_tensorflow</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">random_ops</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">np_arr_backward</span><span class="p">,</span> <span class="n">initializer_W</span><span class="p">,</span> <span class="n">lazy_property</span>
+
+<div class="viewcode-block" id="_save_summary_for_2d_image"><a class="viewcode-back" href="../../model.html#mdgru.model._save_summary_for_2d_image">[docs]</a><span class="k">def</span> <span class="nf">_save_summary_for_2d_image</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">num_channels</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot; Helper to summarize 2d images in tensorboard, by saving one for each channel.</span>
+<span class="sd">    :param name: name of the image to be saved</span>
+<span class="sd">    :param grid: 2d image</span>
+<span class="sd">    :param num_channels: num channels to display</span>
+<span class="sd">    :param collections: which collection should be used for tensorboard, defaults to default summary collection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">num_channels</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">num_channels</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="n">collections</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">num_channels</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)):</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;-c</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">g</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="n">collections</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="save_summary_for_nd_images"><a class="viewcode-back" href="../../model.html#mdgru.model.save_summary_for_nd_images">[docs]</a><span class="k">def</span> <span class="nf">save_summary_for_nd_images</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot; Helper to summarize 3d images in tensorboard, saving an image along each axis.</span>
+<span class="sd">    :param name: name of image</span>
+<span class="sd">    :param grid: image data</span>
+<span class="sd">    :param collections: collection this image is associated with, defaults to the standard tensorboard summary collection</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">_save_summary_for_2d_image</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">collections</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">_save_summary_for_2d_image</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;-d0&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="p">[:,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">collections</span><span class="p">)</span>
+        <span class="n">_save_summary_for_2d_image</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;-d1&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">collections</span><span class="p">)</span>
+        <span class="n">_save_summary_for_2d_image</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;-d2&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">collections</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;helper&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Saving images with more than 3 dimensions in Tensorboard is not &#39;</span>
+                                            <span class="s1">&#39;implemented!&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_pseudo_orthogonal_block_circulant_initialization"><a class="viewcode-back" href="../../model.html#mdgru.model.get_pseudo_orthogonal_block_circulant_initialization">[docs]</a><span class="k">def</span> <span class="nf">get_pseudo_orthogonal_block_circulant_initialization</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Creates pseudo-orthogonal initialization for given shape.</span>
+
+<span class="sd">    Pseudo-orthogonal initialization is achieved assuming circular convolution and a signal size equal to the filter</span>
+<span class="sd">    size. Hence, if applied to signals larger than the filter, or not using circular convolution leads to non orthogonal</span>
+<span class="sd">    filter initializations.</span>
+
+<span class="sd">    :return: pseudo-orthogonal initialization for given shape</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">get_pseudo_orthogonal_uniform</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">partition_info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;this is so far only written for 2d convolutions with equal states!&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np_arr_backward</span><span class="p">(</span><span class="n">initializer_W</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">get_pseudo_orthogonal_uniform</span></div>
+
+
+<div class="viewcode-block" id="get_modified_xavier_method"><a class="viewcode-back" href="../../model.html#mdgru.model.get_modified_xavier_method">[docs]</a><span class="k">def</span> <span class="nf">get_modified_xavier_method</span><span class="p">(</span><span class="n">num_elements</span><span class="p">,</span> <span class="n">uniform_init</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Modified Glorot initializer.</span>
+
+<span class="sd">    Returns an initializer using Glorots method for uniform or Gaussian distributions</span>
+<span class="sd">    depending on the flag &quot;uniform_init&quot;.</span>
+<span class="sd">    :param num_elements: How many elements are there</span>
+<span class="sd">    :param uniform_init: Shall we use uniform or Gaussian distribution?</span>
+<span class="sd">    :return: Glorot/Xavier initializer</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">uniform_init</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">get_modified_xavier</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">partition_info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">limit</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">num_elements</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">random_ops</span><span class="o">.</span><span class="n">random_uniform</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="o">-</span><span class="n">limit</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span>
+                                             <span class="n">dtype</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">get_modified_xavier</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">get_modified_xavier_normal</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">partition_info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">trunc_stddev</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.3</span> <span class="o">/</span> <span class="p">(</span><span class="n">num_elements</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">random_ops</span><span class="o">.</span><span class="n">truncated_normal</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">trunc_stddev</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span>
+                                               <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">get_modified_xavier_normal</span></div>
+
+
+<div class="viewcode-block" id="convolution_helper_padding_same"><a class="viewcode-back" href="../../model.html#mdgru.model.convolution_helper_padding_same">[docs]</a><span class="k">def</span> <span class="nf">convolution_helper_padding_same</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">convolution_filter</span><span class="p">,</span> <span class="n">filter_shape</span><span class="p">,</span> <span class="n">strides</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Helper to allow for convolution strides with less than 1.</span>
+
+<span class="sd">    Strides less than one are performed using transposed convolutions, strides larger than one are performed using</span>
+<span class="sd">    normal convolutions. This helper function only works if all filters are larger or equal than one or smaller or equal</span>
+<span class="sd">    than 1. If this is not given, an error is raised. given that the used padding</span>
+<span class="sd">    is chosen to be &quot;SAME&quot;.</span>
+<span class="sd">    :param inp: input data to convolve</span>
+<span class="sd">    :param convolution_filter: filter to perform convolution with</span>
+<span class="sd">    :param filter_shape: filter shape as list</span>
+<span class="sd">    :param strides: list of strides to be used for the spatial dimensions of inp during the convolution.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">strides</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">strides</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span> \
+            <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">strides</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">convolution</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">convolution_filter</span><span class="p">,</span> <span class="s2">&quot;SAME&quot;</span><span class="p">,</span> <span class="n">strides</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">strides</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Mixes of strides above and below 1 for one convolution operation are not supported!&#39;</span><span class="p">)</span>
+        <span class="n">output_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">ii</span> <span class="k">if</span> <span class="n">ii</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">inp</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()]</span>
+        <span class="n">output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">([</span><span class="mi">1</span> <span class="o">/</span> <span class="n">s</span> <span class="o">*</span> <span class="n">o</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">o</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">strides</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])]))</span>
+        <span class="n">output_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">filter_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># get number of output channel</span>
+        <span class="n">output_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">inp</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># get batchsize</span>
+        <span class="n">filter_shape</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">filter_shape</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">filter_shape</span><span class="p">)</span>
+        <span class="c1"># switch last two dimensions of convolution filter and adjust filter_shape:</span>
+        <span class="n">convolution_filter</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">convolution_filter</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="n">filter_shape</span> <span class="o">=</span> <span class="n">filter_shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">filter_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># select up/transposed convolution operation</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filter_shape</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">conv2d_transpose</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">filter_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">conv3d_transpose</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Transposed convolution is not implemented for the </span><span class="si">{}</span><span class="s1">d case!&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">filter_shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="c1"># special preparation to use conv2d_transpose for 1d upconvolution:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filter_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">old_output_shape</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span>
+            <span class="n">n_input_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">ii</span> <span class="k">if</span> <span class="n">ii</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">inp</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()]</span>
+            <span class="c1"># add singleton dimension for each tensor</span>
+            <span class="n">n_input_shape</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">output_shape</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">filter_shape</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">strides</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">strides</span><span class="p">)</span>
+            <span class="n">strides</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">strides</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">s</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">strides</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="n">op</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">n_input_shape</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">convolution_filter</span><span class="p">,</span> <span class="n">filter_shape</span><span class="p">),</span> <span class="n">output_shape</span><span class="p">,</span> <span class="n">strides</span><span class="p">,</span>
+                   <span class="s2">&quot;SAME&quot;</span><span class="p">),</span> <span class="n">old_output_shape</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">res</span>
+        <span class="n">strides</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">s</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">strides</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">op</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">convolution_filter</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">,</span> <span class="n">strides</span><span class="p">,</span> <span class="s2">&quot;SAME&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="batch_norm"><a class="viewcode-back" href="../../model.html#mdgru.model.batch_norm">[docs]</a><span class="k">def</span> <span class="nf">batch_norm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">name_scope</span><span class="p">,</span> <span class="n">training</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">decay</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the batch_norm for x&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">name_scope</span><span class="p">):</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">size</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">constant_initializer</span><span class="p">(</span><span class="mf">0.1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">bias</span><span class="p">:</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;offset&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">size</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">pop_mean</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;pop_mean&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">size</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros_initializer</span><span class="p">(),</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">pop_var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;pop_var&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">size</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">constant_initializer</span><span class="p">(</span><span class="mf">1.0</span><span class="p">),</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">batch_mean</span><span class="p">,</span> <span class="n">batch_var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">moments</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+
+        <span class="c1"># The following simulates a mini-batch for scenarios where we don&#39;t have</span>
+        <span class="c1"># a large enough mini-batch (THIS ONLY WORKS FOR BATCH SIZES OF 1)</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">batch_mean_list</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;batch_mean_list&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">m</span><span class="p">,</span> <span class="n">size</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros_initializer</span><span class="p">(),</span>
+                                              <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">batch_var_list</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;batch_var_list&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">m</span><span class="p">,</span> <span class="n">size</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">constant_initializer</span><span class="p">(</span><span class="mf">1.0</span><span class="p">),</span>
+                                             <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">starter</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;batch_list_starter&quot;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                      <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">alter_list_at</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">counter</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+                <span class="n">data_unpacked</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">data_unpacked</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">data_unpacked</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">data_unpacked</span><span class="p">)</span>
+
+            <span class="n">starter_op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">starter</span><span class="p">,</span> <span class="n">starter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">control_dependencies</span><span class="p">([</span><span class="n">starter_op</span><span class="p">]):</span>
+                <span class="n">batch_mean_list_op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">batch_mean_list</span><span class="p">,</span> <span class="n">alter_list_at</span><span class="p">(</span><span class="n">batch_mean_list</span><span class="p">,</span> <span class="n">starter</span><span class="p">,</span> <span class="n">batch_mean</span><span class="p">))</span>
+                <span class="n">batch_var_list_op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">batch_var_list</span><span class="p">,</span> <span class="n">alter_list_at</span><span class="p">(</span><span class="n">batch_var_list</span><span class="p">,</span> <span class="n">starter</span><span class="p">,</span> <span class="n">batch_var</span><span class="p">))</span>
+            <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">control_dependencies</span><span class="p">([</span><span class="n">batch_mean_list_op</span><span class="p">,</span> <span class="n">batch_var_list_op</span><span class="p">]):</span>
+                <span class="n">batch_mean</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">batch_mean_list</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">tf</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">starter</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+                <span class="n">batch_var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">batch_var_list</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">tf</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">starter</span><span class="p">,</span> <span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">batch_statistics</span><span class="p">():</span>
+            <span class="n">train_mean_op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">pop_mean</span><span class="p">,</span> <span class="n">pop_mean</span> <span class="o">*</span> <span class="n">decay</span> <span class="o">+</span> <span class="n">batch_mean</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">decay</span><span class="p">))</span>
+            <span class="n">train_var_op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">pop_var</span><span class="p">,</span> <span class="n">pop_var</span> <span class="o">*</span> <span class="n">decay</span> <span class="o">+</span> <span class="n">batch_var</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">decay</span><span class="p">))</span>
+            <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">control_dependencies</span><span class="p">([</span><span class="n">train_mean_op</span><span class="p">,</span> <span class="n">train_var_op</span><span class="p">]):</span>
+                <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">batch_normalization</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">batch_mean</span><span class="p">,</span> <span class="n">batch_var</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">population_statistics</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">batch_normalization</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pop_mean</span><span class="p">,</span> <span class="n">pop_var</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">cond</span><span class="p">(</span><span class="n">training</span><span class="p">,</span> <span class="n">batch_statistics</span><span class="p">,</span> <span class="n">population_statistics</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../model.html#mdgru.model.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract Model class&quot;&quot;&quot;</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;model_seed&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">12345678</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s2">&quot;Override default model initialization random seed&quot;</span><span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">origargs</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">model_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">model_kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># self.model_seed = argget(kw, &#39;model_seed&#39;, 12345678)</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_seed</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;training&quot;</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_step</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;global_step&quot;</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_tensorboard</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;use_tensorboard&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="c1">#</span>
+        <span class="c1"># if argget(kw, &quot;whiten&quot;, False):</span>
+        <span class="c1">#     self.data = batch_norm(data, &quot;bn&quot;, self.training, m=32)</span>
+        <span class="c1"># else:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="c1"># pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;dimensions&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Model.prediction"><a class="viewcode-back" href="../../model.html#mdgru.model.Model.prediction">[docs]</a>    <span class="k">def</span> <span class="nf">prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;lazy property call to produce a prediction in tensorflow.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;this should never be called, but implemented by&quot;</span>
+                        <span class="s2">&quot;the child class&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Model.costs"><a class="viewcode-back" href="../../model.html#mdgru.model.Model.costs">[docs]</a>    <span class="k">def</span> <span class="nf">costs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;lazy property to compute the costs per sample.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;this should never be called, but implemented by&quot;</span>
+                        <span class="s2">&quot;the child class&quot;</span><span class="p">)</span></div>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;lazy property to compute the cost per batch&quot;&quot;&quot;</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">costs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tensorboard</span><span class="p">:</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span> <span class="n">loss</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span>
+
+<div class="viewcode-block" id="Model.get_model_name_from_ckpt"><a class="viewcode-back" href="../../model.html#mdgru.model.Model.get_model_name_from_ckpt">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_model_name_from_ckpt</span><span class="p">(</span><span class="n">ckpt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;returns root node name of tensorflow graph stored in checkpoint ckpt&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">pywrap_tensorflow</span><span class="o">.</span><span class="n">NewCheckpointReader</span><span class="p">(</span><span class="n">ckpt</span><span class="p">)</span>
+            <span class="n">modelname</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">get_variable_to_shape_map</span><span class="p">()</span><span class="o">.</span><span class="n">popitem</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runfile&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;could not load modelname from ckpt-file </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ckpt</span><span class="p">))</span>
+            <span class="n">modelname</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">modelname</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">set_allowed_gpu_memory_fraction</span><span class="p">(</span><span class="n">gpuboundfraction</span><span class="p">):</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">GPUOptions</span><span class="p">(</span><span class="n">per_process_gpu_memory_fraction</span><span class="o">=</span><span class="n">gpuboundfraction</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ClassificationModel"><a class="viewcode-back" href="../../model.html#mdgru.model.ClassificationModel">[docs]</a><span class="k">class</span> <span class="nc">ClassificationModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract model class. &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ClassificationModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">dropout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">momentum</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;momentum&quot;</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nclasses</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;nclasses&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RegressionModel"><a class="viewcode-back" href="../../model.html#mdgru.model.RegressionModel">[docs]</a><span class="k">class</span> <span class="nc">RegressionModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract model class for regression tasks.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RegressionModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">dropout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nclasses</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;nclasses&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">momentum</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;momentum&quot;</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ReconstructionModel"><a class="viewcode-back" href="../../model.html#mdgru.model.ReconstructionModel">[docs]</a><span class="k">class</span> <span class="nc">ReconstructionModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract model class for reconstruction tasks.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ReconstructionModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">dropout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nclasses</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;nclasses&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GANModel"><a class="viewcode-back" href="../../model.html#mdgru.model.GANModel">[docs]</a><span class="k">class</span> <span class="nc">GANModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract model class for GANs.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GANModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">dropout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">momentum</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;momentum&quot;</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nclasses</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;nclasses&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fakedata</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;fakedata&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
+<span class="n">generate_defaults_info</span><span class="p">(</span><span class="n">Model</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

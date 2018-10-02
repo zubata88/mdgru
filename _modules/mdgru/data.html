@@ -1,0 +1,378 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mdgru.data &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>mdgru.data</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mdgru.data</h1><div class="highlight"><pre>
+<span></span><span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Simon Andermatt, Simon Pezold&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2017 Simon Andermatt&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">argget</span><span class="p">,</span> <span class="n">compile_arguments</span><span class="p">,</span> <span class="n">generate_defaults_info</span>
+
+
+<div class="viewcode-block" id="DataCollection"><a class="viewcode-back" href="../../data.html#mdgru.data.DataCollection">[docs]</a><span class="k">class</span> <span class="nc">DataCollection</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Abstract class for all data handling classes. </span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;seed&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Seed to be used for deterministic random sampling, given no threading is used&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">1234</span><span class="p">},</span>
+                 <span class="s1">&#39;nclasses&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">origargs</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">data_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">DataCollection</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data_kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">randomstate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DataCollection.set_states"><a class="viewcode-back" href="../../data.html#mdgru.data.DataCollection.set_states">[docs]</a>    <span class="k">def</span> <span class="nf">set_states</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; reset random state generators given the states in &quot;states&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        states: object</span>
+<span class="sd">            Random generator state</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;could not reproduce state, setting unreproducable random seed&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">randomstate</span><span class="o">.</span><span class="n">set_seed</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">randomstate</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DataCollection.get_states"><a class="viewcode-back" href="../../data.html#mdgru.data.DataCollection.get_states">[docs]</a>    <span class="k">def</span> <span class="nf">get_states</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Get states of this data collection&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">randomstate</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DataCollection.reset_seed"><a class="viewcode-back" href="../../data.html#mdgru.data.DataCollection.reset_seed">[docs]</a>    <span class="k">def</span> <span class="nf">reset_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">12345678</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; reset main random number generator with given seed &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">randomstate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DataCollection.random_sample"><a class="viewcode-back" href="../../data.html#mdgru.data.DataCollection.random_sample">[docs]</a>    <span class="k">def</span> <span class="nf">random_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Randomly samples from our dataset. If the implementation knows </span>
+<span class="sd">        different datasets, the dataset string can be used to choose one, if </span>
+<span class="sd">        not, it will be ignored. </span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        \*\*kw: keyword args</span>
+<span class="sd">            batch_size can be set, amongst other parameters. See implementing methods for</span>
+<span class="sd">            more detail.</span>
+<span class="sd">                  </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        array</span>
+<span class="sd">            A random sample of length batch_size.</span>
+<span class="sd">        </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;random_sample not implemented in </span><span class="si">{}</span><span class="s2">&quot;</span>
+                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">get_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;needs to be implemented. should return batch shape&quot;</span> <span class="o">+</span>
+                        <span class="s2">&quot;with batch size set to None&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DataCollection.get_data_dims"><a class="viewcode-back" href="../../data.html#mdgru.data.DataCollection.get_data_dims">[docs]</a>    <span class="k">def</span> <span class="nf">get_data_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns the dimensionality of the whole collection (even if samples </span>
+<span class="sd">        are returned/computed on the fly, the theoretical size is returned).</span>
+<span class="sd">        Has between two and three entries (Depending on the type of data. A </span>
+<span class="sd">        dataset with sequence of vectors has 3, a dataset with sequences of </span>
+<span class="sd">        indices has two, etc)</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            A shape array of the dimensionality of the data.</span>
+<span class="sd">            </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;get_data_dims not implemented in </span><span class="si">{}</span><span class="s2">&quot;</span>
+                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="DataCollection._one_hot_vectorize"><a class="viewcode-back" href="../../data.html#mdgru.data.DataCollection._one_hot_vectorize">[docs]</a>    <span class="k">def</span> <span class="nf">_one_hot_vectorize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indexlabels</span><span class="p">,</span> <span class="n">nclasses</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zero_out_label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        simplified onehotlabels method. we discourage using interpolated labels </span>
+<span class="sd">        anyways, hence this only allows integer values in indexlabels</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        indexlabels : ndarray</span>
+<span class="sd">            array containing labels or indices for each class, starting at 0 until nclasses-1</span>
+<span class="sd">        nclasses : int</span>
+<span class="sd">            number of classes</span>
+<span class="sd">        zero_out_label : int</span>
+<span class="sd">            label to assign probability of zero for the whole probability distribution</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            Probabilitydistributions per pixel where at position indexlabels the value is set to 1, otherwise to 0</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">nclasses</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nclasses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nclasses</span>
+        <span class="c1"># we reshape it into dims*classes, onehotvectorize it, and shape it back:</span>
+        <span class="n">lshape</span> <span class="o">=</span> <span class="n">indexlabels</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">lsprod</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">lshape</span><span class="p">)</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">lsprod</span><span class="p">,</span> <span class="n">nclasses</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">indexlabels</span> <span class="o">=</span> <span class="n">indexlabels</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="c1"># print(l.shape)</span>
+        <span class="c1"># print(np.max(indexlabels))</span>
+        <span class="c1"># print(lshape)</span>
+        <span class="n">l</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">lsprod</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="n">indexlabels</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">zero_out_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">l</span><span class="p">[:,</span> <span class="n">zero_out_label</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># go back to shape from before.</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">lshape</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">nclasses</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">l</span></div>
+
+<div class="viewcode-block" id="DataCollection.get_all_tps"><a class="viewcode-back" href="../../data.html#mdgru.data.DataCollection.get_all_tps">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_all_tps</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">featurefiles</span><span class="p">,</span> <span class="n">maskfiles</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        computes list of all folders that are subfolders of folder and contain all provided featurefiles and maskfiles.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        folder: str</span>
+<span class="sd">            location at which timepoints are searched</span>
+<span class="sd">        featurefiles: list of str</span>
+<span class="sd">            necessary featurefiles to be contained in a timepoint</span>
+<span class="sd">        maskfiles: list of str</span>
+<span class="sd">            necessary maskfiles to be contained in a timepoint</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sorted list</span>
+<span class="sd">            valid timepoints in string format</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">comm</span> <span class="o">=</span> <span class="s2">&quot;find &#39;&quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&#39; -type d -exec test -e </span><span class="si">{}</span><span class="s2">/&quot;</span> <span class="o">+</span> <span class="n">featurefiles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">featurefiles</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">comm</span> <span class="o">+=</span> <span class="s2">&quot; -a -e </span><span class="si">{}</span><span class="s2">/&quot;</span> <span class="o">+</span> <span class="n">i</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">maskfiles</span><span class="p">:</span>
+            <span class="n">comm</span> <span class="o">+=</span> <span class="s2">&quot; -a -e </span><span class="si">{}</span><span class="s2">/&quot;</span> <span class="o">+</span> <span class="n">i</span>
+        <span class="n">comm</span> <span class="o">+=</span> <span class="s2">&quot; </span><span class="se">\\</span><span class="s2">; -print</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">res</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">comm</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+        <span class="c1"># print(comm)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="c1"># Python 3 code in this block</span>
+            <span class="k">return</span> <span class="nb">sorted</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">if</span> <span class="n">r</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Python 2 code in this block</span>
+            <span class="k">return</span> <span class="nb">sorted</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">if</span> <span class="n">r</span><span class="p">])</span></div></div>
+
+
+<span class="n">generate_defaults_info</span><span class="p">(</span><span class="n">DataCollection</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

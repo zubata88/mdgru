@@ -1,0 +1,320 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mdgru.model.mdrnn &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../model.html">mdgru.model</a> &raquo;</li>
+        
+      <li>mdgru.model.mdrnn</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mdgru.model.mdrnn</h1><div class="highlight"><pre>
+<span></span><span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Simon Andermatt&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2017 Simon Andermatt&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">argget</span><span class="p">,</span> <span class="n">generate_defaults_info</span>
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">compile_arguments</span>
+<span class="kn">from</span> <span class="nn">mdgru.model</span> <span class="k">import</span> <span class="n">batch_norm</span><span class="p">,</span> <span class="n">get_modified_xavier_method</span>
+<span class="c1"># CaffeMDGRU is not supported anymore, uncomment at own risk:</span>
+<span class="c1"># from .caffe_mdgru import CaffeMDGRU</span>
+<span class="kn">from</span> <span class="nn">mdgru.model.mdrnn.mdgru</span> <span class="k">import</span> <span class="n">MDRNN</span>
+
+
+<div class="viewcode-block" id="MDGRUNet"><a class="viewcode-back" href="../../../mdrnn_tf.html#mdgru.model.mdrnn.MDGRUNet">[docs]</a><span class="k">class</span> <span class="nc">MDGRUNet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convenience class combining attributes to be used for multiple MDRNN and voxel-wise fully connected layers.&quot;&quot;&quot;</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;add_e_bn&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">&quot;resmdgru&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Add a residual connection around an MDGRU block&#39;</span><span class="p">},</span>
+        <span class="s2">&quot;vwfc_activation&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">tanh</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MDGRUNet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">mdrnn_net_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">MDGRUNet</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">mdrnn_net_kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mdrnn_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">MDRNN</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">crnn_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mdrnn_kw</span><span class="p">[</span><span class="s1">&#39;crnn_class&#39;</span><span class="p">],</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MDGRUNet.mdgru_bb"><a class="viewcode-back" href="../../../mdrnn_tf.html#mdgru.model.mdrnn.MDGRUNet.mdgru_bb">[docs]</a>    <span class="k">def</span> <span class="nf">mdgru_bb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">num_hidden</span><span class="p">,</span> <span class="n">num_output</span><span class="p">,</span> <span class="n">noactivation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convenience function to combine a MDRNN layer with a voxel-wise fully connected layer.</span>
+
+<span class="sd">        :param inp: input data</span>
+<span class="sd">        :param dropout: dropout rate</span>
+<span class="sd">        :param num_hidden: number of hidden units, output units of the MDRNN</span>
+<span class="sd">        :param num_output: number of output units of the voxel-wise fully connected layer</span>
+<span class="sd">                           (Can be None -&gt; no voxel-wise fully connected layer)</span>
+<span class="sd">        :param noactivation: Flag to disable activation of voxel-wise fully connected layer</span>
+<span class="sd">        :param name: Name for this particular MDRNN + vw fully connected layer</span>
+<span class="sd">        :param kw: Arguments for MDRNN and the vw fully connected layer (can override this class&#39; attributes)</span>
+<span class="sd">        :return: Output of the voxelwise fully connected layer and MDRNN mix</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;dimensions&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dimensions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">mdrnn_kw</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">mdrnn_kw</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mdrnn_kw</span><span class="p">)</span>
+        <span class="n">mdrnn_kw</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crnn_kw</span><span class="p">)</span>
+        <span class="n">mdrnn_kw</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+
+        <span class="n">add_e_bn</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;add_e_bn&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_e_bn</span><span class="p">)</span>
+        <span class="n">resmdgru</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;resmdgru&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">resmdgru</span><span class="p">)</span>
+        <span class="n">mdrnn_kw</span><span class="p">[</span><span class="s2">&quot;num_hidden&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_hidden</span>
+        <span class="n">mdrnn_kw</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;mdgru&quot;</span>
+        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="n">mdgruclass</span> <span class="o">=</span> <span class="n">MDRNN</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">,</span> <span class="n">mdrnn_kw</span><span class="p">)</span>
+            <span class="n">mdgru</span> <span class="o">=</span> <span class="n">mdgruclass</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">num_output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mdgruinnershape</span> <span class="o">=</span> <span class="n">mdgru</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span>
+                <span class="n">doreshape</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mdgruinnershape</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+                    <span class="n">newshape</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">mdgruinnershape</span><span class="p">),</span> <span class="n">mdgru</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+                    <span class="n">mdgru</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">mdgru</span><span class="p">,</span> <span class="n">newshape</span><span class="p">)</span>
+                    <span class="n">doreshape</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">num_input</span> <span class="o">=</span> <span class="n">mdgru</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">filtershape</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">mdgru</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span><span class="n">num_input</span><span class="p">,</span> <span class="n">num_output</span><span class="p">]</span>
+
+                <span class="n">numelem</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_output</span> <span class="o">+</span> <span class="n">num_input</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+                <span class="n">uniform</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vwfc_activation</span> <span class="ow">in</span> <span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">elu</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">]:</span>
+                    <span class="n">numelem</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_input</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+                    <span class="n">uniform</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">W</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span>
+                    <span class="s2">&quot;W&quot;</span><span class="p">,</span> <span class="n">filtershape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="n">get_modified_xavier_method</span><span class="p">(</span><span class="n">numelem</span><span class="p">,</span> <span class="n">uniform</span><span class="p">))</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">num_output</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">constant_initializer</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+                <span class="n">mdgru</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">convolution</span><span class="p">(</span><span class="n">mdgru</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;SAME&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">resmdgru</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">doreshape</span><span class="p">:</span>
+                        <span class="n">inp</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span>
+                                         <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">as_list</span><span class="p">()),</span> <span class="n">inp</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+                    <span class="n">resW</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;resW&quot;</span><span class="p">,</span>
+                                           <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">inp</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span>
+                                               <span class="n">inp</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">num_output</span><span class="p">],</span>
+                                           <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="n">get_modified_xavier_method</span><span class="p">(</span><span class="n">num_output</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+                    <span class="n">mdgru</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">convolution</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">resW</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;SAME&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">mdgru</span>
+                <span class="k">if</span> <span class="n">add_e_bn</span><span class="p">:</span>
+                    <span class="n">mdgru</span> <span class="o">=</span> <span class="n">batch_norm</span><span class="p">(</span><span class="n">mdgru</span><span class="p">,</span> <span class="s2">&quot;bne&quot;</span><span class="p">,</span> <span class="n">mdgruclass</span><span class="o">.</span><span class="n">istraining</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="n">mdgruclass</span><span class="o">.</span><span class="n">min_mini_batch</span><span class="p">)</span>
+                <span class="n">mdgru</span> <span class="o">=</span> <span class="n">mdgru</span> <span class="o">+</span> <span class="n">b</span>
+                <span class="k">if</span> <span class="n">doreshape</span><span class="p">:</span>
+                    <span class="n">mdgru</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">mdgru</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">mdgruinnershape</span> <span class="o">+</span> <span class="p">[</span><span class="n">mdgru</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+            <span class="k">if</span> <span class="n">noactivation</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">mdgru</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vwfc_activation</span><span class="p">(</span><span class="n">mdgru</span><span class="p">)</span></div></div>
+
+
+<span class="n">generate_defaults_info</span><span class="p">(</span><span class="n">MDGRUNet</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

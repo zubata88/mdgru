@@ -1,0 +1,338 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>RUN_mdgru &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>RUN_mdgru</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for RUN_mdgru</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">define_arguments</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Simon Andermatt&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2017 Simon Andermatt&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">mdgru.data.grid_collection</span> <span class="k">import</span> <span class="n">GridDataCollection</span><span class="p">,</span> <span class="n">ThreadedGridDataCollection</span>
+<span class="c1"># from options.parser import clean_datacollection_args</span>
+<span class="kn">from</span> <span class="nn">mdgru.runner</span> <span class="k">import</span> <span class="n">Runner</span>
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">compile_arguments</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+
+<div class="viewcode-block" id="run_mdgru"><a class="viewcode-back" href="../RUN_mdgru.html#RUN_mdgru.run_mdgru">[docs]</a><span class="k">def</span> <span class="nf">run_mdgru</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Executes a training/ testing or training and testing run for the mdgru network&quot;&quot;&quot;</span>
+
+    <span class="c1"># Parse arguments</span>
+    <span class="n">fullparameters</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span> <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;evaluate any data with given parameters&quot;</span><span class="p">,</span> <span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">pre_parameter</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Options changing parameter. Use together with --help&#39;</span><span class="p">)</span>
+    <span class="n">pre_parameter</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--use_pytorch&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;use experimental pytorch version. Only core functionality is provided&#39;</span><span class="p">)</span>
+    <span class="n">pre_parameter</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--gpu&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;set gpu ids&#39;</span><span class="p">)</span>
+    <span class="n">pre_parameter</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--nonthreaded&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+                                     <span class="n">help</span><span class="o">=</span><span class="s2">&quot;disallow threading during training to preload data before the processing&quot;</span><span class="p">)</span>
+    <span class="n">pre_parameter</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dice_loss_label&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;labels for which the dice losses shall be calculated&#39;</span><span class="p">)</span>
+    <span class="n">pre_parameter</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dice_loss_weight&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;weights for the dice losses of the individual classes. same size as dice_loss_label or scalar if dice_autoweighted. final loss: sum(dice_loss_weight)*diceloss + (1-sum(dice_loss_weight))*crossentropy&#39;</span><span class="p">)</span>
+    <span class="n">pre_parameter</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dice_autoweighted&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;weights the label Dices with the squared inverse gold standard area/volume; specify which labels with dice_loss_label; sum(dice_loss_weight) is used as a weighting between crossentropy and diceloss&#39;</span><span class="p">)</span>
+    <span class="n">pre_parameter</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dice_generalized&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;total intersections of all labels over total sums of all labels, instead of linearly combined class Dices&#39;</span><span class="p">)</span>
+    <span class="n">pre_parameter</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dice_cc&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;dice loss for binary segmentation per true component&#39;</span><span class="p">)</span>
+    <span class="n">pre_args</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_known_args</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-h&#39;</span><span class="p">,</span><span class="s1">&#39;--help&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;print this help message&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Set environment flag(s) and finally import the classes that depend upon them</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CUDA_VISIBLE_DEVICES&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">pre_args</span><span class="o">.</span><span class="n">gpu</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">pre_args</span><span class="o">.</span><span class="n">use_pytorch</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pre_args</span><span class="o">.</span><span class="n">dice_cc</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">mdgru.model_pytorch.mdgru_classification</span> <span class="k">import</span> <span class="n">MDGRUClassificationCC</span> <span class="k">as</span> <span class="n">modelcls</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">mdgru.model_pytorch.mdgru_classification</span> <span class="k">import</span> <span class="n">MDGRUClassification</span> <span class="k">as</span> <span class="n">modelcls</span>
+        <span class="kn">from</span> <span class="nn">mdgru.eval.torch</span> <span class="k">import</span> <span class="n">SupervisedEvaluationTorch</span> <span class="k">as</span> <span class="n">evalcls</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pre_args</span><span class="o">.</span><span class="n">dice_generalized</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">mdgru.model.mdgru_classification</span> <span class="k">import</span> <span class="n">MDGRUClassificationWithGeneralizedDiceLoss</span> <span class="k">as</span> <span class="n">modelcls</span>
+        <span class="k">elif</span> <span class="n">pre_args</span><span class="o">.</span><span class="n">dice_loss_label</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">pre_args</span><span class="o">.</span><span class="n">dice_autoweighted</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">mdgru.model.mdgru_classification</span> <span class="k">import</span> <span class="n">MDGRUClassificationWithDiceLoss</span> <span class="k">as</span> <span class="n">modelcls</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">mdgru.model.mdgru_classification</span> <span class="k">import</span> <span class="n">MDGRUClassification</span> <span class="k">as</span> <span class="n">modelcls</span>
+        <span class="kn">from</span> <span class="nn">mdgru.eval.tf</span> <span class="k">import</span> <span class="n">SupervisedEvaluationTensorflow</span> <span class="k">as</span> <span class="n">evalcls</span>
+
+
+    <span class="c1"># Set the necessary classes</span>
+    <span class="c1"># dc = GridDataCollection</span>
+    <span class="n">tdc</span> <span class="o">=</span> <span class="n">GridDataCollection</span> <span class="k">if</span> <span class="n">pre_args</span><span class="o">.</span><span class="n">nonthreaded</span> <span class="k">else</span> <span class="n">ThreadedGridDataCollection</span>
+
+    <span class="n">define_arguments</span><span class="p">(</span><span class="n">modelcls</span><span class="p">,</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Model Parameters&#39;</span><span class="p">))</span>
+    <span class="n">define_arguments</span><span class="p">(</span><span class="n">evalcls</span><span class="p">,</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Evaluation Parameters&#39;</span><span class="p">))</span>
+    <span class="n">define_arguments</span><span class="p">(</span><span class="n">Runner</span><span class="p">,</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Runner Parameters&#39;</span><span class="p">))</span>
+    <span class="n">define_arguments</span><span class="p">(</span><span class="n">tdc</span><span class="p">,</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Data Parameters&#39;</span><span class="p">))</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">)</span>
+    <span class="c1"># print(args)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">help</span><span class="p">:</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">use_pytorch</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">gpubound</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">modelcls</span><span class="o">.</span><span class="n">set_allowed_gpu_memory_fraction</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">gpubound</span><span class="p">)</span>
+
+
+    <span class="c1"># Set up datacollections</span>
+
+    <span class="c1"># args_tr, args_val, args_te = clean_datacollection_args(args)</span>
+
+    <span class="c1"># Set up model and evaluation</span>
+    <span class="n">kw</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">args_eval</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">evalcls</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">args_model</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">modelcls</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">args_data</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">tdc</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">args_eval</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">args_model</span><span class="p">)</span>
+    <span class="n">args_eval</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">args_data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">use_pytorch</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">checkpointfiles</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">args_eval</span><span class="p">[</span><span class="s1">&#39;namespace&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">modelcls</span><span class="o">.</span><span class="n">get_model_name_from_ckpt</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">checkpointfiles</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">args_eval</span><span class="p">[</span><span class="s1">&#39;channels_first&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">use_pytorch</span>
+
+
+    <span class="c1"># if args_tr is not None:</span>
+    <span class="c1">#     traindc = tdc(**args_tr)</span>
+    <span class="c1"># if args_val is not None:</span>
+    <span class="c1">#     valdc = tdc(**args_val)</span>
+    <span class="c1"># if args_te is not None:</span>
+    <span class="c1">#     testdc = dc(**args_te)</span>
+    <span class="c1"># if args.only_test: #FIXME: this is not the smartest way of doing it, make sure that you can allow missing entries in this dict!</span>
+    <span class="c1">#     datadict = {&quot;train&quot;: testdc, &quot;validation&quot;: testdc, &quot;test&quot;: testdc}</span>
+    <span class="c1"># elif args.only_train:</span>
+    <span class="c1">#     datadict = {&quot;train&quot;: traindc, &quot;validation&quot;: valdc, &quot;test&quot;: valdc}</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#     datadict = {&quot;train&quot;: traindc, &quot;validation&quot;: valdc, &quot;test&quot;: testdc}</span>
+
+    <span class="n">ev</span> <span class="o">=</span> <span class="n">evalcls</span><span class="p">(</span><span class="n">modelcls</span><span class="p">,</span> <span class="n">tdc</span><span class="p">,</span> <span class="n">args_eval</span><span class="p">)</span>
+
+    <span class="c1"># Set up runner</span>
+    <span class="n">args_runner</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">Runner</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">args_runner</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="s2">&quot;experimentloc&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">datapath</span><span class="p">,</span> <span class="s1">&#39;experiments&#39;</span><span class="p">),</span>
+        <span class="s2">&quot;fullparameters&quot;</span><span class="p">:</span> <span class="n">fullparameters</span><span class="p">,</span>
+        <span class="c1"># &quot;estimatefilenames&quot;: optionname</span>
+    <span class="p">})</span>
+    <span class="n">runner</span> <span class="o">=</span> <span class="n">Runner</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="o">**</span><span class="n">args_runner</span><span class="p">)</span>
+    <span class="c1"># Run computation</span>
+    <span class="k">return</span> <span class="n">runner</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">run_mdgru</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

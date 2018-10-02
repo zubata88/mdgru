@@ -1,0 +1,359 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Data loader module &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Helper routines and functions" href="helper.html" />
+    <link rel="prev" title="Evaluation module" href="eval.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluation module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Data loader module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/data.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-mdgru.data">
+<span id="data-loader-module"></span><h1>Data loader module<a class="headerlink" href="#module-mdgru.data" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="mdgru.data.DataCollection">
+<em class="property">class </em><code class="descclassname">mdgru.data.</code><code class="descname">DataCollection</code><span class="sig-paren">(</span><em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data.html#DataCollection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.DataCollection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Abstract class for all data handling classes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kw</strong> (<em>dict containing the following options.</em>) – <ul class="simple">
+<li><strong>seed</strong> [default: 1234] Seed to be used for deterministic random sampling, given no threading is used</li>
+<li><strong>nclasses</strong> [default: None]</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="mdgru.data.DataCollection._one_hot_vectorize">
+<code class="descname">_one_hot_vectorize</code><span class="sig-paren">(</span><em>indexlabels</em>, <em>nclasses=None</em>, <em>zero_out_label=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data.html#DataCollection._one_hot_vectorize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.DataCollection._one_hot_vectorize" title="Permalink to this definition">¶</a></dt>
+<dd><p>simplified onehotlabels method. we discourage using interpolated labels
+anyways, hence this only allows integer values in indexlabels</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>indexlabels</strong> (<em>ndarray</em>) – array containing labels or indices for each class, starting at 0 until nclasses-1</li>
+<li><strong>nclasses</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – number of classes</li>
+<li><strong>zero_out_label</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – label to assign probability of zero for the whole probability distribution</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>ndarray</em> – Probabilitydistributions per pixel where at position indexlabels the value is set to 1, otherwise to 0</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="mdgru.data.DataCollection.get_all_tps">
+<em class="property">static </em><code class="descname">get_all_tps</code><span class="sig-paren">(</span><em>folder</em>, <em>featurefiles</em>, <em>maskfiles</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data.html#DataCollection.get_all_tps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.DataCollection.get_all_tps" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes list of all folders that are subfolders of folder and contain all provided featurefiles and maskfiles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>folder</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – location at which timepoints are searched</li>
+<li><strong>featurefiles</strong> (<em>list of str</em>) – necessary featurefiles to be contained in a timepoint</li>
+<li><strong>maskfiles</strong> (<em>list of str</em>) – necessary maskfiles to be contained in a timepoint</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>sorted list</em> – valid timepoints in string format</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.DataCollection.get_data_dims">
+<code class="descname">get_data_dims</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data.html#DataCollection.get_data_dims"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.DataCollection.get_data_dims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the dimensionality of the whole collection (even if samples
+are returned/computed on the fly, the theoretical size is returned).
+Has between two and three entries (Depending on the type of data. A
+dataset with sequence of vectors has 3, a dataset with sequences of
+indices has two, etc)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>list</em> – A shape array of the dimensionality of the data.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.DataCollection.get_states">
+<code class="descname">get_states</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data.html#DataCollection.get_states"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.DataCollection.get_states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get states of this data collection</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.DataCollection.random_sample">
+<code class="descname">random_sample</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data.html#DataCollection.random_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.DataCollection.random_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly samples from our dataset. If the implementation knows
+different datasets, the dataset string can be used to choose one, if
+not, it will be ignored.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>**kw</strong> (<em>keyword args</em>) – batch_size can be set, amongst other parameters. See implementing methods for
+more detail.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>array</em> – A random sample of length batch_size.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.DataCollection.reset_seed">
+<code class="descname">reset_seed</code><span class="sig-paren">(</span><em>seed=12345678</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data.html#DataCollection.reset_seed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.DataCollection.reset_seed" title="Permalink to this definition">¶</a></dt>
+<dd><p>reset main random number generator with given seed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.DataCollection.set_states">
+<code class="descname">set_states</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data.html#DataCollection.set_states"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.DataCollection.set_states" title="Permalink to this definition">¶</a></dt>
+<dd><p>reset random state generators given the states in “states”</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>states</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><em>object</em></a>) – Random generator state</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-mdgru.data.grid_collection"></span></div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="helper.html" class="btn btn-neutral float-right" title="Helper routines and functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="eval.html" class="btn btn-neutral" title="Evaluation module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

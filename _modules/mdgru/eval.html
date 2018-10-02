@@ -1,0 +1,615 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mdgru.eval &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>mdgru.eval</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mdgru.eval</h1><div class="highlight"><pre>
+<span></span><span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Simon Andermatt&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2017 Simon Andermatt&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">abstractmethod</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">argget</span><span class="p">,</span> <span class="n">compile_arguments</span><span class="p">,</span> <span class="n">generate_defaults_info</span>
+
+
+<span class="k">class</span> <span class="nc">SupervisedEvaluation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;dropout_rate&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+                         <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;keep rate&quot; for weights using dropconnect. The higher the value, the closer the sampled models to the full model.&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;namespace&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s2">&quot;override default model name (if no ckpt is provided). Probably not a good idea!&quot;</span><span class="p">,</span>
+                      <span class="s1">&#39;alt&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;modelname&#39;</span><span class="p">]},</span>
+        <span class="s1">&#39;only_save_labels&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;save only labels and no probability distributions&#39;</span><span class="p">},</span>
+        <span class="c1"># &#39;batch_size&#39;: {&#39;value&#39;: 1, &#39;help&#39;: &#39;determines batch size to be used during training&#39;}</span>
+        <span class="s1">&#39;validate_same&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;always pick other random samples for validation!&#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;invert_meaning&#39;</span><span class="p">:</span> <span class="s1">&#39;dont_&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;evaluate_uncertainty_times&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                       <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Number times we want to evaluate one volume. This only makes sense &#39;</span>
+                                               <span class="s1">&#39;using a keep rate of less than 1 during evaluation (dropout_during_evaluation &#39;</span>
+                                               <span class="s1">&#39;less than 1)&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;number_of_evaluation_samples&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;evaluate_uncertainty_dropout&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                                         <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Keeprate of weights during evaluation. Useful to visualize uncertainty &#39;</span>
+                                                 <span class="s1">&#39;in conjunction with a number of samples per volume&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;dropout_during_evaluation&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;evaluate_uncertainty_saveall&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                                         <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Save each evaluation sample per volume. Without this flag, only the &#39;</span>
+                                                 <span class="s1">&#39;standard deviation and mean over all samples is kept.&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;save_individual_evaluations&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;show_f05&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">&#39;show_f1&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">&#39;show_f2&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">&#39;show_l2&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">&#39;show_cross_entropy&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">&#39;print_each&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;print execution time and losses each # iterations&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">},</span>
+        <span class="s1">&#39;batch_size&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Minibatchsize&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;batchsize&#39;</span><span class="p">,</span> <span class="s1">&#39;short&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;datapath&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;path where training, validation and testing folders lie. Can also be some other path, as long as the other locations are provided as absolute paths. An experimentsfolder will be created in this folder, where all runs and checkpoint files will be saved.&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;locationtraining&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                             <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;absolute or relative path to datapath to the training data. Either a list of paths to the sample folders or one path to a folder where samples should be automatically determined.&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;nargs&#39;</span><span class="p">:</span> <span class="s1">&#39;+&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;locationtesting&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;absolute or relative path to datapath to the testing data. Either a list of paths to the sample folders or one path to a folder where samples should be automatically determined.&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;nargs&#39;</span><span class="p">:</span> <span class="s1">&#39;+&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;locationvalidation&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                               <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;absolute or relative path to datapath to the validation data. Either a list of paths to the sample folders or one path to a folder where samples should be automatically determined.&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;nargs&#39;</span><span class="p">:</span> <span class="s1">&#39;+&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;output_dims&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;number of output channels, e.g. number of classes the model needs to create a probability distribution over.&#39;</span><span class="p">,</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;alt&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;nclasses&#39;</span><span class="p">]},</span>
+        <span class="s1">&#39;windowsize&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;short&#39;</span><span class="p">:</span><span class="s1">&#39;w&#39;</span><span class="p">,</span><span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;window size to be used during training, validation and testing, if not specified otherwise&#39;</span><span class="p">,</span> <span class="s1">&#39;nargs&#39;</span><span class="p">:</span><span class="s1">&#39;+&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;padding&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;padding to be used during training, validation and testing, if not specified otherwise. During training, the padding specifies the amount a patch is allowed to reach outside of the image along all dimensions, during testing, it specifies also the amount of overlap needed between patches.&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;nargs&#39;</span><span class="p">:</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;short&#39;</span><span class="p">:</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">},</span>
+        <span class="s1">&#39;windowsizetesting&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;override windowsize for testing&#39;</span><span class="p">,</span><span class="s1">&#39;nargs&#39;</span><span class="p">:</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">},</span>
+        <span class="s1">&#39;windowsizevalidation&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span><span class="c1">#{&#39;value&#39;:None, &#39;help&#39;: &#39;override windowsize for validation&#39;,&#39;nargs&#39;:&#39;+&#39;},</span>
+        <span class="s1">&#39;paddingtesting&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;override padding for testing&#39;</span><span class="p">,</span> <span class="s1">&#39;nargs&#39;</span><span class="p">:</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">},</span>
+        <span class="s1">&#39;paddingvalidation&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span><span class="c1">#{&#39;value&#39;:None, &#39;help&#39;: &#39;override padding for validation&#39;, &#39;nargs&#39;:&#39;+&#39;},</span>
+        <span class="s1">&#39;testbatchsize&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;batchsize for testing&#39;</span><span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelcls</span><span class="p">,</span> <span class="n">datacls</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">origargs</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">eval_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">SupervisedEvaluation</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">eval_kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">windowsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_tensorboard</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># self.dropout_rate = argget(kw, &quot;dropout_rate&quot;, 0.5)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># create datasets for training, validation and testing:</span>
+        <span class="n">locs</span> <span class="o">=</span> <span class="p">[[</span><span class="kc">None</span><span class="p">,</span> <span class="n">l</span><span class="p">]</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="p">,</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="kc">None</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">locationtraining</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">locationvalidation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">locationtesting</span><span class="p">]]</span>
+        <span class="n">paramstraining</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">]</span> <span class="o">+</span> <span class="n">locs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">paramsvalidation</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">windowsizevalidation</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">windowsizevalidation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">paddingvalidation</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paddingvalidation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">]</span> <span class="o">+</span> <span class="n">locs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">paramstesting</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">windowsizetesting</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">windowsizetesting</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">paddingtesting</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paddingtesting</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">]</span> <span class="o">+</span> <span class="n">locs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">kwdata</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">datacls</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">kwcopy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">kwdata</span><span class="p">)</span>
+        <span class="n">kwcopy</span><span class="p">[</span><span class="s1">&#39;nclasses&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dims</span>
+        <span class="n">kwcopy</span><span class="p">[</span><span class="s1">&#39;batch_size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trdc</span> <span class="o">=</span> <span class="n">datacls</span><span class="p">(</span><span class="o">*</span><span class="n">paramstraining</span><span class="p">,</span> <span class="n">kw</span><span class="o">=</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">kwcopy</span><span class="p">))</span>
+        <span class="n">testkw</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">kwcopy</span><span class="p">)</span>
+        <span class="n">testkw</span><span class="p">[</span><span class="s1">&#39;batch_size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">testkw</span><span class="p">[</span><span class="s1">&#39;batch_size&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">testbatchsize</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">testbatchsize</span>
+        <span class="n">valkw</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">testkw</span><span class="p">)</span>
+        <span class="n">testkw</span><span class="p">[</span><span class="s1">&#39;ignore_missing_mask&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tedc</span> <span class="o">=</span> <span class="n">datacls</span><span class="p">(</span><span class="o">*</span><span class="n">paramstesting</span><span class="p">,</span> <span class="n">kw</span><span class="o">=</span><span class="n">testkw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valdc</span> <span class="o">=</span> <span class="n">datacls</span><span class="p">(</span><span class="o">*</span><span class="n">paramsvalidation</span><span class="p">,</span> <span class="n">kw</span><span class="o">=</span><span class="n">valkw</span><span class="p">)</span>
+        <span class="c1"># self.trdc = collectioninst[&quot;train&quot;]</span>
+        <span class="c1"># self.tedc = collectioninst[&quot;test&quot;]</span>
+        <span class="c1"># self.valdc = collectioninst[&quot;validation&quot;]</span>
+        <span class="c1"># self.nclasses = argget(kw, &quot;nclasses&quot;, 2, keep=True) #redundant, not used anymore.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currit</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># self.only_save_labels = argget(kw, &quot;only_save_labels&quot;, False)</span>
+        <span class="c1"># self.batch_size = argget(kw, &quot;batchsize&quot;, 1)</span>
+        <span class="c1"># self.validate_same = argget(kw, &quot;validate_same&quot;, False)</span>
+        <span class="c1"># self.evaluate_uncertainty_times = argget(kw, &quot;evaluate_uncertainty_times&quot;, 1)</span>
+        <span class="c1"># self.evaluate_uncertainty_dropout = argget(kw, &quot;evaluate_uncertainty_dropout&quot;,</span>
+        <span class="c1">#                                            1.0)  # these standard values ensure that we dont evaluate uncertainty if nothing was provided.</span>
+        <span class="c1"># self.evaluate_uncertainty_saveall = argget(kw, &quot;evaluate_uncertainty_saveall&quot;, False)</span>
+        <span class="c1"># self.show_f05 = argget(kw, &quot;show_f05&quot;, True)</span>
+        <span class="c1"># self.show_f1 = argget(kw, &quot;show_f1&quot;, True)</span>
+        <span class="c1"># self.show_f2 = argget(kw, &quot;show_f2&quot;, True)</span>
+        <span class="c1"># self.show_l2 = argget(kw, &quot;show_l2_loss&quot;, True)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_dice</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;show_dice&quot;</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f1</span><span class="p">)</span>
+        <span class="c1"># self.show_cross_entropy = argget(kw, &quot;show_cross_entropy_loss&quot;, True)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">binary_evaluation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_dice</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f1</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f05</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimatefilename</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;estimatefilename&quot;</span><span class="p">,</span> <span class="s2">&quot;estimate&quot;</span><span class="p">)</span>
+        <span class="c1"># self.print_each = argget(kw, &#39;print_each&#39;, 1)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;gpus&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_train_session</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_test_session</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Performs one training iteration in respective framework and returns loss(es)&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;This needs to be implemented depending on the framework&quot;</span><span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">testing</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_predict_with_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batchlabs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_set_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sess</span><span class="p">,</span> <span class="n">cachefolder</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_globalstep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Measures and logs time for data sampling and training iteration.&quot;&quot;&quot;</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">batch</span><span class="p">,</span> <span class="n">batchlabs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trdc</span><span class="o">.</span><span class="n">random_sample</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="n">time_after_loading</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_train</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">batchlabs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currit</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">currit</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_each</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;eval&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;it: </span><span class="si">{}</span><span class="s2">, time: [i/o: </span><span class="si">{}</span><span class="s2">, processing: </span><span class="si">{}</span><span class="s2">, all: </span><span class="si">{}</span><span class="s2">], loss: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                                           <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">currit</span><span class="p">,</span>
+                                                   <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">time_after_loading</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+                                                   <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">time_after_loading</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+                                                   <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+                                                   <span class="n">loss</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">loss</span>
+
+    <span class="k">def</span> <span class="nf">test_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">ref</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Evaluates all activated scores between ref and pred.&quot;&quot;&quot;</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pred</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">ref</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="n">tar2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">pred</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">tar2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])),</span> <span class="n">ref</span><span class="o">.</span><span class="n">flatten</span><span class="p">()]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">tar2</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-8</span>
+        <span class="n">nclasses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">nclasses</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_evaluation</span><span class="p">:</span>
+            <span class="n">enc_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">enc_pred</span> <span class="o">=</span> <span class="n">nclasses</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">enc_both</span> <span class="o">=</span> <span class="n">enc_ref</span> <span class="o">+</span> <span class="n">enc_pred</span>
+            <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">enc_both</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">minlength</span><span class="o">=</span><span class="n">nclasses</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nclasses</span><span class="p">,</span> <span class="n">nclasses</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_dice</span><span class="p">:</span>
+            <span class="n">res</span><span class="p">[</span><span class="s2">&quot;dice&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">bins</span><span class="p">[</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)[</span><span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span>
+                           <span class="nb">range</span><span class="p">(</span><span class="n">nclasses</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f05</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f2</span><span class="p">:</span>
+            <span class="n">precision</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">bins</span><span class="p">[</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nclasses</span><span class="p">)])</span>
+            <span class="n">recall</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">bins</span><span class="p">[</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)[</span><span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nclasses</span><span class="p">)])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f05</span><span class="p">:</span>
+            <span class="n">beta2</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">res</span><span class="p">[</span><span class="s2">&quot;f05&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">beta2</span><span class="p">)</span> <span class="o">*</span> <span class="n">precision</span> <span class="o">*</span> <span class="n">recall</span> <span class="o">/</span> <span class="p">((</span><span class="n">beta2</span> <span class="o">*</span> <span class="n">precision</span><span class="p">)</span> <span class="o">+</span> <span class="n">recall</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f1</span><span class="p">:</span>
+            <span class="n">res</span><span class="p">[</span><span class="s2">&quot;f1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">bins</span><span class="p">[</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)[</span><span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span>
+                         <span class="nb">range</span><span class="p">(</span><span class="n">nclasses</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f2</span><span class="p">:</span>
+            <span class="n">beta2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">res</span><span class="p">[</span><span class="s2">&quot;f2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">beta2</span><span class="p">)</span> <span class="o">*</span> <span class="n">precision</span> <span class="o">*</span> <span class="n">recall</span> <span class="o">/</span> <span class="p">(</span><span class="n">beta2</span> <span class="o">*</span> <span class="n">precision</span> <span class="o">+</span> <span class="n">recall</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_cross_entropy</span><span class="p">:</span>
+            <span class="n">res</span><span class="p">[</span><span class="s2">&quot;cross_entropy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ref</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">pred</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_l2</span><span class="p">:</span>
+            <span class="n">res</span><span class="p">[</span><span class="s2">&quot;l2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">ref</span> <span class="o">-</span> <span class="n">pred</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">def</span> <span class="nf">test_all_random</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resample</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">dc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valdc</span>
+        <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_same</span><span class="p">:</span>
+            <span class="n">dc</span><span class="o">.</span><span class="n">randomstate</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">12345677</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">resample</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">testbatch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">testbatchlabs</span> <span class="o">=</span> <span class="n">dc</span><span class="o">.</span><span class="n">random_sample</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="n">loss</span><span class="p">,</span> <span class="n">prediction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict_with_loss</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">testbatch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">testbatchlabs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">prediction</span>
+
+    <span class="k">def</span> <span class="nf">test_all_available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_results</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">dc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tedc</span>
+
+        <span class="k">if</span> <span class="n">batch_size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;not supported yet to have more than batchsize 1&#39;</span><span class="p">)</span>
+        <span class="n">volgens</span> <span class="o">=</span> <span class="n">dc</span><span class="o">.</span><span class="n">get_volume_batch_generators</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">dropout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dropout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_uncertainty_dropout</span>
+        <span class="n">full_vols</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">errs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">lasttime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">volgen</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">volgens</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s1">&#39;evaluating file </span><span class="si">{}</span><span class="s1"> of shape </span><span class="si">{}</span><span class="s1"> with w </span><span class="si">{}</span><span class="s1"> and p </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shape</span> <span class="k">if</span> <span class="n">s</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">nclasses</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_uncertainty_times</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">uncertres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_uncertainty_saveall</span><span class="p">:</span>
+                    <span class="n">allres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluate_uncertainty_times</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="n">certainty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">pp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">pp</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">slicesa</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">))]</span>
+                    <span class="n">slicesb</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">))]</span>
+                    <span class="n">reshapearr</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">))]</span>
+                    <span class="n">reshapearr</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">pp</span>
+                    <span class="n">slicesa</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">pp</span><span class="p">)</span>
+                    <span class="n">slicesb</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="o">-</span><span class="n">pp</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="n">slicesa</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">slicesa</span><span class="p">)</span>
+                    <span class="n">slicesb</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">slicesb</span><span class="p">)</span>
+                    <span class="n">certainty</span><span class="p">[</span><span class="n">slicesa</span><span class="p">]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">pp</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">pp</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">reshapearr</span><span class="p">)</span>
+                    <span class="n">certainty</span><span class="p">[</span><span class="n">slicesb</span><span class="p">]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">pp</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">pp</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">reshapearr</span><span class="p">)</span>
+
+            <span class="n">certainty</span> <span class="o">=</span> <span class="n">certainty</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">w</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1"># read, compute, merge, write back</span>
+            <span class="k">for</span> <span class="n">subvol</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">imin</span><span class="p">,</span> <span class="n">imax</span> <span class="ow">in</span> <span class="n">volgen</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_uncertainty_times</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">preds</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluate_uncertainty_times</span><span class="p">):</span>
+                        <span class="n">preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_predict</span><span class="p">(</span><span class="n">subvol</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">testing</span><span class="p">))</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                            <span class="s1">&#39;evaluated run </span><span class="si">{}</span><span class="s1"> of subvolume from </span><span class="si">{}</span><span class="s1"> to </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">imin</span><span class="p">,</span> <span class="n">imax</span><span class="p">))</span>
+                    <span class="n">pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">preds</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="n">uncert</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">preds</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="n">preds</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">*</span> <span class="n">certainty</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">preds</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict</span><span class="p">(</span><span class="n">subvol</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">testing</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;evaluated subvolume from </span><span class="si">{}</span><span class="s1"> to </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">imin</span><span class="p">,</span> <span class="n">imax</span><span class="p">))</span>
+
+                <span class="n">pred</span> <span class="o">*=</span> <span class="n">certainty</span>
+                <span class="c1"># now reembed it into array</span>
+                <span class="n">wrongmin</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">imin</span><span class="p">]</span>
+                <span class="n">wrongmax</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">shape</span> <span class="o">-</span> <span class="n">imax</span><span class="p">)]</span>
+                <span class="n">mimin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">imin</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+                <span class="n">mimax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">imax</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+                <span class="n">slicesaa</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="n">mimina</span><span class="p">,</span> <span class="n">miminb</span><span class="p">)</span> <span class="k">for</span> <span class="n">mimina</span><span class="p">,</span> <span class="n">miminb</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mimin</span><span class="p">,</span> <span class="n">mimax</span><span class="p">)]</span>
+                <span class="n">slicesaa</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+                <span class="n">slicesaa</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">slicesaa</span><span class="p">)</span>
+                <span class="n">slicesbb</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">slicesbb</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">wrongmina</span><span class="p">,</span> <span class="n">wrongminb</span><span class="p">)</span> <span class="k">for</span> <span class="n">wrongmina</span><span class="p">,</span> <span class="n">wrongminb</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">wrongmin</span><span class="p">,</span> <span class="n">wrongmax</span><span class="p">))</span>
+                <span class="n">slicesbb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+                <span class="n">slicesbb</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">slicesbb</span><span class="p">)</span>
+
+                <span class="n">res</span><span class="p">[</span><span class="n">slicesaa</span><span class="p">]</span> <span class="o">+=</span> <span class="n">pred</span><span class="p">[</span><span class="n">slicesbb</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_uncertainty_times</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">uncert</span> <span class="o">*=</span> <span class="n">certainty</span>
+                    <span class="n">uncertres</span><span class="p">[</span><span class="n">slicesaa</span><span class="p">]</span> <span class="o">+=</span> \
+                        <span class="n">uncert</span><span class="p">[</span><span class="n">slicesbb</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_uncertainty_saveall</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluate_uncertainty_times</span><span class="p">):</span>
+                            <span class="n">allres</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">slicesaa</span><span class="p">]</span> <span class="o">+=</span> <span class="n">preds</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">slicesbb</span><span class="p">]</span>
+
+            <span class="c1"># normalize again:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_uncertainty_times</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">return_results</span><span class="p">:</span>
+                <span class="n">uncertres</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">dc</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">uncertres</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;std-&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimatefilename</span><span class="p">),</span> <span class="n">tporigin</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_uncertainty_saveall</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluate_uncertainty_times</span><span class="p">):</span>
+                        <span class="n">dc</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">allres</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;iter</span><span class="si">{}</span><span class="s2">-&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimatefilename</span><span class="p">),</span>
+                                <span class="n">tporigin</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-8</span><span class="p">)]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">nclasses</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="n">res</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1"># evaluate accuracy...</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">name</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">maskfiles</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">mfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">dc</span><span class="o">.</span><span class="n">maskfiles</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">mfile</span><span class="p">):</span>
+                        <span class="n">mf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">mfile</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+                        <span class="n">errs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_scores</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">mf</span><span class="p">)])</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s1">&#39;was not able to save test scores, is ground truth available?&#39;</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">return_results</span><span class="p">:</span>
+                <span class="n">full_vols</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">name</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">res</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">only_save_labels</span><span class="p">:</span>
+                    <span class="n">dc</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimatefilename</span> <span class="o">+</span> <span class="s2">&quot;-probdist&quot;</span><span class="p">),</span> <span class="n">tporigin</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+                <span class="n">dc</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimatefilename</span> <span class="o">+</span> <span class="s2">&quot;-labels&quot;</span><span class="p">),</span>
+                        <span class="n">tporigin</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;evaluation took </span><span class="si">{}</span><span class="s1"> seconds&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">lasttime</span><span class="p">))</span>
+            <span class="n">lasttime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">return_results</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">full_vols</span><span class="p">,</span> <span class="n">errs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">errs</span>
+
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;loads model at location f from disk&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="n">states</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pickle_name</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.pickle&quot;</span>
+            <span class="n">states</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">pickle_name</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;there was no randomstate pickle named </span><span class="si">{}</span><span class="s1"> around&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pickle_name</span><span class="p">))</span>
+        <span class="k">if</span> <span class="s2">&quot;trdc&quot;</span> <span class="ow">in</span> <span class="n">states</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trdc</span><span class="o">.</span><span class="n">set_states</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="s1">&#39;trdc&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trdc</span><span class="o">.</span><span class="n">set_states</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;tedc&quot;</span> <span class="ow">in</span> <span class="n">states</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tedc</span><span class="o">.</span><span class="n">set_states</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="s1">&#39;tedc&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tedc</span><span class="o">.</span><span class="n">set_states</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;valdc&quot;</span> <span class="ow">in</span> <span class="n">states</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">valdc</span><span class="o">.</span><span class="n">set_states</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="s1">&#39;valdc&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">valdc</span><span class="o">.</span><span class="n">set_states</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;epoch&#39;</span> <span class="ow">in</span> <span class="n">states</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="s1">&#39;epoch&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="s1">&#39;iteration&#39;</span> <span class="ow">in</span> <span class="n">states</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="s1">&#39;iteration&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;saves model to disk at location f&#39;&#39;&#39;</span>
+        <span class="n">ckpt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">trdc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trdc</span><span class="o">.</span><span class="n">get_states</span><span class="p">()</span>
+        <span class="n">tedc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tedc</span><span class="o">.</span><span class="n">get_states</span><span class="p">()</span>
+        <span class="n">valdc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valdc</span><span class="o">.</span><span class="n">get_states</span><span class="p">()</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">trdc</span><span class="p">:</span>
+            <span class="n">states</span><span class="p">[</span><span class="s1">&#39;trdc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trdc</span>
+        <span class="k">if</span> <span class="n">tedc</span><span class="p">:</span>
+            <span class="n">states</span><span class="p">[</span><span class="s1">&#39;tedc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tedc</span>
+        <span class="k">if</span> <span class="n">valdc</span><span class="p">:</span>
+            <span class="n">states</span><span class="p">[</span><span class="s1">&#39;valdc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">valdc</span>
+        <span class="n">states</span><span class="p">[</span><span class="s1">&#39;epoch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span>
+        <span class="n">states</span><span class="p">[</span><span class="s1">&#39;iteration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span> <span class="o">+</span> <span class="s2">&quot;.pickle&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ckpt</span>
+
+    <span class="k">def</span> <span class="nf">add_summary_simple_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;this needs to be implemented and only works with tensorflow backend.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sess</span><span class="p">,</span> <span class="n">cachefolder</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<span class="n">generate_defaults_info</span><span class="p">(</span><span class="n">SupervisedEvaluation</span><span class="p">)</span>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

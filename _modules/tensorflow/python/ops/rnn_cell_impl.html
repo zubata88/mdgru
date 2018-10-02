@@ -1,0 +1,1560 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tensorflow.python.ops.rnn_cell_impl &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>tensorflow.python.ops.rnn_cell_impl</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for tensorflow.python.ops.rnn_cell_impl</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2015 The TensorFlow Authors. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># ==============================================================================</span>
+<span class="sd">&quot;&quot;&quot;Module implementing RNN Cells.</span>
+
+<span class="sd">This module provides a number of basic commonly used RNN cells, such as LSTM</span>
+<span class="sd">(Long Short Term Memory) or GRU (Gated Recurrent Unit), and a number of</span>
+<span class="sd">operators that allow adding dropouts, projections, or embeddings for inputs.</span>
+<span class="sd">Constructing multi-layer cells is supported by the class `MultiRNNCell`, or by</span>
+<span class="sd">calling the `rnn` ops several times.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">numbers</span>
+
+<span class="kn">from</span> <span class="nn">tensorflow.python.eager</span> <span class="k">import</span> <span class="n">context</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="k">import</span> <span class="n">constant_op</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="k">import</span> <span class="n">dtypes</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="k">import</span> <span class="n">ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="k">import</span> <span class="n">tensor_shape</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="k">import</span> <span class="n">tensor_util</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.layers</span> <span class="k">import</span> <span class="n">base</span> <span class="k">as</span> <span class="n">base_layer</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">array_ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">clip_ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">init_ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">math_ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">nn_ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">partitioned_variables</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">random_ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">tensor_array_ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">variable_scope</span> <span class="k">as</span> <span class="n">vs</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">variables</span> <span class="k">as</span> <span class="n">tf_variables</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.platform</span> <span class="k">import</span> <span class="n">tf_logging</span> <span class="k">as</span> <span class="n">logging</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.training</span> <span class="k">import</span> <span class="n">checkpointable</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.util</span> <span class="k">import</span> <span class="n">nest</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.util.tf_export</span> <span class="k">import</span> <span class="n">tf_export</span>
+
+
+<span class="n">_BIAS_VARIABLE_NAME</span> <span class="o">=</span> <span class="s2">&quot;bias&quot;</span>
+<span class="n">_WEIGHTS_VARIABLE_NAME</span> <span class="o">=</span> <span class="s2">&quot;kernel&quot;</span>
+
+
+<span class="c1"># TODO(jblespiau): Remove this function when we are sure there are no longer</span>
+<span class="c1"># any usage (even if protected, it is being used). Prefer assert_like_rnncell.</span>
+<span class="k">def</span> <span class="nf">_like_rnncell</span><span class="p">(</span><span class="n">cell</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Checks that a given object is an RNNCell by using duck typing.&quot;&quot;&quot;</span>
+  <span class="n">conditions</span> <span class="o">=</span> <span class="p">[</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="s2">&quot;output_size&quot;</span><span class="p">),</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="s2">&quot;state_size&quot;</span><span class="p">),</span>
+                <span class="nb">hasattr</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="s2">&quot;zero_state&quot;</span><span class="p">),</span> <span class="n">callable</span><span class="p">(</span><span class="n">cell</span><span class="p">)]</span>
+  <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span>
+
+
+<span class="c1"># This can be used with self.assertRaisesRegexp for assert_like_rnncell.</span>
+<span class="n">ASSERT_LIKE_RNNCELL_ERROR_REGEXP</span> <span class="o">=</span> <span class="s2">&quot;is not an RNNCell&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">assert_like_rnncell</span><span class="p">(</span><span class="n">cell_name</span><span class="p">,</span> <span class="n">cell</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Raises a TypeError if cell is not like an RNNCell.</span>
+
+<span class="sd">  NOTE: Do not rely on the error message (in particular in tests) which can be</span>
+<span class="sd">  subject to change to increase readability. Use</span>
+<span class="sd">  ASSERT_LIKE_RNNCELL_ERROR_REGEXP.</span>
+
+<span class="sd">  Args:</span>
+<span class="sd">    cell_name: A string to give a meaningful error referencing to the name</span>
+<span class="sd">      of the functionargument.</span>
+<span class="sd">    cell: The object which should behave like an RNNCell.</span>
+
+<span class="sd">  Raises:</span>
+<span class="sd">    TypeError: A human-friendly exception.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">conditions</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="nb">hasattr</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="s2">&quot;output_size&quot;</span><span class="p">),</span>
+      <span class="nb">hasattr</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="s2">&quot;state_size&quot;</span><span class="p">),</span>
+      <span class="nb">hasattr</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="s2">&quot;zero_state&quot;</span><span class="p">),</span>
+      <span class="n">callable</span><span class="p">(</span><span class="n">cell</span><span class="p">),</span>
+  <span class="p">]</span>
+  <span class="n">errors</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="s2">&quot;&#39;output_size&#39; property is missing&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;&#39;state_size&#39; property is missing&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;&#39;zero_state&#39; method is missing&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;is not callable&quot;</span>
+  <span class="p">]</span>
+
+  <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">conditions</span><span class="p">):</span>
+
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[</span><span class="n">error</span> <span class="k">for</span> <span class="n">error</span><span class="p">,</span> <span class="n">cond</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="n">conditions</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">cond</span><span class="p">]</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The argument </span><span class="si">{!r}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">) is not an RNNCell: </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">cell_name</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">errors</span><span class="p">)))</span>
+
+
+<span class="k">def</span> <span class="nf">_concat</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">static</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Concat that enables int, Tensor, or TensorShape values.</span>
+
+<span class="sd">  This function takes a size specification, which can be an integer, a</span>
+<span class="sd">  TensorShape, or a Tensor, and converts it into a concatenated Tensor</span>
+<span class="sd">  (if static = False) or a list of integers (if static = True).</span>
+
+<span class="sd">  Args:</span>
+<span class="sd">    prefix: The prefix; usually the batch size (and/or time step size).</span>
+<span class="sd">      (TensorShape, int, or Tensor.)</span>
+<span class="sd">    suffix: TensorShape, int, or Tensor.</span>
+<span class="sd">    static: If `True`, return a python list with possibly unknown dimensions.</span>
+<span class="sd">      Otherwise return a `Tensor`.</span>
+
+<span class="sd">  Returns:</span>
+<span class="sd">    shape: the concatenation of prefix and suffix.</span>
+
+<span class="sd">  Raises:</span>
+<span class="sd">    ValueError: if `suffix` is not a scalar or vector (or TensorShape).</span>
+<span class="sd">    ValueError: if prefix or suffix was `None` and asked for dynamic</span>
+<span class="sd">      Tensors out.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">prefix</span>
+    <span class="n">p_static</span> <span class="o">=</span> <span class="n">tensor_util</span><span class="o">.</span><span class="n">constant_value</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">ndims</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">p</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">p</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">ndims</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;prefix tensor must be either a scalar or vector, &quot;</span>
+                       <span class="s2">&quot;but saw tensor: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">tensor_shape</span><span class="o">.</span><span class="n">as_shape</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+    <span class="n">p_static</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">ndims</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">constant_op</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">as_list</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtypes</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+         <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_fully_defined</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+  <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">suffix</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">suffix</span>
+    <span class="n">s_static</span> <span class="o">=</span> <span class="n">tensor_util</span><span class="o">.</span><span class="n">constant_value</span><span class="p">(</span><span class="n">suffix</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">ndims</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">s</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">s</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">ndims</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;suffix tensor must be either a scalar or vector, &quot;</span>
+                       <span class="s2">&quot;but saw tensor: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">s</span><span class="p">)</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">tensor_shape</span><span class="o">.</span><span class="n">as_shape</span><span class="p">(</span><span class="n">suffix</span><span class="p">)</span>
+    <span class="n">s_static</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">ndims</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">constant_op</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">as_list</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtypes</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+         <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">is_fully_defined</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+
+  <span class="k">if</span> <span class="n">static</span><span class="p">:</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">tensor_shape</span><span class="o">.</span><span class="n">as_shape</span><span class="p">(</span><span class="n">p_static</span><span class="p">)</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">s_static</span><span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span> <span class="k">if</span> <span class="n">shape</span><span class="o">.</span><span class="n">ndims</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Provided a prefix or suffix of None: </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">&quot;</span>
+                       <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">suffix</span><span class="p">))</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">s</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">shape</span>
+
+
+<span class="k">def</span> <span class="nf">_zero_state_tensors</span><span class="p">(</span><span class="n">state_size</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Create tensors of zeros based on state_size, batch_size, and dtype.&quot;&quot;&quot;</span>
+  <span class="k">def</span> <span class="nf">get_state_shape</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Combine s with batch_size to get a proper tensor shape.&quot;&quot;&quot;</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">_concat</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="n">c_static</span> <span class="o">=</span> <span class="n">_concat</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">static</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+      <span class="n">size</span><span class="o">.</span><span class="n">set_shape</span><span class="p">(</span><span class="n">c_static</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">size</span>
+  <span class="k">return</span> <span class="n">nest</span><span class="o">.</span><span class="n">map_structure</span><span class="p">(</span><span class="n">get_state_shape</span><span class="p">,</span> <span class="n">state_size</span><span class="p">)</span>
+
+
+<span class="nd">@tf_export</span><span class="p">(</span><span class="s2">&quot;nn.rnn_cell.RNNCell&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">RNNCell</span><span class="p">(</span><span class="n">base_layer</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Abstract object representing an RNN cell.</span>
+
+<span class="sd">  Every `RNNCell` must have the properties below and implement `call` with</span>
+<span class="sd">  the signature `(output, next_state) = call(input, state)`.  The optional</span>
+<span class="sd">  third input argument, `scope`, is allowed for backwards compatibility</span>
+<span class="sd">  purposes; but should be left off for new subclasses.</span>
+
+<span class="sd">  This definition of cell differs from the definition used in the literature.</span>
+<span class="sd">  In the literature, &#39;cell&#39; refers to an object with a single scalar output.</span>
+<span class="sd">  This definition refers to a horizontal array of such units.</span>
+
+<span class="sd">  An RNN cell, in the most abstract setting, is anything that has</span>
+<span class="sd">  a state and performs some operation that takes a matrix of inputs.</span>
+<span class="sd">  This operation results in an output matrix with `self.output_size` columns.</span>
+<span class="sd">  If `self.state_size` is an integer, this operation also results in a new</span>
+<span class="sd">  state matrix with `self.state_size` columns.  If `self.state_size` is a</span>
+<span class="sd">  (possibly nested tuple of) TensorShape object(s), then it should return a</span>
+<span class="sd">  matching structure of Tensors having shape `[batch_size].concatenate(s)`</span>
+<span class="sd">  for each `s` in `self.batch_size`.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run this RNN cell on inputs, starting from the given state.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      inputs: `2-D` tensor with shape `[batch_size, input_size]`.</span>
+<span class="sd">      state: if `self.state_size` is an integer, this should be a `2-D Tensor`</span>
+<span class="sd">        with shape `[batch_size, self.state_size]`.  Otherwise, if</span>
+<span class="sd">        `self.state_size` is a tuple of integers, this should be a tuple</span>
+<span class="sd">        with shapes `[batch_size, s] for s in self.state_size`.</span>
+<span class="sd">      scope: VariableScope for the created subgraph; defaults to class name.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A pair containing:</span>
+
+<span class="sd">      - Output: A `2-D` tensor with shape `[batch_size, self.output_size]`.</span>
+<span class="sd">      - New state: Either a single `2-D` tensor, or a tuple of tensors matching</span>
+<span class="sd">        the arity and shapes of `state`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">scope</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">with</span> <span class="n">vs</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span>
+                             <span class="n">custom_getter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rnn_get_variable</span><span class="p">)</span> <span class="k">as</span> <span class="n">scope</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">RNNCell</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">scope_attrname</span> <span class="o">=</span> <span class="s2">&quot;rnncell_scope&quot;</span>
+      <span class="n">scope</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope_attrname</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">scope</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">scope</span> <span class="o">=</span> <span class="n">vs</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">vs</span><span class="o">.</span><span class="n">get_variable_scope</span><span class="p">(),</span>
+                                  <span class="n">custom_getter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rnn_get_variable</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope_attrname</span><span class="p">,</span> <span class="n">scope</span><span class="p">)</span>
+      <span class="k">with</span> <span class="n">scope</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">RNNCell</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_rnn_get_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">getter</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">variable</span> <span class="o">=</span> <span class="n">getter</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="n">trainable</span> <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">_trainable</span>  <span class="c1"># pylint: disable=protected-access</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">trainable</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="n">variable</span> <span class="ow">in</span> <span class="n">tf_variables</span><span class="o">.</span><span class="n">trainable_variables</span><span class="p">()</span> <span class="ow">or</span>
+          <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">tf_variables</span><span class="o">.</span><span class="n">PartitionedVariable</span><span class="p">)</span> <span class="ow">and</span>
+           <span class="nb">list</span><span class="p">(</span><span class="n">variable</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">tf_variables</span><span class="o">.</span><span class="n">trainable_variables</span><span class="p">()))</span>
+    <span class="k">if</span> <span class="n">trainable</span> <span class="ow">and</span> <span class="n">variable</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">trainable</span> <span class="ow">and</span> <span class="n">variable</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_non_trainable_weights</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_non_trainable_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">variable</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">state_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;size(s) of state(s) used by this cell.</span>
+
+<span class="sd">    It can be represented by an Integer, a TensorShape or a tuple of Integers</span>
+<span class="sd">    or TensorShapes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Abstract method&quot;</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Integer or TensorShape: size of outputs produced by this cell.&quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Abstract method&quot;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+    <span class="c1"># This tells the parent Layer object that it&#39;s OK to call</span>
+    <span class="c1"># self.add_variable() inside the call() method.</span>
+    <span class="k">pass</span>
+
+  <span class="k">def</span> <span class="nf">zero_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return zero-filled state tensor(s).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      batch_size: int, float, or unit Tensor representing the batch size.</span>
+<span class="sd">      dtype: the data type to use for the state.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      If `state_size` is an int or TensorShape, then the return value is a</span>
+<span class="sd">      `N-D` tensor of shape `[batch_size, state_size]` filled with zeros.</span>
+
+<span class="sd">      If `state_size` is a nested list or tuple, then the return value is</span>
+<span class="sd">      a nested list or tuple (of the same structure) of `2-D` tensors with</span>
+<span class="sd">      the shapes `[batch_size, s]` for each s in `state_size`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Try to use the last cached zero_state. This is done to avoid recreating</span>
+    <span class="c1"># zeros, especially when eager execution is enabled.</span>
+    <span class="n">state_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_size</span>
+    <span class="n">is_eager</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">is_eager</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_last_zero_state&quot;</span><span class="p">):</span>
+      <span class="p">(</span><span class="n">last_state_size</span><span class="p">,</span> <span class="n">last_batch_size</span><span class="p">,</span> <span class="n">last_dtype</span><span class="p">,</span>
+       <span class="n">last_output</span><span class="p">)</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_last_zero_state&quot;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">last_batch_size</span> <span class="o">==</span> <span class="n">batch_size</span> <span class="ow">and</span>
+          <span class="n">last_dtype</span> <span class="o">==</span> <span class="n">dtype</span> <span class="ow">and</span>
+          <span class="n">last_state_size</span> <span class="o">==</span> <span class="n">state_size</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">last_output</span>
+    <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;ZeroState&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">batch_size</span><span class="p">]):</span>
+      <span class="n">output</span> <span class="o">=</span> <span class="n">_zero_state_tensors</span><span class="p">(</span><span class="n">state_size</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_eager</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_last_zero_state</span> <span class="o">=</span> <span class="p">(</span><span class="n">state_size</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span>
+
+
+<span class="k">class</span> <span class="nc">LayerRNNCell</span><span class="p">(</span><span class="n">RNNCell</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Subclass of RNNCells that act like proper `tf.Layer` objects.</span>
+
+<span class="sd">  For backwards compatibility purposes, most `RNNCell` instances allow their</span>
+<span class="sd">  `call` methods to instantiate variables via `tf.get_variable`.  The underlying</span>
+<span class="sd">  variable scope thus keeps track of any variables, and returning cached</span>
+<span class="sd">  versions.  This is atypical of `tf.layer` objects, which separate this</span>
+<span class="sd">  part of layer building into a `build` method that is only called once.</span>
+
+<span class="sd">  Here we provide a subclass for `RNNCell` objects that act exactly as</span>
+<span class="sd">  `Layer` objects do.  They must provide a `build` method and their</span>
+<span class="sd">  `call` methods do not access Variables `tf.get_variable`.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run this RNN cell on inputs, starting from the given state.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      inputs: `2-D` tensor with shape `[batch_size, input_size]`.</span>
+<span class="sd">      state: if `self.state_size` is an integer, this should be a `2-D Tensor`</span>
+<span class="sd">        with shape `[batch_size, self.state_size]`.  Otherwise, if</span>
+<span class="sd">        `self.state_size` is a tuple of integers, this should be a tuple</span>
+<span class="sd">        with shapes `[batch_size, s] for s in self.state_size`.</span>
+<span class="sd">      scope: optional cell scope.</span>
+<span class="sd">      *args: Additional positional arguments.</span>
+<span class="sd">      **kwargs: Additional keyword arguments.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A pair containing:</span>
+
+<span class="sd">      - Output: A `2-D` tensor with shape `[batch_size, self.output_size]`.</span>
+<span class="sd">      - New state: Either a single `2-D` tensor, or a tuple of tensors matching</span>
+<span class="sd">        the arity and shapes of `state`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Bypass RNNCell&#39;s variable capturing semantics for LayerRNNCell.</span>
+    <span class="c1"># Instead, it is up to subclasses to provide a proper build</span>
+    <span class="c1"># method.  See the class docstring for more details.</span>
+    <span class="k">return</span> <span class="n">base_layer</span><span class="o">.</span><span class="n">Layer</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">,</span>
+                                     <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="nd">@tf_export</span><span class="p">(</span><span class="s2">&quot;nn.rnn_cell.BasicRNNCell&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">BasicRNNCell</span><span class="p">(</span><span class="n">LayerRNNCell</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;The most basic RNN cell.</span>
+
+<span class="sd">  Args:</span>
+<span class="sd">    num_units: int, The number of units in the RNN cell.</span>
+<span class="sd">    activation: Nonlinearity to use.  Default: `tanh`.</span>
+<span class="sd">    reuse: (optional) Python boolean describing whether to reuse variables</span>
+<span class="sd">     in an existing scope.  If not `True`, and the existing scope already has</span>
+<span class="sd">     the given variables, an error is raised.</span>
+<span class="sd">    name: String, the name of the layer. Layers with the same name will</span>
+<span class="sd">      share weights, but to avoid mistakes we require reuse=True in such</span>
+<span class="sd">      cases.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_units</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">BasicRNNCell</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">_reuse</span><span class="o">=</span><span class="n">reuse</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="c1"># Inputs must be 2-dimensional.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">input_spec</span> <span class="o">=</span> <span class="n">base_layer</span><span class="o">.</span><span class="n">InputSpec</span><span class="p">(</span><span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span> <span class="o">=</span> <span class="n">num_units</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span> <span class="o">=</span> <span class="n">activation</span> <span class="ow">or</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">tanh</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">state_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span>
+
+  <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_shape</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">inputs_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected inputs.shape[-1] to be known, saw shape: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                       <span class="o">%</span> <span class="n">inputs_shape</span><span class="p">)</span>
+
+    <span class="n">input_depth</span> <span class="o">=</span> <span class="n">inputs_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+        <span class="n">_WEIGHTS_VARIABLE_NAME</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">input_depth</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_bias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+        <span class="n">_BIAS_VARIABLE_NAME</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span>
+        <span class="n">initializer</span><span class="o">=</span><span class="n">init_ops</span><span class="o">.</span><span class="n">zeros_initializer</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">built</span> <span class="o">=</span> <span class="kc">True</span>
+
+  <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Most basic RNN: output = new_state = act(W * input + U * state + B).&quot;&quot;&quot;</span>
+
+    <span class="n">gate_inputs</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span>
+        <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span><span class="p">)</span>
+    <span class="n">gate_inputs</span> <span class="o">=</span> <span class="n">nn_ops</span><span class="o">.</span><span class="n">bias_add</span><span class="p">(</span><span class="n">gate_inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bias</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">gate_inputs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">output</span>
+
+
+<span class="nd">@tf_export</span><span class="p">(</span><span class="s2">&quot;nn.rnn_cell.GRUCell&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">GRUCell</span><span class="p">(</span><span class="n">LayerRNNCell</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Gated Recurrent Unit cell (cf. http://arxiv.org/abs/1406.1078).</span>
+
+<span class="sd">  Args:</span>
+<span class="sd">    num_units: int, The number of units in the GRU cell.</span>
+<span class="sd">    activation: Nonlinearity to use.  Default: `tanh`.</span>
+<span class="sd">    reuse: (optional) Python boolean describing whether to reuse variables</span>
+<span class="sd">     in an existing scope.  If not `True`, and the existing scope already has</span>
+<span class="sd">     the given variables, an error is raised.</span>
+<span class="sd">    kernel_initializer: (optional) The initializer to use for the weight and</span>
+<span class="sd">    projection matrices.</span>
+<span class="sd">    bias_initializer: (optional) The initializer to use for the bias.</span>
+<span class="sd">    name: String, the name of the layer. Layers with the same name will</span>
+<span class="sd">      share weights, but to avoid mistakes we require reuse=True in such</span>
+<span class="sd">      cases.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">num_units</span><span class="p">,</span>
+               <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">reuse</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">kernel_initializer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">bias_initializer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">GRUCell</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">_reuse</span><span class="o">=</span><span class="n">reuse</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="c1"># Inputs must be 2-dimensional.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">input_spec</span> <span class="o">=</span> <span class="n">base_layer</span><span class="o">.</span><span class="n">InputSpec</span><span class="p">(</span><span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span> <span class="o">=</span> <span class="n">num_units</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span> <span class="o">=</span> <span class="n">activation</span> <span class="ow">or</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">tanh</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span> <span class="o">=</span> <span class="n">kernel_initializer</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_bias_initializer</span> <span class="o">=</span> <span class="n">bias_initializer</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">state_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span>
+
+  <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_shape</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">inputs_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected inputs.shape[-1] to be known, saw shape: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                       <span class="o">%</span> <span class="n">inputs_shape</span><span class="p">)</span>
+
+    <span class="n">input_depth</span> <span class="o">=</span> <span class="n">inputs_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_gate_kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+        <span class="s2">&quot;gates/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">_WEIGHTS_VARIABLE_NAME</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">input_depth</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span>
+        <span class="n">initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_gate_bias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+        <span class="s2">&quot;gates/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">_BIAS_VARIABLE_NAME</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span>
+        <span class="n">initializer</span><span class="o">=</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bias_initializer</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bias_initializer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">init_ops</span><span class="o">.</span><span class="n">constant_initializer</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_candidate_kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+        <span class="s2">&quot;candidate/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">_WEIGHTS_VARIABLE_NAME</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">input_depth</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span>
+        <span class="n">initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_candidate_bias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+        <span class="s2">&quot;candidate/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">_BIAS_VARIABLE_NAME</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span>
+        <span class="n">initializer</span><span class="o">=</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bias_initializer</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bias_initializer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">init_ops</span><span class="o">.</span><span class="n">zeros_initializer</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">built</span> <span class="o">=</span> <span class="kc">True</span>
+
+  <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gated recurrent unit (GRU) with nunits cells.&quot;&quot;&quot;</span>
+
+    <span class="n">gate_inputs</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span>
+        <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_kernel</span><span class="p">)</span>
+    <span class="n">gate_inputs</span> <span class="o">=</span> <span class="n">nn_ops</span><span class="o">.</span><span class="n">bias_add</span><span class="p">(</span><span class="n">gate_inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gate_bias</span><span class="p">)</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">gate_inputs</span><span class="p">)</span>
+    <span class="n">r</span><span class="p">,</span> <span class="n">u</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">num_or_size_splits</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">r_state</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">state</span>
+
+    <span class="n">candidate</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span>
+        <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">inputs</span><span class="p">,</span> <span class="n">r_state</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_candidate_kernel</span><span class="p">)</span>
+    <span class="n">candidate</span> <span class="o">=</span> <span class="n">nn_ops</span><span class="o">.</span><span class="n">bias_add</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_candidate_bias</span><span class="p">)</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+    <span class="n">new_h</span> <span class="o">=</span> <span class="n">u</span> <span class="o">*</span> <span class="n">state</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">u</span><span class="p">)</span> <span class="o">*</span> <span class="n">c</span>
+    <span class="k">return</span> <span class="n">new_h</span><span class="p">,</span> <span class="n">new_h</span>
+
+
+<span class="n">_LSTMStateTuple</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;LSTMStateTuple&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;h&quot;</span><span class="p">))</span>
+
+
+<span class="nd">@tf_export</span><span class="p">(</span><span class="s2">&quot;nn.rnn_cell.LSTMStateTuple&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">LSTMStateTuple</span><span class="p">(</span><span class="n">_LSTMStateTuple</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Tuple used by LSTM Cells for `state_size`, `zero_state`, and output state.</span>
+
+<span class="sd">  Stores two elements: `(c, h)`, in that order. Where `c` is the hidden state</span>
+<span class="sd">  and `h` is the output.</span>
+
+<span class="sd">  Only used when `state_is_tuple=True`.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span>
+    <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">h</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Inconsistent internal state: </span><span class="si">%s</span><span class="s2"> vs </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span>
+                      <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">dtype</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">c</span><span class="o">.</span><span class="n">dtype</span>
+
+
+<span class="nd">@tf_export</span><span class="p">(</span><span class="s2">&quot;nn.rnn_cell.BasicLSTMCell&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">BasicLSTMCell</span><span class="p">(</span><span class="n">LayerRNNCell</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Basic LSTM recurrent network cell.</span>
+
+<span class="sd">  The implementation is based on: http://arxiv.org/abs/1409.2329.</span>
+
+<span class="sd">  We add forget_bias (default: 1) to the biases of the forget gate in order to</span>
+<span class="sd">  reduce the scale of forgetting in the beginning of the training.</span>
+
+<span class="sd">  It does not allow cell clipping, a projection layer, and does not</span>
+<span class="sd">  use peep-hole connections: it is the basic baseline.</span>
+
+<span class="sd">  For advanced models, please use the full @{tf.nn.rnn_cell.LSTMCell}</span>
+<span class="sd">  that follows.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_units</span><span class="p">,</span> <span class="n">forget_bias</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+               <span class="n">state_is_tuple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initialize the basic LSTM cell.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      num_units: int, The number of units in the LSTM cell.</span>
+<span class="sd">      forget_bias: float, The bias added to forget gates (see above).</span>
+<span class="sd">        Must set to `0.0` manually when restoring from CudnnLSTM-trained</span>
+<span class="sd">        checkpoints.</span>
+<span class="sd">      state_is_tuple: If True, accepted and returned states are 2-tuples of</span>
+<span class="sd">        the `c_state` and `m_state`.  If False, they are concatenated</span>
+<span class="sd">        along the column axis.  The latter behavior will soon be deprecated.</span>
+<span class="sd">      activation: Activation function of the inner states.  Default: `tanh`.</span>
+<span class="sd">      reuse: (optional) Python boolean describing whether to reuse variables</span>
+<span class="sd">        in an existing scope.  If not `True`, and the existing scope already has</span>
+<span class="sd">        the given variables, an error is raised.</span>
+<span class="sd">      name: String, the name of the layer. Layers with the same name will</span>
+<span class="sd">        share weights, but to avoid mistakes we require reuse=True in such</span>
+<span class="sd">        cases.</span>
+
+<span class="sd">      When restoring from CudnnLSTM-trained checkpoints, must use</span>
+<span class="sd">      `CudnnCompatibleLSTMCell` instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">BasicLSTMCell</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">_reuse</span><span class="o">=</span><span class="n">reuse</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_is_tuple</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: Using a concatenated state is slower and will soon be &quot;</span>
+                   <span class="s2">&quot;deprecated.  Use state_is_tuple=True.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="c1"># Inputs must be 2-dimensional.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">input_spec</span> <span class="o">=</span> <span class="n">base_layer</span><span class="o">.</span><span class="n">InputSpec</span><span class="p">(</span><span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span> <span class="o">=</span> <span class="n">num_units</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_forget_bias</span> <span class="o">=</span> <span class="n">forget_bias</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span> <span class="o">=</span> <span class="n">state_is_tuple</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span> <span class="o">=</span> <span class="n">activation</span> <span class="ow">or</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">tanh</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">state_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">LSTMStateTuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span> <span class="k">else</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span>
+
+  <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_shape</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">inputs_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected inputs.shape[-1] to be known, saw shape: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                       <span class="o">%</span> <span class="n">inputs_shape</span><span class="p">)</span>
+
+    <span class="n">input_depth</span> <span class="o">=</span> <span class="n">inputs_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">h_depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+        <span class="n">_WEIGHTS_VARIABLE_NAME</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">input_depth</span> <span class="o">+</span> <span class="n">h_depth</span><span class="p">,</span> <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_bias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+        <span class="n">_BIAS_VARIABLE_NAME</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span>
+        <span class="n">initializer</span><span class="o">=</span><span class="n">init_ops</span><span class="o">.</span><span class="n">zeros_initializer</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">built</span> <span class="o">=</span> <span class="kc">True</span>
+
+  <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Long short-term memory cell (LSTM).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      inputs: `2-D` tensor with shape `[batch_size, input_size]`.</span>
+<span class="sd">      state: An `LSTMStateTuple` of state tensors, each shaped</span>
+<span class="sd">        `[batch_size, self.state_size]`, if `state_is_tuple` has been set to</span>
+<span class="sd">        `True`.  Otherwise, a `Tensor` shaped</span>
+<span class="sd">        `[batch_size, 2 * self.state_size]`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A pair containing the new hidden state, and the new state (either a</span>
+<span class="sd">        `LSTMStateTuple` or a concatenated state, depending on</span>
+<span class="sd">        `state_is_tuple`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sigmoid</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">sigmoid</span>
+    <span class="n">one</span> <span class="o">=</span> <span class="n">constant_op</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtypes</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="c1"># Parameters of gates are concatenated into one multiply for efficiency.</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span><span class="p">:</span>
+      <span class="n">c</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">state</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">c</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">num_or_size_splits</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">one</span><span class="p">)</span>
+
+    <span class="n">gate_inputs</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span>
+        <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">inputs</span><span class="p">,</span> <span class="n">h</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span><span class="p">)</span>
+    <span class="n">gate_inputs</span> <span class="o">=</span> <span class="n">nn_ops</span><span class="o">.</span><span class="n">bias_add</span><span class="p">(</span><span class="n">gate_inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bias</span><span class="p">)</span>
+
+    <span class="c1"># i = input_gate, j = new_input, f = forget_gate, o = output_gate</span>
+    <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">o</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">gate_inputs</span><span class="p">,</span> <span class="n">num_or_size_splits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">one</span><span class="p">)</span>
+
+    <span class="n">forget_bias_tensor</span> <span class="o">=</span> <span class="n">constant_op</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forget_bias</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="c1"># Note that using `add` and `multiply` instead of `+` and `*` gives a</span>
+    <span class="c1"># performance improvement. So using those at the cost of readability.</span>
+    <span class="n">add</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">add</span>
+    <span class="n">multiply</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">multiply</span>
+    <span class="n">new_c</span> <span class="o">=</span> <span class="n">add</span><span class="p">(</span><span class="n">multiply</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">add</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">forget_bias_tensor</span><span class="p">))),</span>
+                <span class="n">multiply</span><span class="p">(</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">j</span><span class="p">)))</span>
+    <span class="n">new_h</span> <span class="o">=</span> <span class="n">multiply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">new_c</span><span class="p">),</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">o</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span><span class="p">:</span>
+      <span class="n">new_state</span> <span class="o">=</span> <span class="n">LSTMStateTuple</span><span class="p">(</span><span class="n">new_c</span><span class="p">,</span> <span class="n">new_h</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">new_state</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">new_c</span><span class="p">,</span> <span class="n">new_h</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_h</span><span class="p">,</span> <span class="n">new_state</span>
+
+
+<span class="nd">@tf_export</span><span class="p">(</span><span class="s2">&quot;nn.rnn_cell.LSTMCell&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">LSTMCell</span><span class="p">(</span><span class="n">LayerRNNCell</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Long short-term memory unit (LSTM) recurrent network cell.</span>
+
+<span class="sd">  The default non-peephole implementation is based on:</span>
+
+<span class="sd">    http://www.bioinf.jku.at/publications/older/2604.pdf</span>
+
+<span class="sd">  S. Hochreiter and J. Schmidhuber.</span>
+<span class="sd">  &quot;Long Short-Term Memory&quot;. Neural Computation, 9(8):1735-1780, 1997.</span>
+
+<span class="sd">  The peephole implementation is based on:</span>
+
+<span class="sd">    https://research.google.com/pubs/archive/43905.pdf</span>
+
+<span class="sd">  Hasim Sak, Andrew Senior, and Francoise Beaufays.</span>
+<span class="sd">  &quot;Long short-term memory recurrent neural network architectures for</span>
+<span class="sd">   large scale acoustic modeling.&quot; INTERSPEECH, 2014.</span>
+
+<span class="sd">  The class uses optional peep-hole connections, optional cell clipping, and</span>
+<span class="sd">  an optional projection layer.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_units</span><span class="p">,</span>
+               <span class="n">use_peepholes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cell_clip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">initializer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_proj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">proj_clip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">num_unit_shards</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_proj_shards</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">forget_bias</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">state_is_tuple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+               <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initialize the parameters for an LSTM cell.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      num_units: int, The number of units in the LSTM cell.</span>
+<span class="sd">      use_peepholes: bool, set True to enable diagonal/peephole connections.</span>
+<span class="sd">      cell_clip: (optional) A float value, if provided the cell state is clipped</span>
+<span class="sd">        by this value prior to the cell output activation.</span>
+<span class="sd">      initializer: (optional) The initializer to use for the weight and</span>
+<span class="sd">        projection matrices.</span>
+<span class="sd">      num_proj: (optional) int, The output dimensionality for the projection</span>
+<span class="sd">        matrices.  If None, no projection is performed.</span>
+<span class="sd">      proj_clip: (optional) A float value.  If `num_proj &gt; 0` and `proj_clip` is</span>
+<span class="sd">        provided, then the projected values are clipped elementwise to within</span>
+<span class="sd">        `[-proj_clip, proj_clip]`.</span>
+<span class="sd">      num_unit_shards: Deprecated, will be removed by Jan. 2017.</span>
+<span class="sd">        Use a variable_scope partitioner instead.</span>
+<span class="sd">      num_proj_shards: Deprecated, will be removed by Jan. 2017.</span>
+<span class="sd">        Use a variable_scope partitioner instead.</span>
+<span class="sd">      forget_bias: Biases of the forget gate are initialized by default to 1</span>
+<span class="sd">        in order to reduce the scale of forgetting at the beginning of</span>
+<span class="sd">        the training. Must set it manually to `0.0` when restoring from</span>
+<span class="sd">        CudnnLSTM trained checkpoints.</span>
+<span class="sd">      state_is_tuple: If True, accepted and returned states are 2-tuples of</span>
+<span class="sd">        the `c_state` and `m_state`.  If False, they are concatenated</span>
+<span class="sd">        along the column axis.  This latter behavior will soon be deprecated.</span>
+<span class="sd">      activation: Activation function of the inner states.  Default: `tanh`.</span>
+<span class="sd">      reuse: (optional) Python boolean describing whether to reuse variables</span>
+<span class="sd">        in an existing scope.  If not `True`, and the existing scope already has</span>
+<span class="sd">        the given variables, an error is raised.</span>
+<span class="sd">      name: String, the name of the layer. Layers with the same name will</span>
+<span class="sd">        share weights, but to avoid mistakes we require reuse=True in such</span>
+<span class="sd">        cases.</span>
+
+<span class="sd">      When restoring from CudnnLSTM-trained checkpoints, use</span>
+<span class="sd">      `CudnnCompatibleLSTMCell` instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">LSTMCell</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">_reuse</span><span class="o">=</span><span class="n">reuse</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_is_tuple</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: Using a concatenated state is slower and will soon be &quot;</span>
+                   <span class="s2">&quot;deprecated.  Use state_is_tuple=True.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_unit_shards</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">num_proj_shards</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+          <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: The num_unit_shards and proj_unit_shards parameters are &quot;</span>
+          <span class="s2">&quot;deprecated and will be removed in Jan 2017.  &quot;</span>
+          <span class="s2">&quot;Use a variable scope with a partitioner instead.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="c1"># Inputs must be 2-dimensional.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">input_spec</span> <span class="o">=</span> <span class="n">base_layer</span><span class="o">.</span><span class="n">InputSpec</span><span class="p">(</span><span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span> <span class="o">=</span> <span class="n">num_units</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_use_peepholes</span> <span class="o">=</span> <span class="n">use_peepholes</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cell_clip</span> <span class="o">=</span> <span class="n">cell_clip</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_initializer</span> <span class="o">=</span> <span class="n">initializer</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj</span> <span class="o">=</span> <span class="n">num_proj</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_proj_clip</span> <span class="o">=</span> <span class="n">proj_clip</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_num_unit_shards</span> <span class="o">=</span> <span class="n">num_unit_shards</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj_shards</span> <span class="o">=</span> <span class="n">num_proj_shards</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_forget_bias</span> <span class="o">=</span> <span class="n">forget_bias</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span> <span class="o">=</span> <span class="n">state_is_tuple</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span> <span class="o">=</span> <span class="n">activation</span> <span class="ow">or</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">tanh</span>
+
+    <span class="k">if</span> <span class="n">num_proj</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_state_size</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="n">LSTMStateTuple</span><span class="p">(</span><span class="n">num_units</span><span class="p">,</span> <span class="n">num_proj</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">state_is_tuple</span> <span class="k">else</span> <span class="n">num_units</span> <span class="o">+</span> <span class="n">num_proj</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_output_size</span> <span class="o">=</span> <span class="n">num_proj</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_state_size</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="n">LSTMStateTuple</span><span class="p">(</span><span class="n">num_units</span><span class="p">,</span> <span class="n">num_units</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">state_is_tuple</span> <span class="k">else</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">num_units</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_output_size</span> <span class="o">=</span> <span class="n">num_units</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">state_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_size</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_size</span>
+
+  <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_shape</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">inputs_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected inputs.shape[-1] to be known, saw shape: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                       <span class="o">%</span> <span class="n">inputs_shape</span><span class="p">)</span>
+
+    <span class="n">input_depth</span> <span class="o">=</span> <span class="n">inputs_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">h_depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj</span>
+    <span class="n">maybe_partitioner</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">partitioned_variables</span><span class="o">.</span><span class="n">fixed_size_partitioner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_unit_shards</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_unit_shards</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+        <span class="n">_WEIGHTS_VARIABLE_NAME</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">input_depth</span> <span class="o">+</span> <span class="n">h_depth</span><span class="p">,</span> <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span>
+        <span class="n">initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_initializer</span><span class="p">,</span>
+        <span class="n">partitioner</span><span class="o">=</span><span class="n">maybe_partitioner</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_bias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+        <span class="n">_BIAS_VARIABLE_NAME</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span>
+        <span class="n">initializer</span><span class="o">=</span><span class="n">init_ops</span><span class="o">.</span><span class="n">zeros_initializer</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_peepholes</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_w_f_diag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span><span class="s2">&quot;w_f_diag&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span>
+                                         <span class="n">initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_initializer</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_w_i_diag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span><span class="s2">&quot;w_i_diag&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span>
+                                         <span class="n">initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_initializer</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_w_o_diag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span><span class="s2">&quot;w_o_diag&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span>
+                                         <span class="n">initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_initializer</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">maybe_proj_partitioner</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="n">partitioned_variables</span><span class="o">.</span><span class="n">fixed_size_partitioner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_proj_shards</span><span class="p">)</span>
+          <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj_shards</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+          <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_proj_kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span>
+          <span class="s2">&quot;projection/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">_WEIGHTS_VARIABLE_NAME</span><span class="p">,</span>
+          <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj</span><span class="p">],</span>
+          <span class="n">initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_initializer</span><span class="p">,</span>
+          <span class="n">partitioner</span><span class="o">=</span><span class="n">maybe_proj_partitioner</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">built</span> <span class="o">=</span> <span class="kc">True</span>
+
+  <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run one step of LSTM.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      inputs: input Tensor, 2D, `[batch, num_units].</span>
+<span class="sd">      state: if `state_is_tuple` is False, this must be a state Tensor,</span>
+<span class="sd">        `2-D, [batch, state_size]`.  If `state_is_tuple` is True, this must be a</span>
+<span class="sd">        tuple of state Tensors, both `2-D`, with column sizes `c_state` and</span>
+<span class="sd">        `m_state`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple containing:</span>
+
+<span class="sd">      - A `2-D, [batch, output_dim]`, Tensor representing the output of the</span>
+<span class="sd">        LSTM after reading `inputs` when previous state was `state`.</span>
+<span class="sd">        Here output_dim is:</span>
+<span class="sd">           num_proj if num_proj was set,</span>
+<span class="sd">           num_units otherwise.</span>
+<span class="sd">      - Tensor(s) representing the new state of LSTM after reading `inputs` when</span>
+<span class="sd">        the previous state was `state`.  Same type and shape(s) as `state`.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: If input size cannot be inferred from inputs via</span>
+<span class="sd">        static shape inference.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num_proj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj</span>
+    <span class="n">sigmoid</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">sigmoid</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span><span class="p">:</span>
+      <span class="p">(</span><span class="n">c_prev</span><span class="p">,</span> <span class="n">m_prev</span><span class="p">)</span> <span class="o">=</span> <span class="n">state</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">c_prev</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">])</span>
+      <span class="n">m_prev</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_proj</span><span class="p">])</span>
+
+    <span class="n">input_size</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">with_rank</span><span class="p">(</span><span class="mi">2</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">input_size</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not infer input size from inputs.get_shape()[-1]&quot;</span><span class="p">)</span>
+
+    <span class="c1"># i = input_gate, j = new_input, f = forget_gate, o = output_gate</span>
+    <span class="n">lstm_matrix</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span>
+        <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">inputs</span><span class="p">,</span> <span class="n">m_prev</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span><span class="p">)</span>
+    <span class="n">lstm_matrix</span> <span class="o">=</span> <span class="n">nn_ops</span><span class="o">.</span><span class="n">bias_add</span><span class="p">(</span><span class="n">lstm_matrix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bias</span><span class="p">)</span>
+
+    <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">o</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">lstm_matrix</span><span class="p">,</span> <span class="n">num_or_size_splits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Diagonal connections</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_peepholes</span><span class="p">:</span>
+      <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">f</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forget_bias</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_w_f_diag</span> <span class="o">*</span> <span class="n">c_prev</span><span class="p">)</span> <span class="o">*</span> <span class="n">c_prev</span> <span class="o">+</span>
+           <span class="n">sigmoid</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_w_i_diag</span> <span class="o">*</span> <span class="n">c_prev</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">f</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forget_bias</span><span class="p">)</span> <span class="o">*</span> <span class="n">c_prev</span> <span class="o">+</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">*</span>
+           <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_clip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="c1"># pylint: disable=invalid-unary-operand-type</span>
+      <span class="n">c</span> <span class="o">=</span> <span class="n">clip_ops</span><span class="o">.</span><span class="n">clip_by_value</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell_clip</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_clip</span><span class="p">)</span>
+      <span class="c1"># pylint: enable=invalid-unary-operand-type</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_peepholes</span><span class="p">:</span>
+      <span class="n">m</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">o</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_w_o_diag</span> <span class="o">*</span> <span class="n">c</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">m</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activation</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_proj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">m</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_kernel</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_clip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># pylint: disable=invalid-unary-operand-type</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">clip_ops</span><span class="o">.</span><span class="n">clip_by_value</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_proj_clip</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_clip</span><span class="p">)</span>
+        <span class="c1"># pylint: enable=invalid-unary-operand-type</span>
+
+    <span class="n">new_state</span> <span class="o">=</span> <span class="p">(</span><span class="n">LSTMStateTuple</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span> <span class="k">else</span>
+                 <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">c</span><span class="p">,</span> <span class="n">m</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">m</span><span class="p">,</span> <span class="n">new_state</span>
+
+
+<span class="k">def</span> <span class="nf">_enumerated_map_structure_up_to</span><span class="p">(</span><span class="n">shallow_structure</span><span class="p">,</span> <span class="n">map_fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+  <span class="n">ix</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+  <span class="k">def</span> <span class="nf">enumerated_fn</span><span class="p">(</span><span class="o">*</span><span class="n">inner_args</span><span class="p">,</span> <span class="o">**</span><span class="n">inner_kwargs</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">map_fn</span><span class="p">(</span><span class="n">ix</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">inner_args</span><span class="p">,</span> <span class="o">**</span><span class="n">inner_kwargs</span><span class="p">)</span>
+    <span class="n">ix</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">r</span>
+  <span class="k">return</span> <span class="n">nest</span><span class="o">.</span><span class="n">map_structure_up_to</span><span class="p">(</span><span class="n">shallow_structure</span><span class="p">,</span>
+                                  <span class="n">enumerated_fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_default_dropout_state_filter_visitor</span><span class="p">(</span><span class="n">substate</span><span class="p">):</span>
+  <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">substate</span><span class="p">,</span> <span class="n">LSTMStateTuple</span><span class="p">):</span>
+    <span class="c1"># Do not perform dropout on the memory state.</span>
+    <span class="k">return</span> <span class="n">LSTMStateTuple</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+  <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">substate</span><span class="p">,</span> <span class="n">tensor_array_ops</span><span class="o">.</span><span class="n">TensorArray</span><span class="p">):</span>
+    <span class="k">return</span> <span class="kc">False</span>
+  <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="nd">@tf_export</span><span class="p">(</span><span class="s2">&quot;nn.rnn_cell.DropoutWrapper&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DropoutWrapper</span><span class="p">(</span><span class="n">RNNCell</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Operator adding dropout to inputs and outputs of the given cell.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">input_keep_prob</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">output_keep_prob</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+               <span class="n">state_keep_prob</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">variational_recurrent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+               <span class="n">input_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">dropout_state_filter_visitor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a cell with added input, state, and/or output dropout.</span>
+
+<span class="sd">    If `variational_recurrent` is set to `True` (**NOT** the default behavior),</span>
+<span class="sd">    then the same dropout mask is applied at every step, as described in:</span>
+
+<span class="sd">    Y. Gal, Z Ghahramani.  &quot;A Theoretically Grounded Application of Dropout in</span>
+<span class="sd">    Recurrent Neural Networks&quot;.  https://arxiv.org/abs/1512.05287</span>
+
+<span class="sd">    Otherwise a different dropout mask is applied at every time step.</span>
+
+<span class="sd">    Note, by default (unless a custom `dropout_state_filter` is provided),</span>
+<span class="sd">    the memory state (`c` component of any `LSTMStateTuple`) passing through</span>
+<span class="sd">    a `DropoutWrapper` is never modified.  This behavior is described in the</span>
+<span class="sd">    above article.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      cell: an RNNCell, a projection to output_size is added to it.</span>
+<span class="sd">      input_keep_prob: unit Tensor or float between 0 and 1, input keep</span>
+<span class="sd">        probability; if it is constant and 1, no input dropout will be added.</span>
+<span class="sd">      output_keep_prob: unit Tensor or float between 0 and 1, output keep</span>
+<span class="sd">        probability; if it is constant and 1, no output dropout will be added.</span>
+<span class="sd">      state_keep_prob: unit Tensor or float between 0 and 1, output keep</span>
+<span class="sd">        probability; if it is constant and 1, no output dropout will be added.</span>
+<span class="sd">        State dropout is performed on the outgoing states of the cell.</span>
+<span class="sd">        **Note** the state components to which dropout is applied when</span>
+<span class="sd">        `state_keep_prob` is in `(0, 1)` are also determined by</span>
+<span class="sd">        the argument `dropout_state_filter_visitor` (e.g. by default dropout</span>
+<span class="sd">        is never applied to the `c` component of an `LSTMStateTuple`).</span>
+<span class="sd">      variational_recurrent: Python bool.  If `True`, then the same</span>
+<span class="sd">        dropout pattern is applied across all time steps per run call.</span>
+<span class="sd">        If this parameter is set, `input_size` **must** be provided.</span>
+<span class="sd">      input_size: (optional) (possibly nested tuple of) `TensorShape` objects</span>
+<span class="sd">        containing the depth(s) of the input tensors expected to be passed in to</span>
+<span class="sd">        the `DropoutWrapper`.  Required and used **iff**</span>
+<span class="sd">         `variational_recurrent = True` and `input_keep_prob &lt; 1`.</span>
+<span class="sd">      dtype: (optional) The `dtype` of the input, state, and output tensors.</span>
+<span class="sd">        Required and used **iff** `variational_recurrent = True`.</span>
+<span class="sd">      seed: (optional) integer, the randomness seed.</span>
+<span class="sd">      dropout_state_filter_visitor: (optional), default: (see below).  Function</span>
+<span class="sd">        that takes any hierarchical level of the state and returns</span>
+<span class="sd">        a scalar or depth=1 structure of Python booleans describing</span>
+<span class="sd">        which terms in the state should be dropped out.  In addition, if the</span>
+<span class="sd">        function returns `True`, dropout is applied across this sublevel.  If</span>
+<span class="sd">        the function returns `False`, dropout is not applied across this entire</span>
+<span class="sd">        sublevel.</span>
+<span class="sd">        Default behavior: perform dropout on all terms except the memory (`c`)</span>
+<span class="sd">        state of `LSTMCellState` objects, and don&#39;t try to apply dropout to</span>
+<span class="sd">        `TensorArray` objects:</span>
+<span class="sd">        ```</span>
+<span class="sd">        def dropout_state_filter_visitor(s):</span>
+<span class="sd">          if isinstance(s, LSTMCellState):</span>
+<span class="sd">            # Never perform dropout on the c state.</span>
+<span class="sd">            return LSTMCellState(c=False, h=True)</span>
+<span class="sd">          elif isinstance(s, TensorArray):</span>
+<span class="sd">            return False</span>
+<span class="sd">          return True</span>
+<span class="sd">        ```</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TypeError: if `cell` is not an `RNNCell`, or `keep_state_fn` is provided</span>
+<span class="sd">        but not `callable`.</span>
+<span class="sd">      ValueError: if any of the keep_probs are not between 0 and 1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">assert_like_rnncell</span><span class="p">(</span><span class="s2">&quot;cell&quot;</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">dropout_state_filter_visitor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">dropout_state_filter_visitor</span><span class="p">)):</span>
+      <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;dropout_state_filter_visitor must be callable&quot;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_dropout_state_filter</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">dropout_state_filter_visitor</span> <span class="ow">or</span> <span class="n">_default_dropout_state_filter_visitor</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="s2">&quot;DropoutWrapperInit&quot;</span><span class="p">):</span>
+      <span class="k">def</span> <span class="nf">tensor_and_const_value</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="n">tensor_value</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">convert_to_tensor</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">const_value</span> <span class="o">=</span> <span class="n">tensor_util</span><span class="o">.</span><span class="n">constant_value</span><span class="p">(</span><span class="n">tensor_value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">tensor_value</span><span class="p">,</span> <span class="n">const_value</span><span class="p">)</span>
+      <span class="k">for</span> <span class="n">prob</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">input_keep_prob</span><span class="p">,</span> <span class="s2">&quot;input_keep_prob&quot;</span><span class="p">),</span>
+                         <span class="p">(</span><span class="n">state_keep_prob</span><span class="p">,</span> <span class="s2">&quot;state_keep_prob&quot;</span><span class="p">),</span>
+                         <span class="p">(</span><span class="n">output_keep_prob</span><span class="p">,</span> <span class="s2">&quot;output_keep_prob&quot;</span><span class="p">)]:</span>
+        <span class="n">tensor_prob</span><span class="p">,</span> <span class="n">const_prob</span> <span class="o">=</span> <span class="n">tensor_and_const_value</span><span class="p">(</span><span class="n">prob</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">const_prob</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+          <span class="k">if</span> <span class="n">const_prob</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">const_prob</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter </span><span class="si">%s</span><span class="s2"> must be between 0 and 1: </span><span class="si">%d</span><span class="s2">&quot;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">const_prob</span><span class="p">))</span>
+          <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">const_prob</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">,</span> <span class="n">tensor_prob</span><span class="p">)</span>
+
+    <span class="c1"># Set cell, variational_recurrent, seed before running the code below</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span> <span class="o">=</span> <span class="n">cell</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_variational_recurrent</span> <span class="o">=</span> <span class="n">variational_recurrent</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_seed</span> <span class="o">=</span> <span class="n">seed</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_recurrent_input_noise</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_recurrent_state_noise</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_recurrent_output_noise</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">variational_recurrent</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;When variational_recurrent=True, dtype must be provided&quot;</span><span class="p">)</span>
+
+      <span class="k">def</span> <span class="nf">convert_to_batch_shape</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="c1"># Prepend a 1 for the batch dimension; for recurrent</span>
+        <span class="c1"># variational dropout we use the same dropout mask for all</span>
+        <span class="c1"># batch elements.</span>
+        <span class="k">return</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="n">tensor_shape</span><span class="o">.</span><span class="n">TensorShape</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">as_list</span><span class="p">()),</span> <span class="mi">0</span><span class="p">)</span>
+
+      <span class="k">def</span> <span class="nf">batch_noise</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">inner_seed</span><span class="p">):</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">convert_to_batch_shape</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">random_ops</span><span class="o">.</span><span class="n">random_uniform</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">inner_seed</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_keep_prob</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">)</span> <span class="ow">or</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_input_keep_prob</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">input_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+              <span class="s2">&quot;When variational_recurrent=True and input_keep_prob &lt; 1.0 or &quot;</span>
+              <span class="s2">&quot;is unknown, input_size must be provided&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_recurrent_input_noise</span> <span class="o">=</span> <span class="n">_enumerated_map_structure_up_to</span><span class="p">(</span>
+            <span class="n">input_size</span><span class="p">,</span>
+            <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">batch_noise</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">inner_seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_seed</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">)),</span>
+            <span class="n">input_size</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_recurrent_state_noise</span> <span class="o">=</span> <span class="n">_enumerated_map_structure_up_to</span><span class="p">(</span>
+          <span class="n">cell</span><span class="o">.</span><span class="n">state_size</span><span class="p">,</span>
+          <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">batch_noise</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">inner_seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_seed</span><span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">)),</span>
+          <span class="n">cell</span><span class="o">.</span><span class="n">state_size</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_recurrent_output_noise</span> <span class="o">=</span> <span class="n">_enumerated_map_structure_up_to</span><span class="p">(</span>
+          <span class="n">cell</span><span class="o">.</span><span class="n">output_size</span><span class="p">,</span>
+          <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">batch_noise</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">inner_seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_seed</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">)),</span>
+          <span class="n">cell</span><span class="o">.</span><span class="n">output_size</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_gen_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">salt_prefix</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">salt</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">salt_prefix</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+    <span class="n">string</span> <span class="o">=</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seed</span><span class="p">)</span> <span class="o">+</span> <span class="n">salt</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">string</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">8</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x7FFFFFFF</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">wrapped_cell</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">state_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="o">.</span><span class="n">state_size</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="o">.</span><span class="n">output_size</span>
+
+  <span class="k">def</span> <span class="nf">zero_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;ZeroState&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">batch_size</span><span class="p">]):</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="o">.</span><span class="n">zero_state</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_variational_recurrent_dropout_value</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">noise</span><span class="p">,</span> <span class="n">keep_prob</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs dropout given the pre-calculated noise tensor.&quot;&quot;&quot;</span>
+    <span class="c1"># uniform [keep_prob, 1.0 + keep_prob)</span>
+    <span class="n">random_tensor</span> <span class="o">=</span> <span class="n">keep_prob</span> <span class="o">+</span> <span class="n">noise</span>
+
+    <span class="c1"># 0. if [keep_prob, 1.0) and 1. if [1.0, 1.0 + keep_prob)</span>
+    <span class="n">binary_tensor</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">random_tensor</span><span class="p">)</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">math_ops</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">keep_prob</span><span class="p">)</span> <span class="o">*</span> <span class="n">binary_tensor</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">set_shape</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+  <span class="k">def</span> <span class="nf">_dropout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">salt_prefix</span><span class="p">,</span> <span class="n">recurrent_noise</span><span class="p">,</span> <span class="n">keep_prob</span><span class="p">,</span>
+               <span class="n">shallow_filtered_substructure</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decides whether to perform standard dropout or recurrent dropout.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">shallow_filtered_substructure</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="c1"># Put something so we traverse the entire structure; inside the</span>
+      <span class="c1"># dropout function we check to see if leafs of this are bool or not.</span>
+      <span class="n">shallow_filtered_substructure</span> <span class="o">=</span> <span class="n">values</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variational_recurrent</span><span class="p">:</span>
+      <span class="k">def</span> <span class="nf">dropout</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">do_dropout</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">do_dropout</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="n">do_dropout</span><span class="p">:</span>
+          <span class="k">return</span> <span class="n">nn_ops</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span>
+              <span class="n">v</span><span class="p">,</span> <span class="n">keep_prob</span><span class="o">=</span><span class="n">keep_prob</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_seed</span><span class="p">(</span><span class="n">salt_prefix</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="k">return</span> <span class="n">v</span>
+      <span class="k">return</span> <span class="n">_enumerated_map_structure_up_to</span><span class="p">(</span>
+          <span class="n">shallow_filtered_substructure</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span>
+          <span class="o">*</span><span class="p">[</span><span class="n">shallow_filtered_substructure</span><span class="p">,</span> <span class="n">values</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">def</span> <span class="nf">dropout</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">do_dropout</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">do_dropout</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="n">do_dropout</span><span class="p">:</span>
+          <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variational_recurrent_dropout_value</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">keep_prob</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="k">return</span> <span class="n">v</span>
+      <span class="k">return</span> <span class="n">_enumerated_map_structure_up_to</span><span class="p">(</span>
+          <span class="n">shallow_filtered_substructure</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span>
+          <span class="o">*</span><span class="p">[</span><span class="n">shallow_filtered_substructure</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">recurrent_noise</span><span class="p">])</span>
+
+  <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run the cell with the declared dropouts.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_should_dropout</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+      <span class="k">return</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">or</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">_should_dropout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_keep_prob</span><span class="p">):</span>
+      <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dropout</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">_recurrent_input_noise</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">_input_keep_prob</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">,</span> <span class="n">new_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_should_dropout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state_keep_prob</span><span class="p">):</span>
+      <span class="c1"># Identify which subsets of the state to perform dropout on and</span>
+      <span class="c1"># which ones to keep.</span>
+      <span class="n">shallow_filtered_substructure</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">get_traverse_shallow_structure</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_dropout_state_filter</span><span class="p">,</span> <span class="n">new_state</span><span class="p">)</span>
+      <span class="n">new_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dropout</span><span class="p">(</span><span class="n">new_state</span><span class="p">,</span> <span class="s2">&quot;state&quot;</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_recurrent_state_noise</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_state_keep_prob</span><span class="p">,</span>
+                                <span class="n">shallow_filtered_substructure</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_should_dropout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_keep_prob</span><span class="p">):</span>
+      <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dropout</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s2">&quot;output&quot;</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">_recurrent_output_noise</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">_output_keep_prob</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">new_state</span>
+
+
+<span class="nd">@tf_export</span><span class="p">(</span><span class="s2">&quot;nn.rnn_cell.ResidualWrapper&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ResidualWrapper</span><span class="p">(</span><span class="n">RNNCell</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;RNNCell wrapper that ensures cell inputs are added to the outputs.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">residual_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Constructs a `ResidualWrapper` for `cell`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      cell: An instance of `RNNCell`.</span>
+<span class="sd">      residual_fn: (Optional) The function to map raw cell inputs and raw cell</span>
+<span class="sd">        outputs to the actual cell outputs of the residual network.</span>
+<span class="sd">        Defaults to calling nest.map_structure on (lambda i, o: i + o), inputs</span>
+<span class="sd">        and outputs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span> <span class="o">=</span> <span class="n">cell</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_residual_fn</span> <span class="o">=</span> <span class="n">residual_fn</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">state_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="o">.</span><span class="n">state_size</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="o">.</span><span class="n">output_size</span>
+
+  <span class="k">def</span> <span class="nf">zero_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;ZeroState&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">batch_size</span><span class="p">]):</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="o">.</span><span class="n">zero_state</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run the cell and then apply the residual_fn on its inputs to its outputs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      inputs: cell inputs.</span>
+<span class="sd">      state: cell state.</span>
+<span class="sd">      scope: optional cell scope.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Tuple of cell outputs and new state.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TypeError: If cell inputs and outputs have different structure (type).</span>
+<span class="sd">      ValueError: If cell inputs and outputs have different structure (value).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">outputs</span><span class="p">,</span> <span class="n">new_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">)</span>
+    <span class="c1"># Ensure shapes match</span>
+    <span class="k">def</span> <span class="nf">assert_shape_match</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+      <span class="n">inp</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">assert_is_compatible_with</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">default_residual_fn</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
+      <span class="n">nest</span><span class="o">.</span><span class="n">assert_same_structure</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+      <span class="n">nest</span><span class="o">.</span><span class="n">map_structure</span><span class="p">(</span><span class="n">assert_shape_match</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">nest</span><span class="o">.</span><span class="n">map_structure</span><span class="p">(</span><span class="k">lambda</span> <span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">inp</span> <span class="o">+</span> <span class="n">out</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+    <span class="n">res_outputs</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_residual_fn</span> <span class="ow">or</span> <span class="n">default_residual_fn</span><span class="p">)(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">res_outputs</span><span class="p">,</span> <span class="n">new_state</span><span class="p">)</span>
+
+
+<span class="nd">@tf_export</span><span class="p">(</span><span class="s2">&quot;nn.rnn_cell.DeviceWrapper&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DeviceWrapper</span><span class="p">(</span><span class="n">RNNCell</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Operator that ensures an RNNCell runs on a particular device.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Construct a `DeviceWrapper` for `cell` with device `device`.</span>
+
+<span class="sd">    Ensures the wrapped `cell` is called with `tf.device(device)`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      cell: An instance of `RNNCell`.</span>
+<span class="sd">      device: A device string or function, for passing to `tf.device`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span> <span class="o">=</span> <span class="n">cell</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="o">=</span> <span class="n">device</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">state_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="o">.</span><span class="n">state_size</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="o">.</span><span class="n">output_size</span>
+
+  <span class="k">def</span> <span class="nf">zero_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;ZeroState&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">batch_size</span><span class="p">]):</span>
+      <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_device</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="o">.</span><span class="n">zero_state</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run the cell on specified device.&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_device</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">)</span>
+
+
+<span class="nd">@tf_export</span><span class="p">(</span><span class="s2">&quot;nn.rnn_cell.MultiRNNCell&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MultiRNNCell</span><span class="p">(</span><span class="n">RNNCell</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;RNN cell composed sequentially of multiple simple cells.</span>
+
+<span class="sd">  Example:</span>
+
+<span class="sd">  ```python</span>
+<span class="sd">  num_units = [128, 64]</span>
+<span class="sd">  cells = [BasicLSTMCell(num_units=n) for n in num_units]</span>
+<span class="sd">  stacked_rnn_cell = MultiRNNCell(cells)</span>
+<span class="sd">  ```</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cells</span><span class="p">,</span> <span class="n">state_is_tuple</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a RNN cell composed sequentially of a number of RNNCells.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      cells: list of RNNCells that will be composed in this order.</span>
+<span class="sd">      state_is_tuple: If True, accepted and returned states are n-tuples, where</span>
+<span class="sd">        `n = len(cells)`.  If False, the states are all</span>
+<span class="sd">        concatenated along the column axis.  This latter behavior will soon be</span>
+<span class="sd">        deprecated.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: if cells is empty (not allowed), or at least one of the cells</span>
+<span class="sd">        returns a state tuple but the flag `state_is_tuple` is `False`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MultiRNNCell</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cells</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must specify at least one cell for MultiRNNCell.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nest</span><span class="o">.</span><span class="n">is_sequence</span><span class="p">(</span><span class="n">cells</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+          <span class="s2">&quot;cells must be a list or tuple, but saw: </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">cells</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cells</span> <span class="o">=</span> <span class="n">cells</span>
+    <span class="k">for</span> <span class="n">cell_number</span><span class="p">,</span> <span class="n">cell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cells</span><span class="p">):</span>
+      <span class="c1"># Add Checkpointable dependencies on these cells so their variables get</span>
+      <span class="c1"># saved with this object when using object-based saving.</span>
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">checkpointable</span><span class="o">.</span><span class="n">CheckpointableBase</span><span class="p">):</span>
+        <span class="c1"># TODO(allenl): Track down non-Checkpointable callers.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_track_checkpointable</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cell-</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cell_number</span><span class="p">,))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span> <span class="o">=</span> <span class="n">state_is_tuple</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_is_tuple</span><span class="p">:</span>
+      <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">nest</span><span class="o">.</span><span class="n">is_sequence</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">state_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cells</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Some cells return tuples of states, but the flag &quot;</span>
+                         <span class="s2">&quot;state_is_tuple is not set.  State sizes are: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                         <span class="o">%</span> <span class="nb">str</span><span class="p">([</span><span class="n">c</span><span class="o">.</span><span class="n">state_size</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cells</span><span class="p">]))</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">state_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span><span class="p">:</span>
+      <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">state_size</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cells</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="n">cell</span><span class="o">.</span><span class="n">state_size</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cells</span><span class="p">])</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cells</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output_size</span>
+
+  <span class="k">def</span> <span class="nf">zero_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;ZeroState&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">batch_size</span><span class="p">]):</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">zero_state</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cells</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># We know here that state_size of each cell is not a tuple and</span>
+        <span class="c1"># presumably does not contain TensorArrays or anything else fancy</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">MultiRNNCell</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">zero_state</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run this multi-layer cell on inputs, starting from state.&quot;&quot;&quot;</span>
+    <span class="n">cur_state_pos</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">cur_inp</span> <span class="o">=</span> <span class="n">inputs</span>
+    <span class="n">new_states</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cells</span><span class="p">):</span>
+      <span class="k">with</span> <span class="n">vs</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;cell_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span><span class="p">:</span>
+          <span class="k">if</span> <span class="ow">not</span> <span class="n">nest</span><span class="o">.</span><span class="n">is_sequence</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Expected state to be a tuple of length </span><span class="si">%d</span><span class="s2">, but received: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_size</span><span class="p">),</span> <span class="n">state</span><span class="p">))</span>
+          <span class="n">cur_state</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">cur_state</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">cur_state_pos</span><span class="p">],</span>
+                                      <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">state_size</span><span class="p">])</span>
+          <span class="n">cur_state_pos</span> <span class="o">+=</span> <span class="n">cell</span><span class="o">.</span><span class="n">state_size</span>
+        <span class="n">cur_inp</span><span class="p">,</span> <span class="n">new_state</span> <span class="o">=</span> <span class="n">cell</span><span class="p">(</span><span class="n">cur_inp</span><span class="p">,</span> <span class="n">cur_state</span><span class="p">)</span>
+        <span class="n">new_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_state</span><span class="p">)</span>
+
+    <span class="n">new_states</span> <span class="o">=</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">new_states</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_is_tuple</span> <span class="k">else</span>
+                  <span class="n">array_ops</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">new_states</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">cur_inp</span><span class="p">,</span> <span class="n">new_states</span>
+
+
+<span class="k">class</span> <span class="nc">_SlimRNNCell</span><span class="p">(</span><span class="n">RNNCell</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A simple wrapper for slim.rnn_cells.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell_fn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a SlimRNNCell from a cell_fn.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      cell_fn: a function which takes (inputs, state, scope) and produces the</span>
+<span class="sd">        outputs and the new_state. Additionally when called with inputs=None and</span>
+<span class="sd">        state=None it should return (initial_outputs, initial_state).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TypeError: if cell_fn is not callable</span>
+<span class="sd">      ValueError: if cell_fn cannot produce a valid initial state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">cell_fn</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;cell_fn </span><span class="si">%s</span><span class="s2"> needs to be callable&quot;</span><span class="p">,</span> <span class="n">cell_fn</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cell_fn</span> <span class="o">=</span> <span class="n">cell_fn</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cell_name</span> <span class="o">=</span> <span class="n">cell_fn</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+    <span class="n">init_output</span><span class="p">,</span> <span class="n">init_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_fn</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_shape</span> <span class="o">=</span> <span class="n">init_output</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
+    <span class="n">state_shape</span> <span class="o">=</span> <span class="n">init_state</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_output_size</span> <span class="o">=</span> <span class="n">output_shape</span><span class="o">.</span><span class="n">with_rank</span><span class="p">(</span><span class="mi">2</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_state_size</span> <span class="o">=</span> <span class="n">state_shape</span><span class="o">.</span><span class="n">with_rank</span><span class="p">(</span><span class="mi">2</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Initial output created by </span><span class="si">%s</span><span class="s2"> has invalid shape </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span>
+                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell_name</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">))</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Initial state created by </span><span class="si">%s</span><span class="s2"> has invalid shape </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span>
+                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell_name</span><span class="p">,</span> <span class="n">state_shape</span><span class="p">))</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">state_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_size</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_size</span>
+
+  <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">scope</span> <span class="o">=</span> <span class="n">scope</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_name</span>
+    <span class="n">output</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_fn</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">state</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1794 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tensorflow.python.layers.base &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>tensorflow.python.layers.base</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for tensorflow.python.layers.base</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2015 The TensorFlow Authors. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="c1"># pylint: disable=unused-import,g-bad-import-order</span>
+<span class="sd">&quot;&quot;&quot;Contains the base Layer class, from which all layers inherit.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">weakref</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.eager</span> <span class="k">import</span> <span class="n">context</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.estimator</span> <span class="k">import</span> <span class="n">util</span> <span class="k">as</span> <span class="n">estimator_util</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="k">import</span> <span class="n">dtypes</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="k">import</span> <span class="n">ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="k">import</span> <span class="n">tensor_shape</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.layers</span> <span class="k">import</span> <span class="n">utils</span> <span class="k">as</span> <span class="n">layers_util</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="k">import</span> <span class="n">tensor_util</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">array_ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">variable_scope</span> <span class="k">as</span> <span class="n">vs</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">variables</span> <span class="k">as</span> <span class="n">tf_variables</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.platform</span> <span class="k">import</span> <span class="n">tf_logging</span> <span class="k">as</span> <span class="n">logging</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.training</span> <span class="k">import</span> <span class="n">checkpointable</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.util</span> <span class="k">import</span> <span class="n">nest</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.util.tf_export</span> <span class="k">import</span> <span class="n">tf_export</span>
+
+
+<span class="nd">@tf_export</span><span class="p">(</span><span class="s1">&#39;layers.Layer&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Layer</span><span class="p">(</span><span class="n">checkpointable</span><span class="o">.</span><span class="n">CheckpointableBase</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Base layer class.</span>
+
+<span class="sd">  This is the class from which all layers inherit, implementing common</span>
+<span class="sd">  infrastructure functionality.</span>
+
+<span class="sd">  A layer is a class implementing common neural networks operations, such</span>
+<span class="sd">  as convolution, batch norm, etc. These operations require managing variables,</span>
+<span class="sd">  losses, and updates, as well as applying TensorFlow ops to input tensors.</span>
+
+<span class="sd">  Users will just instantiate it and then treat it as a callable.</span>
+
+<span class="sd">  We recommend that descendants of Layer implement the following methods:</span>
+<span class="sd">  * `__init__()`: Save configuration in member variables</span>
+<span class="sd">  * `build()`: Called once from `__call__`, when we know the shapes of inputs</span>
+<span class="sd">    and `dtype`. Should have the calls to `add_variable()`, and then</span>
+<span class="sd">    call the super&#39;s `build()` (which sets `self.built = True`, which is</span>
+<span class="sd">    nice in case the user wants to call `build()` manually before the</span>
+<span class="sd">    first `__call__`).</span>
+<span class="sd">  * `call()`: Called in `__call__` after making sure `build()` has been called</span>
+<span class="sd">    once. Should actually perform the logic of applying the layer to the</span>
+<span class="sd">    input tensors (which should be passed in as the first argument).</span>
+
+<span class="sd">  Read-only properties:</span>
+<span class="sd">    `name`: The name of the layer (string).</span>
+<span class="sd">    `dtype`: Default dtype of the layer (default of `None` means use the</span>
+<span class="sd">      type of the first input).</span>
+<span class="sd">    `trainable_variables`: List of trainable variables.</span>
+<span class="sd">    `non_trainable_variables`: List of non-trainable variables.</span>
+<span class="sd">    `variables`: List of all variables of this layer, trainable and</span>
+<span class="sd">      non-trainable.</span>
+<span class="sd">    `updates`: List of update ops of this layer.</span>
+<span class="sd">    `losses`: List of losses added by this layer.</span>
+
+<span class="sd">  Mutable properties:</span>
+<span class="sd">    `trainable`: Whether the layer should be trained (boolean).</span>
+<span class="sd">    `input_spec`: Optional (list of) `InputSpec` object(s) specifying the</span>
+<span class="sd">      constraints on inputs that can be accepted by the layer.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">activity_regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># We use a kwargs dict here because these kwargs only exist</span>
+    <span class="c1"># for compatibility reasons.</span>
+    <span class="c1"># The list of kwargs is subject to changes in the future.</span>
+    <span class="c1"># We do not want to commit to it or to expose the list to users at all.</span>
+    <span class="c1"># Note this is exactly as safe as defining kwargs in the function signature,</span>
+    <span class="c1"># the only difference being that the list of valid kwargs is defined</span>
+    <span class="c1"># below rather rather in the signature, and default values are defined</span>
+    <span class="c1"># in calls to kwargs.get().</span>
+    <span class="n">allowed_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;_scope&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;_reuse&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;input_shape&#39;</span><span class="p">,</span>  <span class="c1"># For compatibility with Keras `Sequential` model.</span>
+        <span class="s1">&#39;batch_size&#39;</span><span class="p">,</span>  <span class="c1"># For compatibility with Keras `Sequential` model.</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">kwarg</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">kwarg</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_kwargs</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Keyword argument not understood:&#39;</span><span class="p">,</span> <span class="n">kwarg</span><span class="p">)</span>
+
+    <span class="c1"># Mutable properties</span>
+    <span class="c1"># Indicates whether the layer&#39;s weights are updated during training</span>
+    <span class="c1"># and whether the layer&#39;s updates are run during training</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">trainable</span> <span class="o">=</span> <span class="n">trainable</span>
+    <span class="c1"># A stateful layer is a layer whose updates are run during inference too,</span>
+    <span class="c1"># for instance stateful RNNs.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">stateful</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1"># Indicates whether `build` needs to be called upon layer call, to create</span>
+    <span class="c1"># the layer&#39;s weights.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">built</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1"># Provides information about which inputs are compatible with the layer.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">input_spec</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">activity_regularizer</span> <span class="ow">and</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="p">(</span><span class="s1">&#39;Activity regularization is not supported when executing eagerly. &#39;</span>
+           <span class="s1">&#39;Got activity_regularizer=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">activity_regularizer</span><span class="p">,))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_activity_regularizer</span> <span class="o">=</span> <span class="n">activity_regularizer</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_non_trainable_weights</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_updates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># When executing eagerly, _losses is a list of zero-argument lambdas which</span>
+    <span class="c1"># return tensors. When using graph execution, _losses is a list of ops.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_reuse</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;_reuse&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Will be set at build time.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">dtypes</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_call_fn_args</span> <span class="o">=</span> <span class="n">estimator_util</span><span class="o">.</span><span class="n">fn_args</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_compute_previous_mask</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mask&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_fn_args</span> <span class="ow">or</span>
+                                   <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;compute_mask&#39;</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_call_has_scope_arg</span> <span class="o">=</span> <span class="s1">&#39;scope&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_fn_args</span>
+
+    <span class="c1"># These lists will be filled via successive calls</span>
+    <span class="c1"># to self._add_inbound_node().</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_outbound_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_init_set_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="c1"># Determine variable scope.</span>
+    <span class="n">scope</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;_scope&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">scope</span><span class="p">:</span>
+      <span class="k">with</span> <span class="n">vs</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span> <span class="k">as</span> <span class="n">captured_scope</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="o">=</span> <span class="n">captured_scope</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Set `_batch_input_shape` attribute</span>
+    <span class="c1"># for compatibility with Keras `Sequential` model.</span>
+    <span class="k">if</span> <span class="s1">&#39;input_shape&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+      <span class="n">batch_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;batch_size&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_batch_input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">batch_size</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;input_shape&#39;</span><span class="p">])</span>
+
+  <span class="k">def</span> <span class="nf">_init_set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="c1"># Determine layer name (non-unique).</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">vs</span><span class="o">.</span><span class="n">VariableScope</span><span class="p">):</span>
+      <span class="n">base_name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">base_name</span> <span class="o">=</span> <span class="n">name</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="n">base_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_unique_name</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_base_name</span> <span class="o">=</span> <span class="n">base_name</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">activity_regularizer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Optional regularizer function for the output of this layer.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activity_regularizer</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">scope_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No name available for layer scope because the layer &quot;&#39;</span> <span class="o">+</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">+</span> <span class="s1">&#39;&quot; has not been used yet. The scope name &#39;</span> <span class="o">+</span>
+                       <span class="s1">&#39; is determined the first time the layer instance is &#39;</span> <span class="o">+</span>
+                       <span class="s1">&#39;called. You must therefore call the layer before &#39;</span> <span class="o">+</span>
+                       <span class="s1">&#39;querying `scope_name`.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span><span class="o">.</span><span class="n">name</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">trainable_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainable</span> <span class="k">else</span> <span class="p">[]</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">non_trainable_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainable</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_non_trainable_weights</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_non_trainable_weights</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">trainable_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainable_weights</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">non_trainable_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_trainable_weights</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the list of all layer variables/weights.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of variables.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainable_weights</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_trainable_weights</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the list of all layer variables/weights.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of variables.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">updates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Layer.updates not supported in Eager mode.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainable</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stateful</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_updates</span>
+
+  <span class="k">def</span> <span class="nf">add_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updates</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add update op(s), potentially dependent on layer inputs.</span>
+
+<span class="sd">    Weight updates (for instance, the updates of the moving mean and variance</span>
+<span class="sd">    in a BatchNormalization layer) may be dependent on the inputs passed</span>
+<span class="sd">    when calling a layer. Hence, when reusing the same layer on</span>
+<span class="sd">    different inputs `a` and `b`, some entries in `layer.updates` may be</span>
+<span class="sd">    dependent on `a` and some on `b`. This method automatically keeps track</span>
+<span class="sd">    of dependencies.</span>
+
+<span class="sd">    The `get_updates_for` method allows to retrieve the updates relevant to a</span>
+<span class="sd">    specific set of inputs.</span>
+
+<span class="sd">    This call is ignored in Eager mode.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">      updates: Update op, or list/tuple of update ops.</span>
+<span class="sd">      inputs: If anything other than None is passed, it signals the updates</span>
+<span class="sd">        are conditional on some of the layer&#39;s inputs,</span>
+<span class="sd">        and thus they should only be run where these inputs are available.</span>
+<span class="sd">        This is the case for BatchNormalization updates, for instance.</span>
+<span class="sd">        If None, the updates will be taken into account unconditionally,</span>
+<span class="sd">        and you are responsible for making sure that any dependency they might</span>
+<span class="sd">        have is available at runtime.</span>
+<span class="sd">        A step counter might fall into this category.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="k">return</span>  <span class="c1"># Updates already applied when in eager mode.</span>
+
+    <span class="n">updates</span> <span class="o">=</span> <span class="n">_to_list</span><span class="p">(</span><span class="n">updates</span><span class="p">)</span>
+    <span class="n">updates</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">Operation</span><span class="p">)</span>
+               <span class="k">else</span> <span class="n">ops</span><span class="o">.</span><span class="n">convert_to_tensor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">updates</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_updates</span> <span class="o">+=</span> <span class="n">updates</span>
+    <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">updates</span><span class="p">:</span>
+        <span class="n">u</span><span class="o">.</span><span class="n">_unconditional_update</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># pylint: disable=protected-access</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">updates</span><span class="p">:</span>
+        <span class="n">u</span><span class="o">.</span><span class="n">_unconditional_update</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># pylint: disable=protected-access</span>
+
+  <span class="k">def</span> <span class="nf">get_updates_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves updates relevant to a specific set of inputs.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">      inputs: Input tensor or list/tuple of input tensors.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      List of update ops of the layer that depend on `inputs`.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: If called in Eager mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;`get_updates_for()` not supported in Eager mode.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Updates disabled if layer is not trainable and not explicitly stateful.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainable</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stateful</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="c1"># Requesting unconditional updates.</span>
+      <span class="k">return</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">updates</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">_unconditional_update</span><span class="p">]</span>  <span class="c1"># pylint: disable=protected-access</span>
+
+    <span class="c1"># Requesting input-conditional updates.</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="n">reachable</span> <span class="o">=</span> <span class="n">layers_util</span><span class="o">.</span><span class="n">get_reachable_from_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="p">)</span>
+    <span class="n">updates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">update</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">update</span> <span class="ow">in</span> <span class="n">reachable</span><span class="p">:</span>
+        <span class="n">updates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">update</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">updates</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">losses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Losses which are associated with this `Layer`.</span>
+
+<span class="sd">    Note that when executing eagerly, getting this property evaluates</span>
+<span class="sd">    regularizers. When using graph execution, variable regularization ops have</span>
+<span class="sd">    already been created and are simply returned here.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of tensors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="c1"># _losses may only contain variable regularization losses when executing</span>
+      <span class="c1"># eagerly, and they have been saved as lambdas to be executed when</span>
+      <span class="c1"># requested.</span>
+      <span class="k">return</span> <span class="p">[</span><span class="n">regularizer</span><span class="p">()</span> <span class="k">for</span> <span class="n">regularizer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_losses</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_losses</span>
+
+  <span class="k">def</span> <span class="nf">add_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">losses</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add loss tensor(s), potentially dependent on layer inputs.</span>
+
+<span class="sd">    Some losses (for instance, activity regularization losses) may be dependent</span>
+<span class="sd">    on the inputs passed when calling a layer. Hence, when reusing the same</span>
+<span class="sd">    layer on different inputs `a` and `b`, some entries in `layer.losses` may</span>
+<span class="sd">    be dependent on `a` and some on `b`. This method automatically keeps track</span>
+<span class="sd">    of dependencies.</span>
+
+<span class="sd">    The `get_losses_for` method allows to retrieve the losses relevant to a</span>
+<span class="sd">    specific set of inputs.</span>
+
+<span class="sd">    Note that `add_loss` is not supported when executing eagerly. Instead,</span>
+<span class="sd">    variable regularizers may be added through `add_variable`. Activity</span>
+<span class="sd">    regularization is not supported directly (but such losses may be returned</span>
+<span class="sd">    from `Layer.call()`).</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">      losses: Loss tensor, or list/tuple of tensors.</span>
+<span class="sd">      inputs: If anything other than None is passed, it signals the losses</span>
+<span class="sd">        are conditional on some of the layer&#39;s inputs,</span>
+<span class="sd">        and thus they should only be run where these inputs are available.</span>
+<span class="sd">        This is the case for activity regularization losses, for instance.</span>
+<span class="sd">        If `None` is passed, the losses are assumed</span>
+<span class="sd">        to be unconditional, and will apply across all dataflows of the layer</span>
+<span class="sd">        (e.g. weight regularization losses).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: If called in Eager mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="c1"># TODO(fchollet): it should be possible (and highly desirable) to support</span>
+      <span class="c1"># `add_loss` in eager mode. This allows great convenience and flexibility</span>
+      <span class="c1"># in defining custom losses on the fly (e.g. in VAEs).</span>
+      <span class="c1"># Simply appending the loss value to `self._losses`</span>
+      <span class="c1"># is the correct behavior.</span>
+      <span class="c1"># The only caveat is that we need to force the user to only call</span>
+      <span class="c1"># `add_loss` from inside a model or Layer&#39;s `call` method</span>
+      <span class="c1"># (otherwise the loss computation cannot be backproped through).</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Layer.add_loss not supported in Eager mode.&#39;</span><span class="p">)</span>
+
+    <span class="n">losses</span> <span class="o">=</span> <span class="n">_to_list</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_losses</span> <span class="o">+=</span> <span class="n">losses</span>
+    <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">loss</span> <span class="ow">in</span> <span class="n">losses</span><span class="p">:</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">_unconditional_loss</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># pylint: disable=protected-access</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">loss</span> <span class="ow">in</span> <span class="n">losses</span><span class="p">:</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">_unconditional_loss</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># pylint: disable=protected-access</span>
+    <span class="c1"># TODO(fchollet): deprecate collection below.</span>
+    <span class="n">_add_elements_to_collection</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">GraphKeys</span><span class="o">.</span><span class="n">REGULARIZATION_LOSSES</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">get_losses_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves losses relevant to a specific set of inputs.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">      inputs: Input tensor or list/tuple of input tensors.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      List of loss tensors of the layer that depend on `inputs`.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: If called in Eager mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Layer.get_losses_for not supported in Eager mode.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="c1"># Requesting unconditional losses.</span>
+      <span class="k">return</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">losses</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">_unconditional_loss</span><span class="p">]</span>  <span class="c1"># pylint: disable=protected-access</span>
+
+    <span class="c1"># Requesting input-conditional losses.</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="c1"># Retrieve the set of tensors in the TF graph that depend on `inputs`.</span>
+    <span class="c1"># The losses we want to return will be part of this set.</span>
+    <span class="c1"># To avoid unnecessary work, we stop the search in case all of</span>
+    <span class="c1"># `self.losses` have been retrieved.</span>
+    <span class="n">reachable</span> <span class="o">=</span> <span class="n">layers_util</span><span class="o">.</span><span class="n">get_reachable_from_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">losses</span><span class="p">)</span>
+    <span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">loss</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">losses</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">loss</span> <span class="ow">in</span> <span class="n">reachable</span><span class="p">:</span>
+        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">losses</span>
+
+  <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates the variables of the layer.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">built</span> <span class="o">=</span> <span class="kc">True</span>
+
+  <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
+    <span class="sd">&quot;&quot;&quot;The logic of the layer lives here.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">      inputs: input tensor(s).</span>
+<span class="sd">      **kwargs: additional keyword arguments.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Output tensor(s).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">inputs</span>
+
+  <span class="k">def</span> <span class="nf">_name_scope_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_variable_scope</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines op naming for the Layer.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">current_variable_scope</span><span class="o">.</span><span class="n">original_name_scope</span>
+
+  <span class="k">def</span> <span class="nf">compute_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the output shape of the layer given the input shape.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      input_shape: A (possibly nested tuple of) `TensorShape`.  It need not</span>
+<span class="sd">        be fully defined (e.g. the batch size may be unknown).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A (possibly nested tuple of) `TensorShape`.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TypeError: if `input_shape` is not a (possibly nested tuple of)</span>
+<span class="sd">        `TensorShape`.</span>
+<span class="sd">      ValueError: if `input_shape` is incomplete or is incompatible with the</span>
+<span class="sd">        the layer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+  <span class="k">def</span> <span class="nf">_make_unique_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_uid_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">avoid_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">namespace</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">zero_based</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">base_name</span> <span class="o">=</span> <span class="n">_to_snake_case</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">_unique_layer_name</span><span class="p">(</span><span class="n">base_name</span><span class="p">,</span> <span class="n">name_uid_map</span><span class="o">=</span><span class="n">name_uid_map</span><span class="p">,</span>
+                              <span class="n">avoid_names</span><span class="o">=</span><span class="n">avoid_names</span><span class="p">,</span> <span class="n">namespace</span><span class="o">=</span><span class="n">namespace</span><span class="p">,</span>
+                              <span class="n">zero_based</span><span class="o">=</span><span class="n">zero_based</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">base_name</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_set_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="c1"># If constructed with _scope=None, lazy setting of scope.</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reuse</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">vs</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span>
+            <span class="n">scope</span> <span class="k">if</span> <span class="n">scope</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">captured_scope</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="o">=</span> <span class="n">captured_scope</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">vs</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span>
+            <span class="n">scope</span><span class="p">,</span> <span class="n">default_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">captured_scope</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="o">=</span> <span class="n">captured_scope</span>
+
+  <span class="k">def</span> <span class="nf">add_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">initializer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">constraint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">partitioner</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds a new variable to the layer, or gets an existing one; returns it.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">      name: variable name.</span>
+<span class="sd">      shape: variable shape.</span>
+<span class="sd">      dtype: The type of the variable. Defaults to `self.dtype` or `float32`.</span>
+<span class="sd">      initializer: initializer instance (callable).</span>
+<span class="sd">      regularizer: regularizer instance (callable).</span>
+<span class="sd">      trainable: whether the variable should be part of the layer&#39;s</span>
+<span class="sd">        &quot;trainable_variables&quot; (e.g. variables, biases)</span>
+<span class="sd">        or &quot;non_trainable_variables&quot; (e.g. BatchNorm mean, stddev).</span>
+<span class="sd">        Note, if the current variable scope is marked as non-trainable</span>
+<span class="sd">        then this parameter is ignored and any added variables are also</span>
+<span class="sd">        marked as non-trainable.</span>
+<span class="sd">      constraint: constraint instance (callable).</span>
+<span class="sd">      partitioner: (optional) partitioner instance (callable).  If</span>
+<span class="sd">        provided, when the requested variable is created it will be split</span>
+<span class="sd">        into multiple partitions according to `partitioner`.  In this case,</span>
+<span class="sd">        an instance of `PartitionedVariable` is returned.  Available</span>
+<span class="sd">        partitioners include `tf.fixed_size_partitioner` and</span>
+<span class="sd">        `tf.variable_axis_size_partitioner`.  For more details, see the</span>
+<span class="sd">        documentation of `tf.get_variable` and the  &quot;Variable Partitioners</span>
+<span class="sd">        and Sharding&quot; section of the API guide.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The created variable.  Usually either a `Variable` or `ResourceVariable`</span>
+<span class="sd">      instance.  If `partitioner` is not `None`, a `PartitionedVariable`</span>
+<span class="sd">      instance is returned.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: If called with partioned variable regularization and</span>
+<span class="sd">        eager execution is enabled.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># `init_graph` should point to the graph in which variable initialization</span>
+    <span class="c1"># will occur; it should be None if and only if initialization will take</span>
+    <span class="c1"># place in the eager context.</span>
+    <span class="n">init_graph</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="n">default_graph</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">get_default_graph</span><span class="p">()</span>
+      <span class="k">if</span> <span class="n">default_graph</span><span class="o">.</span><span class="n">building_function</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">init_scope</span><span class="p">():</span>
+          <span class="c1"># Retrieve the variables from the graph into which variables</span>
+          <span class="c1"># will be lifted; if initialization ops will be lifted into</span>
+          <span class="c1"># the eager context, then there is nothing to retrieve, since variable</span>
+          <span class="c1"># collections are not supported when eager execution is enabled.</span>
+          <span class="k">if</span> <span class="ow">not</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+            <span class="n">init_graph</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">get_default_graph</span><span class="p">()</span>
+            <span class="n">existing_variables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tf_variables</span><span class="o">.</span><span class="n">global_variables</span><span class="p">())</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Initialization ops will not be lifted out of the default graph.</span>
+        <span class="n">init_graph</span> <span class="o">=</span> <span class="n">default_graph</span>
+        <span class="n">existing_variables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tf_variables</span><span class="o">.</span><span class="n">global_variables</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">or</span> <span class="n">dtypes</span><span class="o">.</span><span class="n">float32</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_set_scope</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">reuse</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">built</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reuse</span>
+    <span class="k">with</span> <span class="n">vs</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="n">reuse</span><span class="p">,</span> <span class="n">auxiliary_name_scope</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">scope</span><span class="p">:</span>
+      <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name_scope_name</span><span class="p">(</span><span class="n">scope</span><span class="p">)):</span>
+        <span class="n">variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_variable_with_custom_getter</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">getter</span><span class="o">=</span><span class="n">vs</span><span class="o">.</span><span class="n">get_variable</span><span class="p">,</span>
+            <span class="c1"># Manage errors in Layer rather than Checkpointable.</span>
+            <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">initializer</span><span class="o">=</span><span class="n">initializer</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">dtypes</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span>
+            <span class="n">constraint</span><span class="o">=</span><span class="n">constraint</span><span class="p">,</span>
+            <span class="n">trainable</span><span class="o">=</span><span class="n">trainable</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainable</span><span class="p">,</span>
+            <span class="n">partitioner</span><span class="o">=</span><span class="n">partitioner</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">init_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pylint: disable=protected-access</span>
+          <span class="c1"># The variable was created and initialized in a graph.</span>
+
+          <span class="k">if</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">existing_variables</span><span class="p">:</span>
+            <span class="c1"># To match the behavior of tf.get_variable(), we only apply</span>
+            <span class="c1"># regularization if the variable is newly created.</span>
+            <span class="k">return</span> <span class="n">variable</span>
+
+          <span class="k">with</span> <span class="n">init_graph</span><span class="o">.</span><span class="n">as_default</span><span class="p">():</span>
+            <span class="n">trainable_variables</span> <span class="o">=</span> <span class="n">tf_variables</span><span class="o">.</span><span class="n">trainable_variables</span><span class="p">()</span>
+          <span class="k">if</span> <span class="p">(</span><span class="n">trainable</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainable</span> <span class="ow">and</span>
+              <span class="n">variable</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">trainable_variables</span><span class="p">):</span>
+            <span class="c1"># A custom getter / variable scope overrode the trainable flag.</span>
+            <span class="n">trainable</span> <span class="o">=</span> <span class="kc">False</span>
+
+          <span class="k">if</span> <span class="n">regularizer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">tf_variables</span><span class="o">.</span><span class="n">PartitionedVariable</span><span class="p">):</span>
+              <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variable</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">colocate_with</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">op</span><span class="p">):</span>
+                  <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;/Regularizer&#39;</span><span class="p">):</span>
+                    <span class="n">regularization</span> <span class="o">=</span> <span class="n">regularizer</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">regularization</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">add_loss</span><span class="p">(</span><span class="n">regularization</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+              <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">colocate_with</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">op</span><span class="p">):</span>
+                <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;/Regularizer&#39;</span><span class="p">):</span>
+                  <span class="n">regularization</span> <span class="o">=</span> <span class="n">regularizer</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+              <span class="k">if</span> <span class="n">regularization</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_loss</span><span class="p">(</span><span class="n">regularization</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">regularizer</span><span class="p">:</span>  <span class="c1"># and initialization took place in an eager context</span>
+          <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">tf_variables</span><span class="o">.</span><span class="n">PartitionedVariable</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s1">&#39;Partitioned variable regularization is not yet &#39;</span>
+                <span class="s1">&#39;supported when executing eagerly. File a feature request &#39;</span>
+                <span class="s1">&#39;if this is important to you.&#39;</span><span class="p">)</span>
+          <span class="c1"># Save a zero-argument lambda which runs the regularizer on the</span>
+          <span class="c1"># variable, to be executed when `Layer.losses` is requested.</span>
+          <span class="c1"># This makes losses responsive to variable updates when executing</span>
+          <span class="c1"># eagerly.</span>
+          <span class="c1">#</span>
+          <span class="c1"># TODO(akshayka): Do the same for graphs as well, so that losses</span>
+          <span class="c1"># collected in a while_loop can be run outside its control flow</span>
+          <span class="c1"># context and so that losses won&#39;t be swallowed up by graph functions</span>
+          <span class="c1"># (i.e., `.losses()` should always create regularizers).</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">regularizer</span><span class="p">(</span><span class="n">variable</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">trainable</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_non_trainable_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">variable</span>
+
+  <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wraps `call`, applying pre- and post-processing steps.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">      inputs: input tensor(s).</span>
+<span class="sd">      *args: additional positional arguments to be passed to `self.call`.</span>
+<span class="sd">      **kwargs: additional keyword arguments to be passed to `self.call`.</span>
+<span class="sd">        **Note**: kwarg `scope` is reserved for use by the layer.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Output tensor(s).</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">      - If the layer&#39;s `call` method takes a `scope` keyword argument,</span>
+<span class="sd">        this argument will be automatically set to the current variable scope.</span>
+<span class="sd">      - If the layer&#39;s `call` method takes a `mask` argument (as some Keras</span>
+<span class="sd">        layers do), its default value will be set to the mask generated</span>
+<span class="sd">        for `inputs` by the previous layer (if `input` did come from</span>
+<span class="sd">        a layer that generated a corresponding mask, i.e. if it came from</span>
+<span class="sd">        a Keras layer with masking support.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: if the layer&#39;s `call` method returns None (an invalid value).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_set_scope</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;scope&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="n">input_list</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+    <span class="n">build_graph</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">()</span>
+    <span class="c1"># TODO(fchollet, allenl): Make deferred mode work with subclassed Models</span>
+    <span class="c1"># which don&#39;t use an &quot;inputs&quot; argument.</span>
+    <span class="n">in_deferred_mode</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">_DeferredTensor</span><span class="p">)</span>
+    <span class="c1"># Ensure the Layer, if being reused, is working with inputs from</span>
+    <span class="c1"># the same graph as where it was created.</span>
+    <span class="k">if</span> <span class="n">build_graph</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Set layer&#39;s &quot;graph&quot; at build time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">_get_graph_from_inputs</span><span class="p">(</span><span class="n">input_list</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
+      <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input graph and Layer graph are not the same: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">build_graph</span> <span class="ow">or</span> <span class="n">in_deferred_mode</span><span class="p">:</span>
+      <span class="n">user_kwargs</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># Handle Keras mask propagation from previous layer to current layer.</span>
+    <span class="n">previous_mask</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_compute_previous_mask&#39;</span><span class="p">)</span> <span class="ow">or</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_previous_mask</span><span class="p">):</span>
+      <span class="n">previous_mask</span> <span class="o">=</span> <span class="n">_collect_previous_mask</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_call_fn_args&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_call_fn_args</span> <span class="o">=</span> <span class="n">estimator_util</span><span class="o">.</span><span class="n">fn_args</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">)</span>
+      <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;mask&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_fn_args</span> <span class="ow">and</span> <span class="s1">&#39;mask&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span>
+          <span class="ow">not</span> <span class="n">_is_all_none</span><span class="p">(</span><span class="n">previous_mask</span><span class="p">)):</span>
+        <span class="c1"># The previous layer generated a mask, and mask was not explicitly pass</span>
+        <span class="c1"># to __call__, hence we set previous_mask as the default value.</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;mask&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">previous_mask</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">built</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Some classes which inherit from Layer do not use its constructor, so</span>
+        <span class="c1"># rather than initializing to None we check for an AttributeError.</span>
+        <span class="n">scope_context_manager</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_always_reuse_variable_scope</span>
+      <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="c1"># From this point we will always set reuse=True, so create a &quot;final&quot;</span>
+        <span class="c1"># variable scope with this setting. We avoid re-creating variable scopes</span>
+        <span class="c1"># after this point as an optimization.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_always_reuse_variable_scope</span> <span class="o">=</span> <span class="n">vs</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auxiliary_name_scope</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">scope_context_manager</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_always_reuse_variable_scope</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">scope_context_manager</span> <span class="o">=</span> <span class="n">vs</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reuse</span><span class="p">,</span> <span class="n">auxiliary_name_scope</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">input_shapes</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">with</span> <span class="n">scope_context_manager</span> <span class="k">as</span> <span class="n">scope</span><span class="p">:</span>
+      <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name_scope_name</span><span class="p">(</span><span class="n">scope</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">built</span><span class="p">:</span>
+          <span class="k">if</span> <span class="ow">not</span> <span class="n">build_graph</span><span class="p">:</span>
+            <span class="c1"># Activity regularization is currently unsupported in Eager mode.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activity_regularizer</span><span class="p">:</span>
+              <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                  <span class="s1">&#39;activity_regularizer currently unsupported with &#39;</span>
+                  <span class="s1">&#39;eager execution enabled. Found an activity_regularizer in &#39;</span>
+                  <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">).&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+          <span class="k">if</span> <span class="ow">not</span> <span class="n">build_graph</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">in_deferred_mode</span><span class="p">:</span>
+            <span class="c1"># TODO(agarwal): support _keras_history in Eager mode.</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">input_list</span><span class="p">:</span>
+              <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;_keras_history&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;_keras_history currently unsupported in &#39;</span>
+                                 <span class="s1">&#39;Eager mode. Found _keras_history in </span><span class="si">%s</span><span class="s1"> while &#39;</span>
+                                 <span class="s1">&#39;executing __call__ for </span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span>
+                                 <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class_</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+
+          <span class="c1"># Check input assumptions set before layer building, e.g. input rank.</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_assert_input_compatibility</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">input_list</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="n">input_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">base_dtype</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+              <span class="k">pass</span>
+          <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;get_shape&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">input_list</span><span class="p">):</span>
+            <span class="n">input_shapes</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">map_structure</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span> <span class="n">inputs</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shapes</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="c1"># Note: not all sub-classes of Layer call Layer.__init__ (especially</span>
+          <span class="c1"># the ones under tensorflow/python/keras). Hence we recompute this</span>
+          <span class="c1"># attribute here if it is not set.</span>
+          <span class="c1"># TODO(agarwal): Fix the sub-classes and avoid this complexity.</span>
+          <span class="n">call_has_scope_arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_has_scope_arg</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_call_fn_args</span> <span class="o">=</span> <span class="n">estimator_util</span><span class="o">.</span><span class="n">fn_args</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_call_has_scope_arg</span> <span class="o">=</span> <span class="s1">&#39;scope&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_fn_args</span>
+          <span class="n">call_has_scope_arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_has_scope_arg</span>
+        <span class="k">if</span> <span class="n">call_has_scope_arg</span><span class="p">:</span>
+          <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;scope&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scope</span>
+        <span class="c1"># Check input assumptions set after layer building, e.g. input shape.</span>
+        <span class="k">if</span> <span class="n">build_graph</span> <span class="ow">or</span> <span class="n">in_deferred_mode</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_assert_input_compatibility</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">in_deferred_mode</span><span class="p">:</span>
+          <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;A layer</span><span class="se">\&#39;</span><span class="s1">s `call` method should return a Tensor &#39;</span>
+                             <span class="s1">&#39;or a list of Tensors, not None.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="c1"># Deferred mode behavior: use `compute_output_shape` to</span>
+          <span class="c1"># infer the number of outputs of the layer and their shapes.</span>
+          <span class="k">if</span> <span class="n">input_shapes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">input_shapes</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">map_structure</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span> <span class="n">inputs</span><span class="p">)</span>
+
+          <span class="n">output_shapes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">input_shapes</span><span class="p">)</span>
+          <span class="n">output_shapes</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">output_shapes</span><span class="p">)</span>
+          <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span>
+              <span class="c1"># TODO(fchollet): name the deferred tensors?</span>
+              <span class="n">_DeferredTensor</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">)</span>
+              <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">output_shapes</span>
+          <span class="p">]</span>
+          <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">build_graph</span><span class="p">:</span>
+          <span class="c1"># Apply activity regularization.</span>
+          <span class="c1"># Note that it should be applied every time the layer creates a new</span>
+          <span class="c1"># output, since it is output-specific.</span>
+          <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activity_regularizer</span><span class="p">:</span>
+            <span class="n">output_list</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">output_list</span><span class="p">:</span>
+              <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="s1">&#39;ActivityRegularizer&#39;</span><span class="p">):</span>
+                <span class="n">activity_regularization</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_activity_regularizer</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">add_loss</span><span class="p">(</span><span class="n">activity_regularization</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">)</span>
+
+          <span class="c1"># TODO(fchollet): consider enabling masking for Eager mode.</span>
+          <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;compute_mask&#39;</span><span class="p">):</span>
+            <span class="n">output_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_mask</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">previous_mask</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+              <span class="k">if</span> <span class="n">output_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">output_mask</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">))]</span>
+              <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">output_mask</span><span class="p">):</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">_keras_mask</span> <span class="o">=</span> <span class="n">m</span>  <span class="c1"># pylint: disable=protected-access</span>
+            <span class="k">else</span><span class="p">:</span>
+              <span class="n">outputs</span><span class="o">.</span><span class="n">_keras_mask</span> <span class="o">=</span> <span class="n">output_mask</span>  <span class="c1"># pylint: disable=protected-access</span>
+
+    <span class="k">if</span> <span class="n">build_graph</span><span class="p">:</span>
+      <span class="c1"># If all input tensors have history metadata,</span>
+      <span class="c1"># we update the output tensors</span>
+      <span class="c1"># with corresponding history metadata, thus eventually allowing to use</span>
+      <span class="c1"># these tensors to instantiate a Network.</span>
+      <span class="k">if</span> <span class="n">_have_all_keras_metadata</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+        <span class="c1"># If the layer returns tensors from its inputs, unmodified,</span>
+        <span class="c1"># we copy them to avoid loss of tensor metadata.</span>
+        <span class="n">output_ls</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+        <span class="n">output_ls_copy</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">output_ls</span><span class="p">:</span>
+          <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">input_list</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">ops</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">original_name_scope</span><span class="p">):</span>
+              <span class="n">x</span> <span class="o">=</span> <span class="n">array_ops</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+          <span class="n">output_ls_copy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_ls_copy</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+          <span class="n">outputs</span> <span class="o">=</span> <span class="n">output_ls_copy</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">outputs</span> <span class="o">=</span> <span class="n">output_ls_copy</span>
+
+      <span class="c1"># Update global default collections.</span>
+      <span class="n">_add_elements_to_collection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">GraphKeys</span><span class="o">.</span><span class="n">UPDATE_OPS</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">in_deferred_mode</span> <span class="ow">or</span> <span class="n">build_graph</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">_have_all_keras_metadata</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+        <span class="c1"># Add an inbound node to the layer, so it can keep track of this call.</span>
+        <span class="c1"># This updates the layer history of the output tensor(s).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_inbound_node</span><span class="p">(</span>
+            <span class="n">input_tensors</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="n">output_tensors</span><span class="o">=</span><span class="n">outputs</span><span class="p">,</span> <span class="n">arguments</span><span class="o">=</span><span class="n">user_kwargs</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">built</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">outputs</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Layer.graph not supported in Eager mode.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span>
+
+  <span class="k">def</span> <span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memo</span><span class="p">):</span>
+    <span class="n">no_copy</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;_graph&#39;</span><span class="p">])</span>
+    <span class="n">shallow_copy</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;_scope&#39;</span><span class="p">,</span> <span class="s1">&#39;_always_reuse_variable_scope&#39;</span><span class="p">])</span>
+    <span class="bp">cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+    <span class="n">memo</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)]</span> <span class="o">=</span> <span class="n">result</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+      <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">no_copy</span><span class="p">:</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+      <span class="k">elif</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">shallow_copy</span><span class="p">:</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+      <span class="k">elif</span> <span class="n">_is_tensor_or_tensor_list</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">memo</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+  <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Apply the layer on a input.</span>
+
+<span class="sd">    This simply wraps `self.__call__`.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">      inputs: Input tensor(s).</span>
+<span class="sd">      *args: additional positional arguments to be passed to `self.call`.</span>
+<span class="sd">      **kwargs: additional keyword arguments to be passed to `self.call`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Output tensor(s).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_add_inbound_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">input_tensors</span><span class="p">,</span>
+                        <span class="n">output_tensors</span><span class="p">,</span>
+                        <span class="n">arguments</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Internal method to create an inbound node for the layer.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        input_tensors: list of input tensors.</span>
+<span class="sd">        output_tensors: list of output tensors.</span>
+<span class="sd">        arguments: dictionary of keyword arguments that were passed to the</span>
+<span class="sd">            `call` method of the layer at the call that created the node.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">input_tensors</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">input_tensors</span><span class="p">)</span>
+    <span class="n">output_tensors</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">output_tensors</span><span class="p">)</span>
+
+    <span class="c1"># Collect input tensor(s) coordinates.</span>
+    <span class="n">inbound_layers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">node_indices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">tensor_indices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">input_tensors</span><span class="p">:</span>
+      <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;_keras_history&#39;</span><span class="p">)</span>
+      <span class="n">inbound_layer</span><span class="p">,</span> <span class="n">node_index</span><span class="p">,</span> <span class="n">tensor_index</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">_keras_history</span>  <span class="c1"># pylint: disable=protected-access</span>
+      <span class="n">inbound_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inbound_layer</span><span class="p">)</span>
+      <span class="n">node_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_index</span><span class="p">)</span>
+      <span class="n">tensor_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tensor_index</span><span class="p">)</span>
+
+    <span class="c1"># Create node, add it to inbound nodes.</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inbound_layers</span><span class="o">=</span><span class="n">inbound_layers</span><span class="p">,</span>
+        <span class="n">node_indices</span><span class="o">=</span><span class="n">node_indices</span><span class="p">,</span>
+        <span class="n">tensor_indices</span><span class="o">=</span><span class="n">tensor_indices</span><span class="p">,</span>
+        <span class="n">input_tensors</span><span class="o">=</span><span class="n">input_tensors</span><span class="p">,</span>
+        <span class="n">output_tensors</span><span class="o">=</span><span class="n">output_tensors</span><span class="p">,</span>
+        <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">)</span>
+
+    <span class="c1"># Update tensor history metadata.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">output_tensors</span><span class="p">)):</span>
+      <span class="c1"># The metadata attribute consists of 1) a layer instance</span>
+      <span class="c1"># 2) a node index for the layer, 3) a tensor index for the node.</span>
+      <span class="c1"># The allows layer reuse (multiple nodes per layer) and multi-output</span>
+      <span class="c1"># or multi-input layers (e.g. a layer can return multiple tensors,</span>
+      <span class="c1"># and each can be sent to a different layer).</span>
+      <span class="n">output_tensors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">_keras_history</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
+
+  <span class="k">def</span> <span class="nf">_get_node_attribute_at_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_index</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Private utility to retrieves an attribute (e.g. inputs) from a node.</span>
+
+<span class="sd">    This is used to implement the methods:</span>
+<span class="sd">        - get_input_shape_at</span>
+<span class="sd">        - get_output_shape_at</span>
+<span class="sd">        - get_input_at</span>
+<span class="sd">        etc...</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        node_index: Integer index of the node from which</span>
+<span class="sd">            to retrieve the attribute.</span>
+<span class="sd">        attr: Exact node attribute name.</span>
+<span class="sd">        attr_name: Human-readable attribute name, for error messages.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The layer&#39;s attribute `attr` at the node of index `node_index`.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        RuntimeError: If the layer has no inbound nodes, or if called in Eager</span>
+<span class="sd">        mode.</span>
+<span class="sd">        ValueError: If the index provided does not match any node.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;The layer has never been called &#39;</span>
+                         <span class="s1">&#39;and thus has no defined &#39;</span> <span class="o">+</span> <span class="n">attr_name</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">node_index</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Asked to get &#39;</span> <span class="o">+</span> <span class="n">attr_name</span> <span class="o">+</span> <span class="s1">&#39; at node &#39;</span> <span class="o">+</span>
+                       <span class="nb">str</span><span class="p">(</span><span class="n">node_index</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;, but the layer has only &#39;</span> <span class="o">+</span>
+                       <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39; inbound nodes.&#39;</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">[</span><span class="n">node_index</span><span class="p">],</span> <span class="n">attr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">values</span>
+
+  <span class="k">def</span> <span class="nf">get_input_shape_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the input shape(s) of a layer at a given node.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        node_index: Integer, index of the node</span>
+<span class="sd">            from which to retrieve the attribute.</span>
+<span class="sd">            E.g. `node_index=0` will correspond to the</span>
+<span class="sd">            first time the layer was called.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A shape tuple</span>
+<span class="sd">        (or list of shape tuples if the layer has multiple inputs).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: If called in Eager mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_node_attribute_at_index</span><span class="p">(</span><span class="n">node_index</span><span class="p">,</span> <span class="s1">&#39;input_shapes&#39;</span><span class="p">,</span>
+                                             <span class="s1">&#39;input shape&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">get_output_shape_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the output shape(s) of a layer at a given node.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        node_index: Integer, index of the node</span>
+<span class="sd">            from which to retrieve the attribute.</span>
+<span class="sd">            E.g. `node_index=0` will correspond to the</span>
+<span class="sd">            first time the layer was called.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A shape tuple</span>
+<span class="sd">        (or list of shape tuples if the layer has multiple outputs).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: If called in Eager mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">&#39;Layer.get_output_shape_at not supported in Eager mode.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_node_attribute_at_index</span><span class="p">(</span><span class="n">node_index</span><span class="p">,</span> <span class="s1">&#39;output_shapes&#39;</span><span class="p">,</span>
+                                             <span class="s1">&#39;output shape&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">get_input_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the input tensor(s) of a layer at a given node.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        node_index: Integer, index of the node</span>
+<span class="sd">            from which to retrieve the attribute.</span>
+<span class="sd">            E.g. `node_index=0` will correspond to the</span>
+<span class="sd">            first time the layer was called.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tensor (or list of tensors if the layer has multiple inputs).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: If called in Eager mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Layer.get_input_at not supported in Eager mode.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_node_attribute_at_index</span><span class="p">(</span><span class="n">node_index</span><span class="p">,</span> <span class="s1">&#39;input_tensors&#39;</span><span class="p">,</span>
+                                             <span class="s1">&#39;input&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">get_output_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the output tensor(s) of a layer at a given node.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        node_index: Integer, index of the node</span>
+<span class="sd">            from which to retrieve the attribute.</span>
+<span class="sd">            E.g. `node_index=0` will correspond to the</span>
+<span class="sd">            first time the layer was called.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tensor (or list of tensors if the layer has multiple outputs).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: If called in Eager mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_node_attribute_at_index</span><span class="p">(</span><span class="n">node_index</span><span class="p">,</span> <span class="s1">&#39;output_tensors&#39;</span><span class="p">,</span>
+                                             <span class="s1">&#39;output&#39;</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the input tensor(s) of a layer.</span>
+
+<span class="sd">    Only applicable if the layer has exactly one input,</span>
+<span class="sd">    i.e. if it is connected to one incoming layer.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Input tensor or list of input tensors.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        AttributeError: if the layer is connected to</span>
+<span class="sd">        more than one incoming layers.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: If called in Eager mode.</span>
+<span class="sd">      AttributeError: If no inbound nodes are found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Layer &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span>
+                           <span class="s1">&#39; is not connected, no input to return.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_node_attribute_at_index</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;input_tensors&#39;</span><span class="p">,</span> <span class="s1">&#39;input&#39;</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the output tensor(s) of a layer.</span>
+
+<span class="sd">    Only applicable if the layer has exactly one output,</span>
+<span class="sd">    i.e. if it is connected to one incoming layer.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Output tensor or list of output tensors.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      AttributeError: if the layer is connected to more than one incoming</span>
+<span class="sd">        layers.</span>
+<span class="sd">      RuntimeError: if called in Eager mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Layer &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; has no inbound nodes.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_node_attribute_at_index</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;output_tensors&#39;</span><span class="p">,</span> <span class="s1">&#39;output&#39;</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">input_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the input shape(s) of a layer.</span>
+
+<span class="sd">    Only applicable if the layer has exactly one input,</span>
+<span class="sd">    i.e. if it is connected to one incoming layer, or if all inputs</span>
+<span class="sd">    have the same shape.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Input shape, as an integer shape tuple</span>
+<span class="sd">        (or list of shape tuples, one tuple per input tensor).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        AttributeError: if the layer has no defined input_shape.</span>
+<span class="sd">        RuntimeError: if called in Eager mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;The layer has never been called &#39;</span>
+                           <span class="s1">&#39;and thus has no defined input shape.&#39;</span><span class="p">)</span>
+    <span class="n">all_input_shapes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+        <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">input_shapes</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_input_shapes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="n">input_shapes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">input_shapes</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_shapes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tensor_shape</span><span class="o">.</span><span class="n">TensorShape</span><span class="p">(</span><span class="n">input_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">as_list</span><span class="p">())</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="nb">tuple</span><span class="p">(</span><span class="n">tensor_shape</span><span class="o">.</span><span class="n">TensorShape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">as_list</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">input_shapes</span>
+        <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;The layer &quot;&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s1">&#39; has multiple inbound nodes, &#39;</span>
+                           <span class="s1">&#39;with different input shapes. Hence &#39;</span>
+                           <span class="s1">&#39;the notion of &quot;input shape&quot; is &#39;</span>
+                           <span class="s1">&#39;ill-defined for the layer. &#39;</span>
+                           <span class="s1">&#39;Use `get_input_shape_at(node_index)` &#39;</span>
+                           <span class="s1">&#39;instead.&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">count_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Count the total number of scalars composing the weights.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An integer count.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: if the layer isn&#39;t yet built</span>
+<span class="sd">          (in which case its weights aren&#39;t yet defined).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">built</span><span class="p">:</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;Sequential&#39;</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>  <span class="c1"># pylint: disable=no-value-for-parameter</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;You tried to call `count_params` on &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span>
+                         <span class="s1">&#39;, but the layer isn</span><span class="se">\&#39;</span><span class="s1">t built. &#39;</span>
+                         <span class="s1">&#39;You can build it manually via: `&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span>
+                         <span class="s1">&#39;.build(batch_input_shape)`.&#39;</span><span class="p">)</span>
+    <span class="n">weight_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">sum</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weight_shapes</span><span class="p">]))</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the output shape(s) of a layer.</span>
+
+<span class="sd">    Only applicable if the layer has one output,</span>
+<span class="sd">    or if all outputs have the same shape.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Output shape, as an integer shape tuple</span>
+<span class="sd">        (or list of shape tuples, one tuple per output tensor).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        AttributeError: if the layer has no defined output shape.</span>
+<span class="sd">        RuntimeError: if called in Eager mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;The layer has never been called &#39;</span>
+                           <span class="s1">&#39;and thus has no defined output shape.&#39;</span><span class="p">)</span>
+    <span class="n">all_output_shapes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+        <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">output_shapes</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_output_shapes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="n">output_shapes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">output_shapes</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_shapes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tensor_shape</span><span class="o">.</span><span class="n">TensorShape</span><span class="p">(</span><span class="n">output_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">as_list</span><span class="p">())</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="nb">tuple</span><span class="p">(</span><span class="n">tensor_shape</span><span class="o">.</span><span class="n">TensorShape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">as_list</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">output_shapes</span>
+        <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;The layer &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span>
+                           <span class="s1">&#39; has multiple inbound nodes, &#39;</span>
+                           <span class="s1">&#39;with different output shapes. Hence &#39;</span>
+                           <span class="s1">&#39;the notion of &quot;output shape&quot; is &#39;</span>
+                           <span class="s1">&#39;ill-defined for the layer. &#39;</span>
+                           <span class="s1">&#39;Use `get_output_shape_at(node_index)` &#39;</span>
+                           <span class="s1">&#39;instead.&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">inbound_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Deprecated, do NOT use! Only for compatibility with external Keras.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inbound_nodes</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">outbound_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Deprecated, do NOT use! Only for compatibility with external Keras.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outbound_nodes</span>
+
+  <span class="k">def</span> <span class="nf">_assert_input_compatibility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks compatibility between the layer and provided inputs.</span>
+
+<span class="sd">    This checks that the tensor(s) `inputs` verify the input assumptions</span>
+<span class="sd">    of the layer (if any). If not, a clear and actional exception gets raised.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        inputs: input tensor or list of input tensors.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: in case of mismatch between</span>
+<span class="sd">            the provided inputs and the expectations of the layer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_spec</span><span class="p">:</span>
+      <span class="k">return</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_spec</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+      <span class="n">input_spec</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_spec</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">input_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_spec</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_spec</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Layer &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; expects &#39;</span> <span class="o">+</span>
+                       <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">input_spec</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39; inputs, &#39;</span>
+                       <span class="s1">&#39;but it received &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span> <span class="o">+</span>
+                       <span class="s1">&#39; input tensors. Inputs received: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">input_index</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">input_spec</span><span class="p">)):</span>
+      <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span>
+          <span class="n">spec</span><span class="o">.</span><span class="n">min_ndim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span>
+          <span class="n">spec</span><span class="o">.</span><span class="n">max_ndim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">ndims</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_index</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; of layer &#39;</span> <span class="o">+</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; is incompatible with the layer: &#39;</span>
+                           <span class="s1">&#39;its rank is undefined, but the layer requires a &#39;</span>
+                           <span class="s1">&#39;defined rank.&#39;</span><span class="p">)</span>
+
+      <span class="c1"># Check ndim.</span>
+      <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">ndims</span>
+        <span class="k">if</span> <span class="n">ndim</span> <span class="o">!=</span> <span class="n">spec</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_index</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; of layer &#39;</span> <span class="o">+</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; is incompatible with the layer: &#39;</span>
+                           <span class="s1">&#39;expected ndim=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;, found ndim=&#39;</span> <span class="o">+</span>
+                           <span class="nb">str</span><span class="p">(</span><span class="n">ndim</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;. Full shape received: &#39;</span> <span class="o">+</span>
+                           <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()))</span>
+      <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">max_ndim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">ndims</span>
+        <span class="k">if</span> <span class="n">ndim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ndim</span> <span class="o">&gt;</span> <span class="n">spec</span><span class="o">.</span><span class="n">max_ndim</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_index</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; of layer &#39;</span> <span class="o">+</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; is incompatible with the layer: &#39;</span>
+                           <span class="s1">&#39;expected max_ndim=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">max_ndim</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s1">&#39;, found ndim=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ndim</span><span class="p">))</span>
+      <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">min_ndim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">ndims</span>
+        <span class="k">if</span> <span class="n">ndim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ndim</span> <span class="o">&lt;</span> <span class="n">spec</span><span class="o">.</span><span class="n">min_ndim</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_index</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; of layer &#39;</span> <span class="o">+</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; is incompatible with the layer: &#39;</span>
+                           <span class="s1">&#39;: expected min_ndim=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">min_ndim</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s1">&#39;, found ndim=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ndim</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s1">&#39;. Full shape received: &#39;</span> <span class="o">+</span>
+                           <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()))</span>
+      <span class="c1"># Check dtype.</span>
+      <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_index</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; of layer &#39;</span> <span class="o">+</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; is incompatible with the layer: &#39;</span>
+                           <span class="s1">&#39;expected dtype=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="s1">&#39;, found dtype=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+      <span class="c1"># Check specific shape axes.</span>
+      <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">axes</span><span class="p">:</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+          <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">):</span>
+              <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">shape</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">axis</span><span class="p">)]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="n">value</span><span class="p">,</span> <span class="kc">None</span><span class="p">}:</span>
+              <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                  <span class="s1">&#39;Input &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_index</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; of layer &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; is&#39;</span>
+                  <span class="s1">&#39; incompatible with the layer: expected axis &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="o">+</span>
+                  <span class="s1">&#39; of input shape to have value &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span>
+                  <span class="s1">&#39; but received input with shape &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
+      <span class="c1"># Check shape.</span>
+      <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+          <span class="k">for</span> <span class="n">spec_dim</span><span class="p">,</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">spec_dim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+              <span class="k">if</span> <span class="n">spec_dim</span> <span class="o">!=</span> <span class="n">dim</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_index</span><span class="p">)</span> <span class="o">+</span>
+                                 <span class="s1">&#39; is incompatible with layer &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span>
+                                 <span class="s1">&#39;: expected shape=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
+                                 <span class="s1">&#39;, found shape=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
+
+
+<span class="nd">@tf_export</span><span class="p">(</span><span class="s1">&#39;keras.layers.InputSpec&#39;</span><span class="p">,</span> <span class="s1">&#39;layers.InputSpec&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">InputSpec</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Specifies the ndim, dtype and shape of every input to a layer.</span>
+
+<span class="sd">  Every layer should expose (if appropriate) an `input_spec` attribute:</span>
+<span class="sd">  a list of instances of InputSpec (one per input tensor).</span>
+
+<span class="sd">  A None entry in a shape is compatible with any dimension,</span>
+<span class="sd">  a None shape is compatible with any shape.</span>
+
+<span class="sd">  Arguments:</span>
+<span class="sd">      dtype: Expected DataType of the input.</span>
+<span class="sd">      shape: Shape tuple, expected shape of the input</span>
+<span class="sd">          (may include None for unchecked axes).</span>
+<span class="sd">      ndim: Integer, expected rank of the input.</span>
+<span class="sd">      max_ndim: Integer, maximum rank of the input.</span>
+<span class="sd">      min_ndim: Integer, minimum rank of the input.</span>
+<span class="sd">      axes: Dictionary mapping integer axes to</span>
+<span class="sd">          a specific dimension value.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">ndim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">max_ndim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">min_ndim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span>
+    <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">=</span> <span class="n">ndim</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">max_ndim</span> <span class="o">=</span> <span class="n">max_ndim</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">min_ndim</span> <span class="o">=</span> <span class="n">min_ndim</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="o">=</span> <span class="n">axes</span> <span class="ow">or</span> <span class="p">{}</span>
+
+  <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;dtype=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="p">(</span><span class="s1">&#39;shape=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="p">(</span><span class="s1">&#39;ndim=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="p">(</span><span class="s1">&#39;max_ndim=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_ndim</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_ndim</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="p">(</span><span class="s1">&#39;min_ndim=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_ndim</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_ndim</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="p">(</span><span class="s1">&#39;axes=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="s1">&#39;InputSpec(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">spec</span> <span class="k">if</span> <span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A `Node` describes the connectivity between two layers.</span>
+
+<span class="sd">  Each time a layer is connected to some new input,</span>
+<span class="sd">  a node is added to `layer._inbound_nodes`.</span>
+<span class="sd">  Each time the output of a layer is used by another layer,</span>
+<span class="sd">  a node is added to `layer._outbound_nodes`.</span>
+
+<span class="sd">  Arguments:</span>
+<span class="sd">      outbound_layer: the layer that takes</span>
+<span class="sd">          `input_tensors` and turns them into `output_tensors`</span>
+<span class="sd">          (the node gets created when the `call`</span>
+<span class="sd">          method of the layer was called).</span>
+<span class="sd">      inbound_layers: a list of layers, the same length as `input_tensors`,</span>
+<span class="sd">          the layers from where `input_tensors` originate.</span>
+<span class="sd">      node_indices: a list of integers, the same length as `inbound_layers`.</span>
+<span class="sd">          `node_indices[i]` is the origin node of `input_tensors[i]`</span>
+<span class="sd">          (necessary since each inbound layer might have several nodes,</span>
+<span class="sd">          e.g. if the layer is being shared with a different data stream).</span>
+<span class="sd">      tensor_indices: a list of integers,</span>
+<span class="sd">          the same length as `inbound_layers`.</span>
+<span class="sd">          `tensor_indices[i]` is the index of `input_tensors[i]` within the</span>
+<span class="sd">          output of the inbound layer</span>
+<span class="sd">          (necessary since each inbound layer might</span>
+<span class="sd">          have multiple tensor outputs, with each one being</span>
+<span class="sd">          independently manipulable).</span>
+<span class="sd">      input_tensors: list of input tensors.</span>
+<span class="sd">      output_tensors: list of output tensors.</span>
+<span class="sd">      arguments: dictionary of keyword arguments that were passed to the</span>
+<span class="sd">          `call` method of the layer at the call that created the node.</span>
+
+<span class="sd">  `node_indices` and `tensor_indices` are basically fine-grained coordinates</span>
+<span class="sd">  describing the origin of the `input_tensors`.</span>
+
+<span class="sd">  A node from layer A to layer B is added to:</span>
+<span class="sd">    - A._outbound_nodes</span>
+<span class="sd">    - B._inbound_nodes</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">outbound_layer</span><span class="p">,</span>
+               <span class="n">inbound_layers</span><span class="p">,</span>
+               <span class="n">node_indices</span><span class="p">,</span>
+               <span class="n">tensor_indices</span><span class="p">,</span>
+               <span class="n">input_tensors</span><span class="p">,</span>
+               <span class="n">output_tensors</span><span class="p">,</span>
+               <span class="n">arguments</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># Layer instance (NOT a list).</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outbound_layer</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="s1">&#39;`outbound_layer` should be a layer instance, not a list.&#39;</span><span class="p">)</span>
+    <span class="c1"># this is the layer that takes a list of input tensors</span>
+    <span class="c1"># and turns them into a list of output tensors.</span>
+    <span class="c1"># the current node will be added to</span>
+    <span class="c1"># the inbound_nodes of outbound_layer.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">outbound_layer</span> <span class="o">=</span> <span class="n">outbound_layer</span>
+
+    <span class="c1"># The following 3 properties describe where</span>
+    <span class="c1"># the input tensors come from: which layers,</span>
+    <span class="c1"># and for each layer, which node and which</span>
+    <span class="c1"># tensor output of each node.</span>
+
+    <span class="c1"># List of layer instances.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">inbound_layers</span> <span class="o">=</span> <span class="n">inbound_layers</span>
+    <span class="c1"># List of integers, 1:1 mapping with inbound_layers.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">node_indices</span> <span class="o">=</span> <span class="n">node_indices</span>
+    <span class="c1"># List of integers, 1:1 mapping with inbound_layers.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">tensor_indices</span> <span class="o">=</span> <span class="n">tensor_indices</span>
+
+    <span class="c1"># Following 2 properties:</span>
+    <span class="c1"># tensor inputs and outputs of outbound_layer.</span>
+
+    <span class="c1"># List of tensors. 1:1 mapping with inbound_layers.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">input_tensors</span> <span class="o">=</span> <span class="n">input_tensors</span>
+    <span class="c1"># List of tensors, created by outbound_layer.call().</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">output_tensors</span> <span class="o">=</span> <span class="n">output_tensors</span>
+
+    <span class="c1"># Following 2 properties: input and output shapes.</span>
+
+    <span class="c1"># List of shape tuples, shapes of input_tensors.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">input_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers_util</span><span class="o">.</span><span class="n">static_shape</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">input_tensors</span><span class="p">]</span>
+    <span class="c1"># List of shape tuples, shapes of output_tensors.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">output_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers_util</span><span class="o">.</span><span class="n">static_shape</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">output_tensors</span><span class="p">]</span>
+
+    <span class="c1"># Optional keyword arguments to layer&#39;s `call`.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span> <span class="o">=</span> <span class="n">arguments</span>
+
+    <span class="c1"># Add nodes to all layers involved.</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">inbound_layers</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># For compatibility with external Keras, we use the deprecated</span>
+        <span class="c1"># accessor here.</span>
+        <span class="n">layer</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="c1"># For compatibility with external Keras, we use the deprecated</span>
+    <span class="c1"># accessor here.</span>
+    <span class="n">outbound_layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">inbound_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inbound_layers</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">layer</span><span class="p">:</span>
+        <span class="n">inbound_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">inbound_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;outbound_layer&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">outbound_layer</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s1">&#39;inbound_layers&#39;</span><span class="p">:</span> <span class="n">inbound_names</span><span class="p">,</span>
+        <span class="s1">&#39;node_indices&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_indices</span><span class="p">,</span>
+        <span class="s1">&#39;tensor_indices&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_indices</span>
+    <span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">_DeferredTensor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Tensor-like object used to build graphs of layers in Eager mode.</span>
+
+<span class="sd">  When calling a layer on a DeferredTensor, the layer will not perform any</span>
+<span class="sd">  computation and will simply perfom shape inference to return new</span>
+<span class="sd">  DeferredTensors with appropriate shape information. Thus DeferredTensor</span>
+<span class="sd">  behaves like a graph-mode Tensor when manipulated by layers.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">tensor_shape</span><span class="o">.</span><span class="n">TensorShape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtypes</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtypes</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+  <span class="k">def</span> <span class="nf">get_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+
+  <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s2">&quot;DeferredTensor(&#39;</span><span class="si">%s</span><span class="s2">&#39;, shape=</span><span class="si">%s</span><span class="s2">, dtype=</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                                         <span class="bp">self</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span>
+                                                         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s2">&quot;&lt;_DeferredTensor &#39;</span><span class="si">%s</span><span class="s2">&#39; shape=</span><span class="si">%s</span><span class="s2"> dtype=</span><span class="si">%s</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                                         <span class="bp">self</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span>
+                                                         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_is_tensor_or_tensor_list</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+  <span class="n">v</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">v</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ops</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+    <span class="k">return</span> <span class="kc">True</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">_to_snake_case</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+  <span class="n">intermediate</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;(.)([A-Z][a-z0-9]+)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1_\2&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+  <span class="n">insecure</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;([a-z])([A-Z])&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1_\2&#39;</span><span class="p">,</span> <span class="n">intermediate</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+  <span class="c1"># If the class is private the name starts with &quot;_&quot; which is not secure</span>
+  <span class="c1"># for creating scopes. We prefix the name with &quot;private&quot; in this case.</span>
+  <span class="k">if</span> <span class="n">insecure</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">insecure</span>
+  <span class="k">return</span> <span class="s1">&#39;private&#39;</span> <span class="o">+</span> <span class="n">insecure</span>
+
+
+<span class="k">def</span> <span class="nf">_to_list</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;This normalizes a list/tuple or single element into a list.</span>
+
+<span class="sd">  If a single element is passed, we return</span>
+<span class="sd">  a list of size 1 containing the element.</span>
+
+<span class="sd">  Arguments:</span>
+<span class="sd">    x: list or tuple or single element.</span>
+
+<span class="sd">  Returns:</span>
+<span class="sd">    A list.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_add_elements_to_collection</span><span class="p">(</span><span class="n">elements</span><span class="p">,</span> <span class="n">collection_list</span><span class="p">):</span>
+  <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">():</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Using collections from Layers not supported in Eager &#39;</span>
+                       <span class="s1">&#39;mode. Tried to add </span><span class="si">%s</span><span class="s1"> to </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">elements</span><span class="p">,</span>
+                                                        <span class="n">collection_list</span><span class="p">))</span>
+  <span class="n">elements</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+  <span class="n">collection_list</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">collection_list</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">collection_list</span><span class="p">:</span>
+    <span class="n">collection</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">get_collection_ref</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">collection_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">element</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">collection_set</span><span class="p">:</span>
+        <span class="n">collection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_is_all_none</span><span class="p">(</span><span class="n">iterable_or_element</span><span class="p">):</span>
+  <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterable_or_element</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+    <span class="n">iterable</span> <span class="o">=</span> <span class="p">[</span><span class="n">iterable_or_element</span><span class="p">]</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">iterable</span> <span class="o">=</span> <span class="n">iterable_or_element</span>
+  <span class="c1"># We cannot use Python&#39;s `any` because the iterable may return Tensors.</span>
+  <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">element</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">return</span> <span class="kc">False</span>
+  <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span> <span class="nf">_have_all_keras_metadata</span><span class="p">(</span><span class="n">iterable_or_element</span><span class="p">):</span>
+  <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterable_or_element</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+    <span class="n">iterable</span> <span class="o">=</span> <span class="p">[</span><span class="n">iterable_or_element</span><span class="p">]</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">iterable</span> <span class="o">=</span> <span class="n">iterable_or_element</span>
+  <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;_keras_history&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">_collect_previous_mask</span><span class="p">(</span><span class="n">input_tensors</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Retrieves the output mask(s) of the previous node.</span>
+
+<span class="sd">  Arguments:</span>
+<span class="sd">      input_tensors: A tensor or list of tensors.</span>
+
+<span class="sd">  Returns:</span>
+<span class="sd">      A mask tensor or list of mask tensors.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">input_tensors</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">input_tensors</span><span class="p">)</span>
+  <span class="n">masks</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">input_tensors</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;_keras_mask&#39;</span><span class="p">):</span>
+      <span class="n">mask</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">_keras_mask</span>  <span class="c1"># pylint: disable=protected-access</span>
+      <span class="n">masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+  <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">masks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">masks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+  <span class="k">return</span> <span class="n">masks</span>
+
+
+<span class="c1"># A global dictionary mapping graph objects to an index of counters used</span>
+<span class="c1"># for various layer names in each graph.</span>
+<span class="c1"># Allows to give unique autogenerated names to layers, in a graph-specific way.</span>
+<span class="n">PER_GRAPH_LAYER_NAME_UIDS</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">WeakKeyDictionary</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_get_default_graph_uid_map</span><span class="p">():</span>
+  <span class="n">graph</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">get_default_graph</span><span class="p">()</span>
+  <span class="n">name_uid_map</span> <span class="o">=</span> <span class="n">PER_GRAPH_LAYER_NAME_UIDS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">name_uid_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">name_uid_map</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">PER_GRAPH_LAYER_NAME_UIDS</span><span class="p">[</span><span class="n">graph</span><span class="p">]</span> <span class="o">=</span> <span class="n">name_uid_map</span>
+  <span class="k">return</span> <span class="n">name_uid_map</span>
+
+
+<span class="k">def</span> <span class="nf">_unique_layer_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name_uid_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">avoid_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">namespace</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                       <span class="n">zero_based</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Makes a layer name (or arbitrary string) unique within a TensorFlow graph.</span>
+
+<span class="sd">  Arguments:</span>
+<span class="sd">    name: String name to make unique.</span>
+<span class="sd">    name_uid_map: An optional defaultdict(int) to use when creating unique</span>
+<span class="sd">      names. If None (default), uses a per-Graph dictionary.</span>
+<span class="sd">    avoid_names: An optional set or dict with names which should not be used. If</span>
+<span class="sd">      None (default) does not avoid any names.</span>
+<span class="sd">    namespace: Gets a name which is unique within the (graph, namespace). Layers</span>
+<span class="sd">      which are not Networks use a blank namespace and so get graph-global</span>
+<span class="sd">      names.</span>
+<span class="sd">    zero_based: If True, name sequences start with no suffix (e.g. &quot;dense&quot;,</span>
+<span class="sd">      &quot;dense_1&quot;). If False, naming is one-based (&quot;dense_1&quot;, &quot;dense_2&quot;).</span>
+
+<span class="sd">  Returns:</span>
+<span class="sd">    Unique string name.</span>
+
+<span class="sd">  Example:</span>
+
+<span class="sd">  ```python</span>
+<span class="sd">  _unique_layer_name(&#39;dense&#39;)  # dense_1</span>
+<span class="sd">  _unique_layer_name(&#39;dense&#39;)  # dense_2</span>
+<span class="sd">  ```</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">if</span> <span class="n">name_uid_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">name_uid_map</span> <span class="o">=</span> <span class="n">_get_default_graph_uid_map</span><span class="p">()</span>
+  <span class="k">if</span> <span class="n">avoid_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">avoid_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+  <span class="n">proposed_name</span> <span class="o">=</span> <span class="kc">None</span>
+  <span class="k">while</span> <span class="n">proposed_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">proposed_name</span> <span class="ow">in</span> <span class="n">avoid_names</span><span class="p">:</span>
+    <span class="n">name_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">namespace</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">zero_based</span><span class="p">:</span>
+      <span class="n">number</span> <span class="o">=</span> <span class="n">name_uid_map</span><span class="p">[</span><span class="n">name_key</span><span class="p">]</span>
+      <span class="k">if</span> <span class="n">number</span><span class="p">:</span>
+        <span class="n">proposed_name</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">proposed_name</span> <span class="o">=</span> <span class="n">name</span>
+      <span class="n">name_uid_map</span><span class="p">[</span><span class="n">name_key</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">name_uid_map</span><span class="p">[</span><span class="n">name_key</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="n">proposed_name</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">name_uid_map</span><span class="p">[</span><span class="n">name_key</span><span class="p">])</span>
+  <span class="k">return</span> <span class="n">proposed_name</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

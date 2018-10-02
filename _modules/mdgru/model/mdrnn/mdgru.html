@@ -1,0 +1,403 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mdgru.model.mdrnn.mdgru &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../model.html">mdgru.model</a> &raquo;</li>
+        
+          <li><a href="../mdrnn.html">mdgru.model.mdrnn</a> &raquo;</li>
+        
+      <li>mdgru.model.mdrnn.mdgru</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mdgru.model.mdrnn.mdgru</h1><div class="highlight"><pre>
+<span></span><span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Simon Andermatt&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2017 Simon Andermatt&quot;</span>
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span><span class="p">,</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">mdgru.model</span> <span class="k">import</span> <span class="n">convolution_helper_padding_same</span>
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">compile_arguments</span><span class="p">,</span> <span class="n">harmonize_filter_size</span><span class="p">,</span> <span class="n">generate_defaults_info</span>
+<span class="kn">from</span> <span class="nn">..crnn.cgru</span> <span class="k">import</span> <span class="n">CGRUCell</span>
+
+
+<div class="viewcode-block" id="MDRNN"><a class="viewcode-back" href="../../../../mdrnn_tf.html#mdgru.model.mdrnn.mdgru.MDRNN">[docs]</a><span class="k">class</span> <span class="nc">MDRNN</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;MDRNN class originally designed to handle the sum of cGRU computations resulting in one MDGRU.</span>
+
+<span class="sd">    _defaults contains initial values for most class attributes.</span>
+<span class="sd">    :param use_dropconnect_x: Flag if dropconnect regularization should be applied to input weights</span>
+<span class="sd">    :param use_dropconnect_h: Flag if dropconnect regularization should be applied to state weights</span>
+<span class="sd">    :param swap_memory: Flag that trades slower computation with less memory consumption by swapping memory to CPU RAM</span>
+<span class="sd">    :param return_cgru_results: Flag if instead of a sum, the individual cgru results should be returned</span>
+<span class="sd">    :param use_static_rnn: Static rnn graph creation, not recommended</span>
+<span class="sd">    :param no_avg_pool: Flag that defines if instead of average pooling convolutions with strides should be used</span>
+<span class="sd">    :param filter_size_x: Dimensions of filters for the input (the current time dimension is ignored in each cRNN)</span>
+<span class="sd">    :param filter_size_h: Dimensions of filters for the state (the current time dimension is ignored in each cRNN)</span>
+<span class="sd">    :param crnn_activation: Activation function for the candidate / state / output in each cRNN</span>
+<span class="sd">    :param legacy_cgru_addition: Activating old implementation of crnn sum, for backwards compatibility</span>
+<span class="sd">    :param crnn_class: Which cRNN class should be used (CGRUCell for MDGRU)</span>
+<span class="sd">    :param strides: Defines strides to be applied along each dimension</span>
+
+<span class="sd">    :param inputarr: Input data, needs to be in shape [batch, spatialdim1...spatialdimn, channel]</span>
+<span class="sd">    :param dropout: Dropoutrate to be applied</span>
+<span class="sd">    :param dimensions: which dimensions should be processed with a cRNN (by default all of them)</span>
+<span class="sd">    :param num_hidden: How many hidden units / channels does this MDRNN have</span>
+<span class="sd">    :param name: What should be the name of this MDRNN</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;use_dropconnect_x&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s2">&quot;Should dropconnect be applied to the input?&quot;</span><span class="p">,</span> <span class="s1">&#39;invert_meaning&#39;</span><span class="p">:</span> <span class="s1">&#39;dont_&#39;</span><span class="p">},</span>
+        <span class="s2">&quot;use_dropconnect_h&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s2">&quot;Should DropConnect be applied to the state?&quot;</span><span class="p">,</span> <span class="s1">&#39;invert_meaning&#39;</span><span class="p">:</span> <span class="s1">&#39;dont_&#39;</span><span class="p">},</span>
+        <span class="s2">&quot;swap_memory&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s2">&quot;Dont switch gpu ram with cpu ram to allow for larger volumes to allow for faster processing&quot;</span><span class="p">,</span> <span class="s1">&#39;invert_meaning&#39;</span> <span class="p">:</span> <span class="s2">&quot;dont_&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;return_cgru_results&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;If provided, returns cgru results as channels instead of a sum over all cgrus&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;dontsumcgrus&#39;</span><span class="p">},</span>
+        <span class="s2">&quot;use_static_rnn&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">&quot;no_avg_pool&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;filter_size_x&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;filter sizes for each dimension of the input&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">},</span>
+        <span class="s2">&quot;filter_size_h&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;filter sizes for each dimension of the state&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">},</span>
+        <span class="s2">&quot;crnn_activation&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">tanh</span><span class="p">,</span>
+        <span class="s2">&quot;legacy_cgru_addition&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s2">&quot;results in worse weight initialization, only use if you know what you are doing!&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;crnn_class&quot;</span><span class="p">:</span> <span class="n">CGRUCell</span><span class="p">,</span>
+        <span class="s2">&quot;strides&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;mdgru&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_hidden&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputarr</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="n">mdgru_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">MDRNN</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">mdgru_kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">crnn_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crnn_class</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputarr</span> <span class="o">=</span> <span class="n">inputarr</span>
+        <span class="n">ndims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputarr</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">dimensions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndims</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="o">=</span> <span class="n">dimensions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_size_x</span> <span class="o">=</span> <span class="n">harmonize_filter_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_size_x</span><span class="p">,</span> <span class="n">ndims</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_size_h</span> <span class="o">=</span> <span class="n">harmonize_filter_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_size_h</span><span class="p">,</span> <span class="n">ndims</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">dropout</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes cRNN result along both directions and each dimension.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;dim</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">d</span><span class="p">)):</span>
+                    <span class="n">fsx</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_size_x</span><span class="p">)</span>
+                    <span class="n">fsh</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_size_h</span><span class="p">)</span>
+                    <span class="n">fsx</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">fsh</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strides</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">st</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strides</span><span class="p">)</span>
+                        <span class="n">stontime</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_avgpool</span><span class="p">:</span>
+                            <span class="k">def</span> <span class="nf">compress_time</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">fsize</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">):</span>
+                                <span class="n">fshape</span> <span class="o">=</span> <span class="n">fsize</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">*</span> <span class="mi">2</span>
+                                <span class="n">filt</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;compressfilt&quot;</span><span class="p">,</span> <span class="n">fshape</span><span class="p">)</span>
+                                <span class="k">return</span> <span class="n">convolution_helper_padding_same</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">filt</span><span class="p">,</span> <span class="n">fshape</span><span class="p">,</span> <span class="n">stride</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strides</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                                <span class="n">compress_time</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">avg_pool3d</span>
+                            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strides</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                                <span class="n">compress_time</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">avg_pool</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;this wont work avg pool only implemented for 2 and 3d.&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">st</span> <span class="o">=</span> <span class="kc">None</span>
+
+                    <span class="n">dimorder</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputarr</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()))]</span>
+                    <span class="n">dimorder</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dimorder</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+                    <span class="n">dimorder</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dimorder</span><span class="p">)</span>
+                    <span class="c1"># transpose to correct run direction</span>
+                    <span class="n">trans_input</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputarr</span><span class="p">,</span> <span class="n">dimorder</span><span class="p">)</span>
+                    <span class="n">myshape</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">trans_input</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]]</span>
+                    <span class="n">myshape</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">input_channels</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">trans_input</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">current_time</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">myshape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+                    <span class="n">tempshape</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">current_time</span><span class="p">,</span> <span class="n">input_channels</span><span class="p">]</span>
+                    <span class="c1"># transpose both back:</span>
+                    <span class="n">dimorderback</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputarr</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()))]</span>
+                    <span class="n">dimorderback</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">dimorderback</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+
+                    <span class="c1"># forward direction:</span>
+                    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;forward&quot;</span><span class="p">):</span>
+                        <span class="n">trans_resf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_cgru</span><span class="p">(</span><span class="n">trans_input</span><span class="p">,</span> <span class="n">myshape</span><span class="p">,</span> <span class="n">tempshape</span><span class="p">,</span> <span class="n">fsx</span><span class="o">=</span><span class="n">fsx</span><span class="p">,</span> <span class="n">fsh</span><span class="o">=</span><span class="n">fsh</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="n">copy</span><span class="p">(</span><span class="n">st</span><span class="p">))</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strides</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">ksize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputarr</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()]</span>
+                            <span class="n">ksize</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">stontime</span>
+                            <span class="n">trans_resf</span> <span class="o">=</span> <span class="n">compress_time</span><span class="p">(</span><span class="n">trans_resf</span><span class="p">,</span>
+                                                       <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span> <span class="o">//</span> <span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ksize</span><span class="p">],</span>
+                                                       <span class="n">ksize</span><span class="p">,</span> <span class="s2">&quot;SAME&quot;</span><span class="p">)</span>
+                        <span class="n">resf</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">trans_resf</span><span class="p">,</span> <span class="n">dimorderback</span><span class="p">)</span>
+                        <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">resf</span><span class="p">)</span>
+                    <span class="c1"># backward direction</span>
+                    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s2">&quot;backward&quot;</span><span class="p">):</span>
+                        <span class="n">rev_trans_input</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reverse</span><span class="p">(</span><span class="n">trans_input</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">dimorder</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">])</span>
+                        <span class="c1"># dimorder should now be 1 at location d;)</span>
+                        <span class="n">rev_trans_resb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_cgru</span><span class="p">(</span><span class="n">rev_trans_input</span><span class="p">,</span> <span class="n">myshape</span><span class="p">,</span> <span class="n">tempshape</span><span class="p">,</span> <span class="n">fsx</span><span class="o">=</span><span class="n">fsx</span><span class="p">,</span> <span class="n">fsh</span><span class="o">=</span><span class="n">fsh</span><span class="p">,</span>
+                                                       <span class="n">strides</span><span class="o">=</span><span class="n">copy</span><span class="p">(</span><span class="n">st</span><span class="p">))</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strides</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">ksize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputarr</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()]</span>
+                            <span class="n">ksize</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">stontime</span>
+                            <span class="n">rev_trans_resb</span> <span class="o">=</span> <span class="n">compress_time</span><span class="p">(</span><span class="n">rev_trans_resb</span><span class="p">,</span>
+                                                           <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span> <span class="o">//</span> <span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ksize</span><span class="p">],</span>
+                                                           <span class="n">ksize</span><span class="p">,</span> <span class="s2">&quot;SAME&quot;</span><span class="p">)</span>
+                        <span class="n">trans_resb</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reverse</span><span class="p">(</span><span class="n">rev_trans_resb</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">dimorder</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">])</span>
+                        <span class="n">resb</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">trans_resb</span><span class="p">,</span> <span class="n">dimorderback</span><span class="p">)</span>
+                        <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">resb</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_cgru_results</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputarr</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legacy_cgru_addition</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">add_n</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">add_n</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MDRNN.add_cgru"><a class="viewcode-back" href="../../../../mdrnn_tf.html#mdgru.model.mdrnn.mdgru.MDRNN.add_cgru">[docs]</a>    <span class="k">def</span> <span class="nf">add_cgru</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minput</span><span class="p">,</span> <span class="n">myshape</span><span class="p">,</span> <span class="n">tempshape</span><span class="p">,</span> <span class="n">fsx</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="n">fsh</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convenience method to unify the cRNN computation, gets input and shape and returns the cRNNs results.&quot;&quot;&quot;</span>
+        <span class="n">kw</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crnn_kw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_dropconnect_h</span><span class="p">:</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s2">&quot;dropconnecth&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s2">&quot;dropconnecth&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_dropconnect_x</span><span class="p">:</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s2">&quot;dropconnectx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s2">&quot;dropconnectx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">kw</span><span class="p">[</span><span class="s2">&quot;filter_size_x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fsx</span>
+        <span class="n">kw</span><span class="p">[</span><span class="s2">&quot;filter_size_h&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fsh</span>
+        <span class="n">kw</span><span class="p">[</span><span class="s2">&quot;strides&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">strides</span>
+        <span class="n">mycell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crnn_class</span><span class="p">(</span><span class="n">myshape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_hidden</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+        <span class="n">trans_input_flattened</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">minput</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">tempshape</span><span class="p">)</span>
+        <span class="n">output_shape</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">myshape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">strides</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">strides</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;strides should match the current spatial dimensions&quot;</span><span class="p">)</span>
+            <span class="n">output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span> <span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">myshape</span><span class="p">[</span><span class="mi">1</span> <span class="o">+</span> <span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">strides</span><span class="p">))]</span>
+        <span class="n">output_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">mycell</span><span class="o">.</span><span class="n">output_size</span>
+
+        <span class="n">zeros_dims</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">minput</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span> <span class="o">-</span><span class="mi">2</span><span class="p">]),</span> <span class="n">mycell</span><span class="o">.</span><span class="n">output_size</span><span class="p">])</span>
+        <span class="n">initial_state</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">zeros_dims</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">mycell</span><span class="o">.</span><span class="n">output_size</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_static_rnn</span><span class="p">:</span>
+            <span class="n">trans_res_flattened</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">static_rnn</span><span class="p">(</span><span class="n">mycell</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">trans_input_flattened</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">2</span><span class="p">),</span>
+                                                               <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">initial_state</span><span class="o">=</span><span class="n">initial_state</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">trans_res_flattened</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">dynamic_rnn</span><span class="p">(</span><span class="n">mycell</span><span class="p">,</span> <span class="n">trans_input_flattened</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                                                       <span class="n">swap_memory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">swap_memory</span><span class="p">,</span> <span class="n">initial_state</span><span class="o">=</span><span class="n">initial_state</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">trans_res_flattened</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">)</span></div></div>
+
+
+<span class="n">generate_defaults_info</span><span class="p">(</span><span class="n">MDRNN</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,345 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>MDRNN (Tensorflow Backend) &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CRNN (Tensorflow Backend)" href="crnn_tf.html" />
+    <link rel="prev" title="Model (Tensorflow Backend)" href="model.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="model.html">Model (Tensorflow Backend)</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">MDRNN (Tensorflow Backend)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crnn_tf.html">CRNN (Tensorflow Backend)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="model.html">Model (Tensorflow Backend)</a> &raquo;</li>
+        
+      <li>MDRNN (Tensorflow Backend)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/mdrnn_tf.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-mdgru.model.mdrnn">
+<span id="mdrnn-tensorflow-backend"></span><h1>MDRNN (Tensorflow Backend)<a class="headerlink" href="#module-mdgru.model.mdrnn" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="mdgru.model.mdrnn.MDGRUNet">
+<em class="property">class </em><code class="descclassname">mdgru.model.mdrnn.</code><code class="descname">MDGRUNet</code><span class="sig-paren">(</span><em>data</em>, <em>target</em>, <em>dropout</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdrnn.html#MDGRUNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdrnn.MDGRUNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Convenience class combining attributes to be used for multiple MDRNN and voxel-wise fully connected layers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kw</strong> (<em>dict containing the following options.</em>) – <ul class="simple">
+<li><strong>add_e_bn</strong> [default: False]</li>
+<li><strong>resmdgru</strong> [default: False] Add a residual connection around an MDGRU block</li>
+<li><strong>vwfc_activation</strong> [default: function tanh at 0x7f7df881e488]</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="mdgru.model.mdrnn.MDGRUNet.mdgru_bb">
+<code class="descname">mdgru_bb</code><span class="sig-paren">(</span><em>inp</em>, <em>dropout</em>, <em>num_hidden</em>, <em>num_output</em>, <em>noactivation=False</em>, <em>name=None</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdrnn.html#MDGRUNet.mdgru_bb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdrnn.MDGRUNet.mdgru_bb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function to combine a MDRNN layer with a voxel-wise fully connected layer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>inp</strong> – input data</li>
+<li><strong>dropout</strong> – dropout rate</li>
+<li><strong>num_hidden</strong> – number of hidden units, output units of the MDRNN</li>
+<li><strong>num_output</strong> – number of output units of the voxel-wise fully connected layer
+(Can be None -&gt; no voxel-wise fully connected layer)</li>
+<li><strong>noactivation</strong> – Flag to disable activation of voxel-wise fully connected layer</li>
+<li><strong>name</strong> – Name for this particular MDRNN + vw fully connected layer</li>
+<li><strong>kw</strong> – Arguments for MDRNN and the vw fully connected layer (can override this class’ attributes)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Output of the voxelwise fully connected layer and MDRNN mix</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-mdgru.model.mdrnn.mdgru"></span><dl class="class">
+<dt id="mdgru.model.mdrnn.mdgru.MDRNN">
+<em class="property">class </em><code class="descclassname">mdgru.model.mdrnn.mdgru.</code><code class="descname">MDRNN</code><span class="sig-paren">(</span><em>inputarr</em>, <em>dropout</em>, <em>dimensions</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdrnn/mdgru.html#MDRNN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdrnn.mdgru.MDRNN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>MDRNN class originally designed to handle the sum of cGRU computations resulting in one MDGRU.</p>
+<p>_defaults contains initial values for most class attributes.
+:param use_dropconnect_x: Flag if dropconnect regularization should be applied to input weights
+:param kw: dict containing the following options.</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>use_dropconnect_x</strong> [default: True] Should dropconnect be applied to the input?</li>
+<li><strong>use_dropconnect_h</strong> [default: True] Should DropConnect be applied to the state?</li>
+<li><strong>swap_memory</strong> [default: True] Dont switch gpu ram with cpu ram to allow for larger volumes to allow for faster processing</li>
+<li><strong>return_cgru_results</strong> [default: False] If provided, returns cgru results as channels instead of a sum over all cgrus</li>
+<li><strong>use_static_rnn</strong> [default: False]</li>
+<li><strong>no_avg_pool</strong> [default: True]</li>
+<li><strong>filter_size_x</strong> [default: [7]] filter sizes for each dimension of the input</li>
+<li><strong>filter_size_h</strong> [default: [7]] filter sizes for each dimension of the state</li>
+<li><strong>crnn_activation</strong> [default: function tanh at 0x7f7df881e488]</li>
+<li><strong>legacy_cgru_addition</strong> [default: False] results in worse weight initialization, only use if you know what you are doing!</li>
+<li><strong>crnn_class</strong> [default: class ‘mdgru.model.crnn.cgru.CGRUCell’]</li>
+<li><strong>strides</strong> [default: None]</li>
+<li><strong>name</strong> [default: mdgru]</li>
+<li><strong>num_hidden</strong> [default: 100]</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>use_dropconnect_h</strong> – Flag if dropconnect regularization should be applied to state weights</li>
+<li><strong>swap_memory</strong> – Flag that trades slower computation with less memory consumption by swapping memory to CPU RAM</li>
+<li><strong>return_cgru_results</strong> – Flag if instead of a sum, the individual cgru results should be returned</li>
+<li><strong>use_static_rnn</strong> – Static rnn graph creation, not recommended</li>
+<li><strong>no_avg_pool</strong> – Flag that defines if instead of average pooling convolutions with strides should be used</li>
+<li><strong>filter_size_x</strong> – Dimensions of filters for the input (the current time dimension is ignored in each cRNN)</li>
+<li><strong>filter_size_h</strong> – Dimensions of filters for the state (the current time dimension is ignored in each cRNN)</li>
+<li><strong>crnn_activation</strong> – Activation function for the candidate / state / output in each cRNN</li>
+<li><strong>legacy_cgru_addition</strong> – Activating old implementation of crnn sum, for backwards compatibility</li>
+<li><strong>crnn_class</strong> – Which cRNN class should be used (CGRUCell for MDGRU)</li>
+<li><strong>strides</strong> – Defines strides to be applied along each dimension</li>
+<li><strong>inputarr</strong> – Input data, needs to be in shape [batch, spatialdim1…spatialdimn, channel]</li>
+<li><strong>dropout</strong> – Dropoutrate to be applied</li>
+<li><strong>dimensions</strong> – which dimensions should be processed with a cRNN (by default all of them)</li>
+<li><strong>num_hidden</strong> – How many hidden units / channels does this MDRNN have</li>
+<li><strong>name</strong> – What should be the name of this MDRNN</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="mdgru.model.mdrnn.mdgru.MDRNN.add_cgru">
+<code class="descname">add_cgru</code><span class="sig-paren">(</span><em>minput, myshape, tempshape, fsx=[7, 7], fsh=[7, 7], strides=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdrnn/mdgru.html#MDRNN.add_cgru"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdrnn.mdgru.MDRNN.add_cgru" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience method to unify the cRNN computation, gets input and shape and returns the cRNNs results.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="crnn_tf.html" class="btn btn-neutral float-right" title="CRNN (Tensorflow Backend)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="model.html" class="btn btn-neutral" title="Model (Tensorflow Backend)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

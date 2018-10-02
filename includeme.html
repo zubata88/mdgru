@@ -1,0 +1,548 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Multi-dimensional Gated Recurrent Units &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Start script" href="RUN_mdgru.html" />
+    <link rel="prev" title="Welcome to mdgru’s documentation!" href="index.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Multi-dimensional Gated Recurrent Units</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-use">How to Use</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#train-test">Train + Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#only-train">Only Train</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#only-test">Only Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#localization-code">Localization code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#papers">Papers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acknowledgements">Acknowledgements</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Multi-dimensional Gated Recurrent Units</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/includeme.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="multi-dimensional-gated-recurrent-units">
+<h1>Multi-dimensional Gated Recurrent Units<a class="headerlink" href="#multi-dimensional-gated-recurrent-units" title="Permalink to this headline">¶</a></h1>
+<p>This repository contains the code used to produce the results in the
+papers <strong>Automated Segmentation of Multiple Sclerosis Lesions using
+Multi-Dimensional Gated Recurrent Units</strong> and <strong>Multi-dimensional Gated
+Recurrent Units for Automated Anatomical Landmark Localization</strong>. It was
+used to reach <em>1st place</em> in the ISBI 2015 longitudinal lesion
+segmentation challenge, <em>2nd place</em> in the white matter hyperintensities
+challenge of MICCAI 2017 and its previous implementation in CAFFE made
+<em>3rd place</em> in the MrBrainS13 Segmentation challenge. We also competed
+in BraTS 2017, where the information on the exact rank are still
+unknown. This release is implemented using the tensorflow framework. The
+CAFFE code is not maintained anymore (there are probably breaking
+changes in CuDNN, not tested), but a snapshot of it is included in this
+release in the folder tensorflow_extra_ops as additional operation for
+tensorflow. Since being published, the code has been improved on quite a
+bit, especially to facilitate handling training and testing runs. The
+reported results should still be reproducible though using this
+implementation.</p>
+<div class="section" id="how-to-use">
+<h2>How to Use<a class="headerlink" href="#how-to-use" title="Permalink to this headline">¶</a></h2>
+<p>The file <em>RUN_mdgru.py</em> is used for
+basically all segmentation tasks. For now, please refer to it’s help
+message by calling <em>python3 RUN_mdgru.py</em> and the documentation in the
+code.</p>
+<p>As the RUN_mdgru.py file contains a overly large number of parameters,
+a sample train+test, individual train, and individual test run are
+detailed in the following:</p>
+<p>First, the data have to be prepared and have to have a certain format:
+Each sample should be contained in one folder, with the label and
+feature (e.g. different Sequences) files consistently named after a
+certain scheme. Furthermore, all the samples belonging to test, train
+and validation set should be located in respective folders. The
+following shows an example, where we have training, testing and
+validation folders train_data, test_data and val_data respectively,
+containing each some samples. Each sample consists of two featurefiles
+(seq1.nii.gz and seq2.nii.gz) and one labelfile (lab.nii.gz), as shown
+in the following example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>path/to/samplestructure
+├── test_data
+│   ├── SAMPLE_27535
+│   │   ├── lab.nii.gz
+│   │   ├── seq1.nii.gz
+│   │   └── seq2.nii.gz
+│   └── SAMPLE_6971
+│       ├── lab.nii.gz
+│       ├── seq1.nii.gz
+│       └── seq2.nii.gz
+├── train_data
+│   ├── SAMPLE_11571
+│   │   ├── lab.nii.gz
+│   │   ├── seq1.nii.gz
+│   │   └── seq2.nii.gz
+│   ├── SAMPLE_13289
+│   │   ├── lab.nii.gz
+│   │   ├── seq1.nii.gz
+│   │   └── seq2.nii.gz
+│   ├── SAMPLE_16158
+│   │   ├── lab.nii.gz
+│   │   ├── seq1.nii.gz
+│   │   └── seq2.nii.gz
+│   ├── SAMPLE_18429
+│   │   ├── lab.nii.gz
+│   │   ├── seq1.nii.gz
+│   │   └── seq2.nii.gz
+│   ├── SAMPLE_19438
+│   │   ├── lab.nii.gz
+│   │   ├── seq1.nii.gz
+│   │   └── seq2.nii.gz
+│   └── SAMPLE_2458
+│       ├── lab.nii.gz
+│       ├── seq1.nii.gz
+│       └── seq2.nii.gz
+└── val_data
+    ├── SAMPLE_26639
+    │   ├── lab.nii.gz
+    │   ├── seq1.nii.gz
+    │   └── seq2.nii.gz
+    └── SAMPLE_27319
+        ├── lab.nii.gz
+        ├── seq1.nii.gz
+        └── seq2.nii.gz
+</pre></div>
+</div>
+<p>The Labelfiles need to be consistent with increasing class numbers. Eg.
+if we model the background, white matter, gray matter and csf for
+instance, we have 4 classes and hence distribute them to the numbers 0,
+1, 2 and 3. Furthermore, the labelfiles should also be encoded as
+integer files (e.g. nifti uint8), and the feature and label files need
+to have matching dimensions.</p>
+<div class="section" id="train-test">
+<h3>Train + Test<a class="headerlink" href="#train-test" title="Permalink to this headline">¶</a></h3>
+<p>In the following, we show the case, where we train a model on the above
+data and also immediately evaluate our model on the last training state
+(rarely a good idea in general) to explain the individual parameters:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">RUN_mdgru</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">datapath</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">samplestructure</span> <span class="o">--</span><span class="n">locationtraining</span> <span class="n">train_data</span> \
+<span class="o">--</span><span class="n">locationvalidation</span> <span class="n">val_data</span> <span class="o">--</span><span class="n">locationtesting</span> <span class="n">test_data</span> \
+<span class="o">--</span><span class="n">optionname</span> <span class="n">defaultsettings</span> <span class="o">--</span><span class="n">modelname</span> <span class="n">mdgrudef48</span> <span class="o">-</span><span class="n">w</span> <span class="mi">64</span> <span class="mi">64</span> <span class="mi">64</span> <span class="o">-</span><span class="n">p</span> <span class="mi">5</span> <span class="mi">5</span> <span class="mi">5</span> \
+<span class="o">-</span><span class="n">f</span> <span class="n">seq1</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span> <span class="n">seq2</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span> <span class="o">-</span><span class="n">m</span> <span class="n">lab</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span> <span class="o">--</span><span class="n">iterations</span> <span class="mi">100000</span> \
+<span class="o">--</span><span class="n">nclasses</span> <span class="mi">4</span> <span class="o">--</span><span class="n">ignore_nifti_header</span> <span class="o">--</span><span class="n">num_threads</span> <span class="mi">4</span>
+</pre></div>
+</div>
+<p>The above first four parameters tell the script, where our different
+data lie. Furthermore, it will create a folder experiments in
+“path/to/samplestructure”. Inside this experiments folder, a folder for
+the current setting is created. The name of this folder can be
+determined with “–optionname”. For each individual
+train/test/train+test run, a folder with logging data is created using
+the latest timestamp in seconds inside this settings folder. Any log
+data for the experiment can then in turn be found inside the cache
+subfolder. (e.g.
+/path/to/samplestructure/defaultsettings/1524126169/cache). Inside this
+cache folder, there will be a log file, logging all relevant information
+to the current run, all validation files will be saved here as well as
+the checkpoints and tensorboard data.</p>
+<p>Expecially for 2d data, and if a large number of samples is available,
+the whole image can be processed. There, we set the subvolume
+(patchsize) parameter to the size of the images, and the padding
+parameters to 0. This has the effect, that we only sample inside the
+image, with a padding of 0 and hence just take the full image. As
+current hardware can rarely support the full volume for volumetric data
+though, a subvolume needs to be specified. Imagine we are using
+volumetric data with dimensions 256x256x192. Since this will not fit, we
+decide to sample patches of 64^3, and hence set the subvolume parameter
+-w to 64 64 64. Furthermore, we decide that we do want to sample a bit
+outside of the full volume as well, as interesting data is close to the
+border. we hence set the -p parameter to 5 5 5, allowing for a random
+sampling of patches of 5 voxels outside along each axis of the full
+volume. During testing, patches are sampled from a regular grid to fully
+cover the full volume (or image). There, the p parameter is used to also
+specify the amount of overlap of the patches. In our example, we would
+only specify an overlap of 5 voxels along each dimension.</p>
+<p>The following image shows the influence of the w and p parameters when
+sampling images during the training and testing phase:</p>
+<div class="figure" id="id1">
+<img alt="Sampling subvolumes/patches" src="https://github.com/zubata88/mdgru/blob/master/sampling.png?raw=true" />
+<p class="caption"><span class="caption-text">Sampling subvolumes/patches</span></p>
+</div>
+<p>The remaining options given above are the –modelname, which is a
+optional, userspecified name for the model we are creating in the
+tensorflow graph. -f and -m specify feature and mask files to be used.
+–nclasses specifies how many classes are in the label files (e.g. 4 for
+background, white matter, grey matter and csf). –iterations specifies
+the maximum number of iterations to train. If we cancel the training
+process at any time, the current state is saved in a checkpoint called
+<em>interrupt</em>. Finally, –ignore_nifti_header is required due to a bug
+in the nifti reorientation code and num_threads is a parameter which
+defines how many threads should be used to load data concurrently. This
+can initially be set to a low value such as 4. If during training, in
+the log file or stdout on the console, values larger than 0.1 seconds
+are used for “io”, it might be advisable to increase this value, as
+valuable time is wasted on waiting for the data loading routine.</p>
+</div>
+<div class="section" id="only-train">
+<h3>Only Train<a class="headerlink" href="#only-train" title="Permalink to this headline">¶</a></h3>
+<p>Usually, we want to use the validation set to determine, which state of
+the network works best for our data and then evaluate our testset on
+that data. We can do this by using the following command:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">RUN_mdgru</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">datapath</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">samplestructure</span> <span class="o">--</span><span class="n">locationtraining</span> <span class="n">train_data</span> \
+<span class="o">--</span><span class="n">locationvalidation</span> <span class="n">val_data</span> \
+<span class="o">--</span><span class="n">optionname</span> <span class="n">onlytrainrun</span> <span class="o">--</span><span class="n">modelname</span> <span class="n">mdgrudef48</span> <span class="o">-</span><span class="n">w</span> <span class="mi">64</span> <span class="mi">64</span> <span class="mi">64</span> <span class="o">-</span><span class="n">p</span> <span class="mi">5</span> <span class="mi">5</span> <span class="mi">5</span> \
+<span class="o">-</span><span class="n">f</span> <span class="n">seq1</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span> <span class="n">seq2</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span> <span class="o">-</span><span class="n">m</span> <span class="n">lab</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span> <span class="o">--</span><span class="n">iterations</span> <span class="mi">100000</span> \
+<span class="o">--</span><span class="n">nclasses</span> <span class="mi">4</span> <span class="o">--</span><span class="n">ignore_nifti_header</span> <span class="o">--</span><span class="n">num_threads</span> <span class="mi">4</span> <span class="o">--</span><span class="n">onlytrain</span>
+</pre></div>
+</div>
+<p>In this setup, we can omit the ‘–locationtesting’ and append
+‘–onlytrain’ in its place, to specify, that we want to stop the
+procedure after the training process.</p>
+<p>Furthermore, it is in most cases advisable to use a certain amount of
+data augmentation, since rarely enough labelled training data is
+available. For this, the following set of parameters can be optionally
+added for the training procedure:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">rotate</span> <span class="n">ANGLE</span> <span class="o">--</span><span class="n">scale</span> <span class="n">scale1</span> <span class="n">scale2</span><span class="o">...</span> <span class="o">--</span><span class="n">deformation</span> <span class="n">gridspacing1</span> <span class="n">gridspacing2</span><span class="o">...</span> <span class="o">--</span><span class="n">deformSigma</span> <span class="n">samplingstdev1</span> <span class="n">samplingstdev2</span><span class="o">...</span>
+</pre></div>
+</div>
+<p>The first parameter is a scalar in radians which allows for random
+rotation around a random vector for 3d data, and around the center point
+for 2d data between [-ANGLE,+ANGLE] degrees. The parameter is sampled
+uniformly. The scaling parameter allows for random scaling between
+[1/scale,scale], where we sample form an exponential distribution and
+each axis has its own scaling parameter. The last two parameters have to
+be used together and specify a random deformation grid which is applied
+to the subvolumes. The first parameters specify the grid spacing, and
+the second set of parameters the standard deviation of a zero mean
+Gaussian which is used at each grid point to sample a random vector.
+This low resolution grid is then interpolated quadratically and used to
+deform the sampling of the subvolumes or patches.</p>
+</div>
+<div class="section" id="only-test">
+<h3>Only Test<a class="headerlink" href="#only-test" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">RUN_mdgru</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">datapath</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">samplestructure</span> <span class="o">--</span><span class="n">locationtraining</span> <span class="n">train_data</span> \
+<span class="o">--</span><span class="n">locationtesting</span> <span class="n">test_data</span>\
+<span class="o">--</span><span class="n">optionname</span> <span class="n">defaultsettings</span> <span class="o">--</span><span class="n">modelname</span> <span class="n">mdgrudef48</span> <span class="o">-</span><span class="n">w</span> <span class="mi">64</span> <span class="mi">64</span> <span class="mi">64</span> <span class="o">-</span><span class="n">p</span> <span class="mi">5</span> <span class="mi">5</span> <span class="mi">5</span> \
+<span class="o">-</span><span class="n">f</span> <span class="n">seq1</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span> <span class="n">seq2</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span> <span class="o">-</span><span class="n">m</span> <span class="n">lab</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span> \
+<span class="o">--</span><span class="n">nclasses</span> <span class="mi">4</span> <span class="o">--</span><span class="n">ignore_nifti_header</span> <span class="o">--</span><span class="n">onlytest</span> <span class="o">--</span><span class="n">ckpt</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">samplestructure</span><span class="o">/</span><span class="n">experiments</span><span class="o">/</span><span class="n">onlytrainrun</span><span class="o">/</span><span class="mi">1524126169</span><span class="o">/</span><span class="n">cache</span><span class="o">/</span><span class="n">temp</span><span class="o">-</span><span class="mi">22500</span> <span class="o">--</span><span class="n">notestingmask</span>
+</pre></div>
+</div>
+<p>Usually, after conducting a training run, it is the best idea to simply
+copy the training parameters, remove the “onlytest”, add the
+locationtesting and the checkpointfile with “–ckpt”. Some other
+parameters can also be left out as shown above, since they do not have
+an impact on the testing process. The training process before, when
+completed, creates at the specified saving interval checkpoint files,
+which are named temp-$i, where $i is the iteration number, if no epochs
+are specified or temp-epoch$epoch-$i otherwise. On the file system, the
+files also have appendices like “.data-00000-of-00001” or “.meta” or
+“.index”, but these can be ignored and should not be specified when
+specifying a checkpoint. After the whole training procedure, a <em>final</em>
+checkpoint is created, which saves the final state of the network.
+If the training process is interrupted, a “interrupt-$i”
+checkpoint is created, where $i is again the iteration number. All of
+these three types of checkpoints can be used to evaluate the model.
+During testing, the optionname also defines the name of the probability
+maps that are saved in the test_data sample folders as results. If
+multiple checkpoints are used for evaluation, either none, one or the
+same number of optionnames can be provided. Finally, –notestingmask has
+to be used, if for the testing samples, no mask files are available.
+Otherwise, it will not find testing samples, as it uses the mask file as
+a requirement for each folder to be accepted as valid sample. If there
+are labelmaps for the test samples, this flag can be omitted, leading to
+an automatic evaluation using predefined metrics during the evaluation.</p>
+</div>
+<div class="section" id="localization-code">
+<h3>Localization code<a class="headerlink" href="#localization-code" title="Permalink to this headline">¶</a></h3>
+<p>The code for the landmark localization task is also included in this
+release except for an appropriate <em>RUN</em>-file. Since it would need some
+code updates due to recent changes in the code, it has not been
+included. If you’re anyhow interested in the localization code, please
+get in touch, and I could provide you with the (now outdated)
+<em>RUN</em>-files we used and information on what needs to be updated to make
+it work again.</p>
+</div>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>Requirements (on ubuntu) can be installed
+using the following lines of code. On other systems, use the
+corresponding packages. Make sure to use tensorflow v 1.8.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">cmake</span> <span class="n">python3</span><span class="o">-</span><span class="n">pip</span> <span class="n">curl</span> <span class="n">git</span> <span class="n">python3</span><span class="o">-</span><span class="n">dicom</span>
+
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">pip</span>
+
+<span class="c1"># either with a gpu, and cuda + cudnn installed:</span>
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="s2">&quot;tensorflow-gpu&gt;=1.8&quot;</span>
+<span class="c1"># or</span>
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="s2">&quot;tensorflow&gt;=1.8&quot;</span>
+
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">nibabel</span> <span class="n">numpy</span> <span class="n">scipy</span> <span class="n">matplotlib</span> <span class="n">pynrrd</span> <span class="n">scikit</span><span class="o">-</span><span class="n">image</span> <span class="n">scikit</span><span class="o">-</span><span class="n">learn</span>
+
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">spezold</span><span class="o">/</span><span class="n">mvloader</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="papers">
+<h2>Papers<a class="headerlink" href="#papers" title="Permalink to this headline">¶</a></h2>
+<p>Reference implementation for - and based on - Caffe version:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@inproceedings</span><span class="p">{</span><span class="n">andermatt2016multi</span><span class="p">,</span>
+  <span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">Multi</span><span class="o">-</span><span class="n">dimensional</span> <span class="n">gated</span> <span class="n">recurrent</span> <span class="n">units</span> <span class="k">for</span> <span class="n">the</span> <span class="n">segmentation</span> <span class="n">of</span> <span class="n">biomedical</span> <span class="mi">3</span><span class="n">D</span><span class="o">-</span><span class="n">data</span><span class="p">},</span>
+  <span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Andermatt</span><span class="p">,</span> <span class="n">Simon</span> <span class="ow">and</span> <span class="n">Pezold</span><span class="p">,</span> <span class="n">Simon</span> <span class="ow">and</span> <span class="n">Cattin</span><span class="p">,</span> <span class="n">Philippe</span><span class="p">},</span>
+  <span class="n">booktitle</span><span class="o">=</span><span class="p">{</span><span class="n">International</span> <span class="n">Workshop</span> <span class="n">on</span> <span class="n">Large</span><span class="o">-</span><span class="n">Scale</span> <span class="n">Annotation</span> <span class="n">of</span> <span class="n">Biomedical</span> <span class="n">Data</span> <span class="ow">and</span> <span class="n">Expert</span> <span class="n">Label</span> <span class="n">Synthesis</span><span class="p">},</span>
+  <span class="n">pages</span><span class="o">=</span><span class="p">{</span><span class="mi">142</span><span class="o">--</span><span class="mi">151</span><span class="p">},</span>
+  <span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">2016</span><span class="p">},</span>
+  <span class="n">organization</span><span class="o">=</span><span class="p">{</span><span class="n">Springer</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Code used for:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@inproceedings</span><span class="p">{</span><span class="n">andermatt2017a</span><span class="p">,</span>
+  <span class="n">title</span> <span class="o">=</span> <span class="p">{{{</span><span class="n">Automated</span> <span class="n">Segmentation</span> <span class="n">of</span> <span class="n">Multiple</span> <span class="n">Sclerosis</span> <span class="n">Lesions</span><span class="p">}}</span> <span class="n">using</span> <span class="p">{{</span><span class="n">Multi</span><span class="o">-</span><span class="n">Dimensional</span> <span class="n">Gated</span> <span class="n">Recurrent</span> <span class="n">Units</span><span class="p">}}},</span>
+  <span class="n">timestamp</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2017</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">09</span><span class="n">T07</span><span class="p">:</span><span class="mi">27</span><span class="p">:</span><span class="mi">10</span><span class="n">Z</span><span class="p">},</span>
+  <span class="n">journal</span> <span class="o">=</span> <span class="p">{</span><span class="n">Lecture</span> <span class="n">Notes</span> <span class="ow">in</span> <span class="n">Computer</span> <span class="n">Science</span><span class="p">},</span>
+  <span class="n">author</span> <span class="o">=</span> <span class="p">{</span><span class="n">Andermatt</span><span class="p">,</span> <span class="n">Simon</span> <span class="ow">and</span> <span class="n">Pezold</span><span class="p">,</span> <span class="n">Simon</span> <span class="ow">and</span> <span class="n">Cattin</span><span class="p">,</span> <span class="n">Philippe</span><span class="p">},</span>
+  <span class="n">year</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2017</span><span class="p">},</span>
+  <span class="n">booktitle</span><span class="o">=</span><span class="p">{</span><span class="n">International</span> <span class="n">Workshop</span> <span class="n">on</span> <span class="n">Brainlesion</span><span class="p">:</span> <span class="n">Glioma</span><span class="p">,</span> <span class="n">Multiple</span> <span class="n">Sclerosis</span><span class="p">,</span> <span class="n">Stroke</span> <span class="ow">and</span> <span class="n">Traumatic</span> <span class="n">Brain</span> <span class="n">Injuries</span><span class="p">},</span>
+  <span class="n">note</span> <span class="o">=</span> <span class="p">{{{[</span><span class="n">accepted</span><span class="p">]}}},</span>
+  <span class="n">organization</span><span class="o">=</span><span class="p">{</span><span class="n">Springer</span><span class="p">}</span>
+<span class="p">}</span>
+<span class="nd">@article</span><span class="p">{</span><span class="n">andermatt2017b</span><span class="p">,</span>
+  <span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">Multi</span><span class="o">-</span><span class="n">dimensional</span> <span class="n">Gated</span> <span class="n">Recurrent</span> <span class="n">Units</span> <span class="k">for</span> <span class="n">Automated</span> <span class="n">Anatomical</span> <span class="n">Landmark</span> <span class="n">Localization</span><span class="p">},</span>
+  <span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Andermatt</span><span class="p">,</span> <span class="n">Simon</span> <span class="ow">and</span> <span class="n">Pezold</span><span class="p">,</span> <span class="n">Simon</span> <span class="ow">and</span> <span class="n">Amann</span><span class="p">,</span> <span class="n">Michael</span> <span class="ow">and</span> <span class="n">Cattin</span><span class="p">,</span> <span class="n">Philippe</span> <span class="n">C</span><span class="p">},</span>
+  <span class="n">journal</span><span class="o">=</span><span class="p">{</span><span class="n">arXiv</span> <span class="n">preprint</span> <span class="n">arXiv</span><span class="p">:</span><span class="mf">1708.02766</span><span class="p">},</span>
+  <span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">2017</span><span class="p">}</span>
+<span class="p">}</span>
+<span class="nd">@article</span><span class="p">{</span><span class="n">andermatt2017wmh</span><span class="p">,</span>
+  <span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">Multi</span><span class="o">-</span><span class="n">dimensional</span> <span class="n">Gated</span> <span class="n">Recurrent</span> <span class="n">Units</span> <span class="k">for</span> <span class="n">the</span> <span class="n">Segmentation</span> <span class="n">of</span> <span class="n">White</span> <span class="n">Matter</span> <span class="n">Hyperintensites</span><span class="p">},</span>
+  <span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Andermatt</span><span class="p">,</span> <span class="n">Simon</span> <span class="ow">and</span> <span class="n">Pezold</span><span class="p">,</span> <span class="n">Simon</span> <span class="ow">and</span> <span class="n">Cattin</span><span class="p">,</span> <span class="n">Philippe</span><span class="p">}</span>
+<span class="p">}</span>
+<span class="nd">@inproceedings</span><span class="p">{</span><span class="n">andermatt2017brats</span><span class="p">,</span>
+<span class="n">title</span> <span class="o">=</span> <span class="p">{</span><span class="n">Multi</span><span class="o">-</span><span class="n">dimensional</span> <span class="n">Gated</span> <span class="n">Recurrent</span> <span class="n">Units</span> <span class="k">for</span>
+<span class="n">Brain</span> <span class="n">Tumor</span> <span class="n">Segmentation</span><span class="p">},</span>
+<span class="n">author</span> <span class="o">=</span> <span class="p">{</span><span class="n">Simon</span> <span class="n">Andermatt</span> <span class="ow">and</span> <span class="n">Simon</span> <span class="n">Pezold</span> <span class="ow">and</span> <span class="n">Philippe</span> <span class="n">C</span><span class="o">.</span> <span class="n">Cattin</span><span class="p">},</span>
+<span class="n">year</span> <span class="o">=</span> <span class="mi">2017</span><span class="p">,</span>
+<span class="n">booktitle</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2017</span> <span class="n">International</span> <span class="p">{{</span><span class="n">MICCAI</span><span class="p">}}</span> <span class="n">BraTS</span> <span class="n">Challenge</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>When using this code, please cite at least <em>andermatt2016multi</em>, since
+it is the foundation of this work. Furthermore, feel free to cite the
+publication matching your use-case from above. E.g. if you’re using the
+code for pathology segmentation, it would be adequate to cite
+<em>andermatt2017a</em> as well.</p>
+</div>
+<div class="section" id="acknowledgements">
+<h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Permalink to this headline">¶</a></h2>
+<p>We thank the Medical Image Analysis Center for funding this work. <img alt="MIAC Logo" src="http://miac.swiss/gallery/normal/116/miaclogo&#64;2x.png" /></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="RUN_mdgru.html" class="btn btn-neutral float-right" title="Start script" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to mdgru’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

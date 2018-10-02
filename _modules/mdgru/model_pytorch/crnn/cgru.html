@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mdgru.model_pytorch.crnn.cgru &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../model_pytorch.html">mdgru.model_pytorch</a> &raquo;</li>
+        
+          <li><a href="../crnn.html">mdgru.model_pytorch.crnn</a> &raquo;</li>
+        
+      <li>mdgru.model_pytorch.crnn.cgru</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mdgru.model_pytorch.crnn.cgru</h1><div class="highlight"><pre>
+<span></span><span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Simon Andermatt&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2017 Simon Andermatt&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">compile_arguments</span><span class="p">,</span> <span class="n">generate_defaults_info</span>
+<span class="kn">from</span> <span class="nn">mdgru.model_pytorch.crnn</span> <span class="k">import</span> <span class="n">CRNNCell</span>
+<span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">th</span>
+<span class="kn">from</span> <span class="nn">torch.nn.parameter</span> <span class="k">import</span> <span class="n">Parameter</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="k">import</span> <span class="n">init</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="k">import</span> <span class="n">functional</span> <span class="k">as</span> <span class="n">F</span>
+
+<div class="viewcode-block" id="CGRUCell"><a class="viewcode-back" href="../../../../crnn_th.html#mdgru.model_pytorch.crnn.cgru.CGRUCell">[docs]</a><span class="k">class</span> <span class="nc">CGRUCell</span><span class="p">(</span><span class="n">CRNNCell</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convolutional gated recurrent unit.</span>
+
+<span class="sd">    This class processes n-d data along the last dimension using a gated recurrent unit, which uses n-1 d convolutions</span>
+<span class="sd">    on its path along that last dimension to gather context from input and last state to produce the new state.</span>
+<span class="sd">    Property defaults contains defaults for all properties of a CGRUCell that are the same for one MDGRU.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;put_r_back&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Place reset gate at its original location, as in the original GRU&#39;</span><span class="p">},</span>
+        <span class="s2">&quot;use_dropconnect_on_state&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Apply dropconnect regularization also to the proposal, not only the gates&#39;</span><span class="p">},</span>
+        <span class="s2">&quot;gate&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">th</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Gate activation function to use&#39;</span><span class="p">},</span>
+        <span class="s2">&quot;start_state&quot;</span><span class="p">:</span> <span class="kc">None</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_input</span><span class="p">,</span> <span class="n">num_units</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CGRUCell</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">num_input</span><span class="p">,</span> <span class="n">num_units</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+        <span class="n">cgru_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">CGRUCell</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cgru_kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_spatial_dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_size_x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_spatial_dims</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">convop</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">conv2d</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_spatial_dims</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">convop</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">conv1d</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;convolutions of size </span><span class="si">{}</span><span class="s2"> are not implemented in pytorch cgru&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_h_candidate</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size_h</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_h_gates</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_h_candidate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_h_gates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_x_candidate</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_inputs</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_x_gates</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_x_candidate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_x_gates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_x_gates</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_x_gates</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_x_candidate</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_x_candidate</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_h_gates</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_h_gates</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_h_candidate</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_h_candidate</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bias_x_gates</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_x_gates</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bias_x_candidate</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_shape_x_candidate</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnecth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;dropconnect_h_gates&quot;</span><span class="p">,</span> <span class="n">th</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_h_gates</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnectx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;dropconnect_x_gates&quot;</span><span class="p">,</span> <span class="n">th</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_x_gates</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_dropconnect_on_state</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnecth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;dropconnect_h_candidate&quot;</span><span class="p">,</span> <span class="n">th</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_h_candidate</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnectx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;dropconnect_x_candidate&quot;</span><span class="p">,</span> <span class="n">th</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_x_candidate</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">initialize_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bias_x_gates</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill_</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bias_x_candidate</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill_</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">init</span><span class="o">.</span><span class="n">xavier_normal_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_x_gates</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">init</span><span class="o">.</span><span class="n">xavier_normal_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_x_candidate</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">init</span><span class="o">.</span><span class="n">xavier_normal_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_h_gates</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">init</span><span class="o">.</span><span class="n">xavier_normal_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_h_candidate</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="n">weights_h_gates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_h_gates</span>
+        <span class="n">weights_h_candidate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_h_candidate</span>
+        <span class="n">weights_x_gates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_x_gates</span>
+        <span class="n">weights_x_candidate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_x_candidate</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span> <span class="c1">#TODO: add option to apply dropout during inference!</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnecth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_dropconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropconnect_h_gates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnecth</span><span class="p">)</span>
+                <span class="n">weights_h_gates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_h_gates</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnect_h_gates</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnectx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_dropconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropconnect_x_gates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnectx</span><span class="p">)</span>
+                <span class="n">weights_x_gates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_x_gates</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnect_x_gates</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_dropconnect_on_state</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnecth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_get_dropconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropconnect_h_candidate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnecth</span><span class="p">)</span>
+                    <span class="n">weights_h_candidate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_h_candidate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnect_h_candidate</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnectx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_get_dropconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropconnect_x_candidate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnectx</span><span class="p">)</span>
+                    <span class="n">weights_x_candidate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_x_candidate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnect_x_candidate</span>
+        <span class="c1"># stride = [1] * self.num_spatial_dims</span>
+        <span class="n">padding_x</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">//</span><span class="mi">2</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size_x</span><span class="p">]</span>
+        <span class="n">padding_h</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">//</span><span class="mi">2</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_size_h</span><span class="p">]</span>
+        <span class="c1"># dilation = [1] * self.num_spatial_dims</span>
+        <span class="c1"># groups = [1] * self.num_spatial_dims</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">prev_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_state</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+            <span class="n">zrxb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convop</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">weights_x_gates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias_x_gates</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding_x</span><span class="p">)</span>
+            <span class="n">htxb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convop</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">weights_x_candidate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias_x_candidate</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding_x</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">prev_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">zrh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convop</span><span class="p">(</span><span class="n">prev_state</span><span class="p">,</span> <span class="n">weights_h_gates</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding_h</span><span class="p">)</span>
+                <span class="n">hth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convop</span><span class="p">(</span><span class="n">prev_state</span><span class="p">,</span> <span class="n">weights_h_candidate</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding_h</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">zrh</span><span class="p">,</span> <span class="n">hth</span><span class="p">,</span> <span class="n">prev_state</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+            <span class="n">zr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">(</span><span class="n">zrxb</span> <span class="o">+</span> <span class="n">zrh</span><span class="p">)</span>
+            <span class="n">z</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">zr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">ht</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crnn_activation</span><span class="p">(</span><span class="n">htxb</span> <span class="o">+</span> <span class="n">r</span> <span class="o">*</span> <span class="n">hth</span><span class="p">)</span>
+            <span class="n">states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">z</span> <span class="o">*</span> <span class="n">prev_state</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="n">ht</span><span class="p">)</span>
+            <span class="c1"># For next iteration:</span>
+            <span class="n">prev_state</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">states</span></div>
+
+
+<span class="n">generate_defaults_info</span><span class="p">(</span><span class="n">CGRUCell</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,443 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Helper routines and functions &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Runner module" href="runner.html" />
+    <link rel="prev" title="Data loader module" href="data.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data loader module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Helper routines and functions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/helper.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-mdgru.helper">
+<span id="helper-routines-and-functions"></span><h1>Helper routines and functions<a class="headerlink" href="#module-mdgru.helper" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="mdgru.helper._initializer_Q">
+<code class="descclassname">mdgru.helper.</code><code class="descname">_initializer_Q</code><span class="sig-paren">(</span><em>k1</em>, <em>k2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#_initializer_Q"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper._initializer_Q" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes a block circulant k1xk1 matrix, consisting of circulant k2xk2 blocks.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>k1</strong> – Outer convolution filter size</li>
+<li><strong>k2</strong> – Inner convolution filter size</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">block circulant matrix with circulant blocks</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.argget">
+<code class="descclassname">mdgru.helper.</code><code class="descname">argget</code><span class="sig-paren">(</span><em>dt</em>, <em>key</em>, <em>default=None</em>, <em>keep=False</em>, <em>ifset=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#argget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.argget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates function arguments.</p>
+<p>It takes a dictionary dt and a key “key” to evaluate, if this key is contained in the dictionary. If yes, return
+its value. If not, return default. By default, the key and value pair are deleted from the dictionary, except if
+keep is set to True. ifset can be used to override the value, and it is returned instead (except if None).
+:param dt: dictionary to be searched
+:param key: location in dictionary
+:param default: default value if key not found in dictionary
+:param keep: bool, indicating if key shall remain in dictionary
+:param ifset: value override.
+:return: chosen value for key if available. Else default or ifset override.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.check_if_kw_empty">
+<code class="descclassname">mdgru.helper.</code><code class="descname">check_if_kw_empty</code><span class="sig-paren">(</span><em>class_name</em>, <em>kw</em>, <em>module_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#check_if_kw_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.check_if_kw_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints standardised warning if an unsupported keyword argument is used for a given class</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.collect_parameters">
+<code class="descclassname">mdgru.helper.</code><code class="descname">collect_parameters</code><span class="sig-paren">(</span><em>cls</em>, <em>kw_args={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#collect_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.collect_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper function to collect all parameters defined in cls’ _defaults needed for both compile arguments and define arguments
+:param cls:
+:param kw_args:
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.compile_arguments">
+<code class="descclassname">mdgru.helper.</code><code class="descname">compile_arguments</code><span class="sig-paren">(</span><em>cls</em>, <em>kw</em>, <em>transitive=False</em>, <em>override_static=False</em>, <em>keep_entries=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#compile_arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.compile_arguments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts valid keywords for cls from given keywords and returns the resulting two dicts.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cls</strong> – instance or class having property or attribute “_defaults”, which is a dict of default parameters.</li>
+<li><strong>transitive</strong> – determines if parent classes should also be consulted</li>
+<li><strong>kw</strong> – the keyword dictionary to separate into valid arguments and rest</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.counter_generator">
+<code class="descclassname">mdgru.helper.</code><code class="descname">counter_generator</code><span class="sig-paren">(</span><em>maxim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#counter_generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.counter_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates indices over multidimensional ranges.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>maxim</strong> – Number of iterations per dimension</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Generator yielding next iteration</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.define_arguments">
+<code class="descclassname">mdgru.helper.</code><code class="descname">define_arguments</code><span class="sig-paren">(</span><em>cls</em>, <em>parser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#define_arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.define_arguments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Requires cls to have field _defaults! Parses all fields defined in _defaults and creates a argparse compatible
+structure from them. These are then appended to the parser structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cls</strong> – cls which contains (at least an empty) _defaults dict.</li>
+<li><strong>parser</strong> – parser to add parameters to</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">parser with added parameters</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.deprecated">
+<code class="descclassname">mdgru.helper.</code><code class="descname">deprecated</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#deprecated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.deprecated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator function to indicate through our logger that the decorated function should not be used anymore
+:param func: function to decorate
+:return: decorated function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.force_symlink">
+<code class="descclassname">mdgru.helper.</code><code class="descname">force_symlink</code><span class="sig-paren">(</span><em>file1</em>, <em>file2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#force_symlink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.force_symlink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to create symlink. If it fails, it tries to remove the folder obstructing its way to create one.
+:param file1: path
+:param file2: symlink name</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.generate_defaults_info">
+<code class="descclassname">mdgru.helper.</code><code class="descname">generate_defaults_info</code><span class="sig-paren">(</span><em>cls</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#generate_defaults_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.generate_defaults_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds description for keyword dict to docstring of class cls</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cls</strong> (<em>Class to extract _defaults field from to generate additional docstring info from.</em>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.harmonize_filter_size">
+<code class="descclassname">mdgru.helper.</code><code class="descname">harmonize_filter_size</code><span class="sig-paren">(</span><em>fs</em>, <em>ndim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#harmonize_filter_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.harmonize_filter_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used in both model classes to set filters to their default values, given either no or incomplete input.
+:param fs: filters as specified
+:param ndim: number of dimensions
+:return: corrected list for filter sizes</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.initializer_W">
+<code class="descclassname">mdgru.helper.</code><code class="descname">initializer_W</code><span class="sig-paren">(</span><em>n</em>, <em>k1</em>, <em>k2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#initializer_W"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.initializer_W" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes kronecker product between an orthogonal matrix T and a circulant orthogonal matrix Q.</p>
+<p>Creates a block circulant matrix using the Kronecker product of a orthogonal square matrix T and a circulant
+orthogonal square matrix Q.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>n</strong> – Number of channels</li>
+<li><strong>k1</strong> – Outer convolution filter size</li>
+<li><strong>k2</strong> – Inner convolution filter size</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.lazy_property">
+<code class="descclassname">mdgru.helper.</code><code class="descname">lazy_property</code><span class="sig-paren">(</span><em>function</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#lazy_property"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.lazy_property" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes a property or simply returns it if already computed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.notify_user">
+<code class="descclassname">mdgru.helper.</code><code class="descname">notify_user</code><span class="sig-paren">(</span><em>chat_id</em>, <em>token</em>, <em>message='no message'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#notify_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.notify_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a notification when training is completed or the process was killed.</p>
+<p>Given that a telegram bot has been created, and it’s api token is known, a chat_id has been opened, and the
+corresponding chat_id is known, this method can be used to be informed if something happens to our process. More
+on telegram bots at <a class="reference external" href="https://telegram.org/blog/bot-revolution">https://telegram.org/blog/bot-revolution</a>.
+:param chat_id: chat_id which is used by telegram to communicate with your bot
+:param token: token generated when creating your bot through the BotFather
+:param message: The message to be sent</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.np_arr_backward">
+<code class="descclassname">mdgru.helper.</code><code class="descname">np_arr_backward</code><span class="sig-paren">(</span><em>matrix</em>, <em>n</em>, <em>k1</em>, <em>k2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#np_arr_backward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.np_arr_backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms from block block circulant matrix to filter representation using indices.
+:param matrix: matrix representation of filter
+:param n: number of channels
+:param k1: filter dim 1
+:param k2: filter dim 2
+:return: filter representation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.helper.np_arr_forward">
+<code class="descclassname">mdgru.helper.</code><code class="descname">np_arr_forward</code><span class="sig-paren">(</span><em>filt</em>, <em>n</em>, <em>k1</em>, <em>k2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/helper.html#np_arr_forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.helper.np_arr_forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms from filter to block block circulant matrix representation using indices.
+:param filt: filter variable
+:param n: number of channels
+:param k1: filter dimension 1
+:param k2: filter dimension 2
+:return:  matrix representation of filter</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="runner.html" class="btn btn-neutral float-right" title="Runner module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="data.html" class="btn btn-neutral" title="Data loader module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

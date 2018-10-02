@@ -1,0 +1,588 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mdgru.helper &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>mdgru.helper</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mdgru.helper</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">re</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Simon Andermatt&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2017 Simon Andermatt&quot;</span>
+
+<span class="n">TINY</span> <span class="o">=</span> <span class="mf">1e-20</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">errno</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span> <span class="k">as</span> <span class="nn">la</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">special_ortho_group</span> <span class="k">as</span> <span class="n">sog</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">urllib.request</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+
+
+<div class="viewcode-block" id="notify_user"><a class="viewcode-back" href="../../helper.html#mdgru.helper.notify_user">[docs]</a><span class="k">def</span> <span class="nf">notify_user</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s1">&#39;no message&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Sends a notification when training is completed or the process was killed.</span>
+
+<span class="sd">    Given that a telegram bot has been created, and it&#39;s api token is known, a chat_id has been opened, and the</span>
+<span class="sd">    corresponding chat_id is known, this method can be used to be informed if something happens to our process. More</span>
+<span class="sd">    on telegram bots at https://telegram.org/blog/bot-revolution.</span>
+<span class="sd">    :param chat_id: chat_id which is used by telegram to communicate with your bot</span>
+<span class="sd">    :param token: token generated when creating your bot through the BotFather</span>
+<span class="sd">    :param message: The message to be sent</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="s1">&#39;https://api.telegram.org/bot</span><span class="si">{}</span><span class="s1">/sendMessage?chat_id=</span><span class="si">{}</span><span class="s1">&amp;text=</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;helper&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Return value of bot message: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;helper&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Could not send </span><span class="si">{}</span><span class="s1"> to chat </span><span class="si">{}</span><span class="s1"> of token </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">token</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="lazy_property"><a class="viewcode-back" href="../../helper.html#mdgru.helper.lazy_property">[docs]</a><span class="k">def</span> <span class="nf">lazy_property</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function computes a property or simply returns it if already computed.&quot;&quot;&quot;</span>
+    <span class="n">attribute</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">function</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+<div class="viewcode-block" id="deprecated"><a class="viewcode-back" href="../../helper.html#mdgru.helper.deprecated">[docs]</a><span class="k">def</span> <span class="nf">deprecated</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Decorator function to indicate through our logger that the decorated function should not be used anymore</span>
+<span class="sd">    :param func: function to decorate</span>
+<span class="sd">    :return: decorated function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">print_deprecated</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;helper&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;The following function has been deprecated and should not be used &#39;</span>
+                                         <span class="s1">&#39;anymore: </span><span class="si">{}</span><span class="s1">!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+        <span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">print_deprecated</span></div>
+
+
+<div class="viewcode-block" id="force_symlink"><a class="viewcode-back" href="../../helper.html#mdgru.helper.force_symlink">[docs]</a><span class="k">def</span> <span class="nf">force_symlink</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Tries to create symlink. If it fails, it tries to remove the folder obstructing its way to create one.</span>
+<span class="sd">    :param file1: path</span>
+<span class="sd">    :param file2: symlink name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EEXIST</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">file2</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">file1</span><span class="p">,</span> <span class="n">file2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="argget"><a class="viewcode-back" href="../../helper.html#mdgru.helper.argget">[docs]</a><span class="k">def</span> <span class="nf">argget</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ifset</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Evaluates function arguments.</span>
+
+<span class="sd">    It takes a dictionary dt and a key &quot;key&quot; to evaluate, if this key is contained in the dictionary. If yes, return</span>
+<span class="sd">    its value. If not, return default. By default, the key and value pair are deleted from the dictionary, except if</span>
+<span class="sd">    keep is set to True. ifset can be used to override the value, and it is returned instead (except if None).</span>
+<span class="sd">    :param dt: dictionary to be searched</span>
+<span class="sd">    :param key: location in dictionary</span>
+<span class="sd">    :param default: default value if key not found in dictionary</span>
+<span class="sd">    :param keep: bool, indicating if key shall remain in dictionary</span>
+<span class="sd">    :param ifset: value override.</span>
+<span class="sd">    :return: chosen value for key if available. Else default or ifset override.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dt</span> <span class="ow">and</span> <span class="n">dt</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">keep</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">dt</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ifset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ifset</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">val</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default</span></div>
+
+
+<div class="viewcode-block" id="check_if_kw_empty"><a class="viewcode-back" href="../../helper.html#mdgru.helper.check_if_kw_empty">[docs]</a><span class="k">def</span> <span class="nf">check_if_kw_empty</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">module_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints standardised warning if an unsupported keyword argument is used for a given class&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">&#39;There were invalid keywords for </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span>
+                                                            <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">()])))</span></div>
+
+
+<div class="viewcode-block" id="np_arr_backward"><a class="viewcode-back" href="../../helper.html#mdgru.helper.np_arr_backward">[docs]</a><span class="k">def</span> <span class="nf">np_arr_backward</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Transforms from block block circulant matrix to filter representation using indices.</span>
+<span class="sd">    :param matrix: matrix representation of filter</span>
+<span class="sd">    :param n: number of channels</span>
+<span class="sd">    :param k1: filter dim 1</span>
+<span class="sd">    :param k2: filter dim 2</span>
+<span class="sd">    :return: filter representation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">matrix</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">n</span><span class="p">,</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">k2</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">k2</span><span class="p">])</span><span class="o">.</span><span class="n">transpose</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="np_arr_forward"><a class="viewcode-back" href="../../helper.html#mdgru.helper.np_arr_forward">[docs]</a><span class="k">def</span> <span class="nf">np_arr_forward</span><span class="p">(</span><span class="n">filt</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Transforms from filter to block block circulant matrix representation using indices.</span>
+<span class="sd">    :param filt: filter variable</span>
+<span class="sd">    :param n: number of channels</span>
+<span class="sd">    :param k1: filter dimension 1</span>
+<span class="sd">    :param k2: filter dimension 2</span>
+<span class="sd">    :return:  matrix representation of filter</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ogrid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">k1</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="n">k1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">k2</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="n">k2</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">filt</span><span class="p">[</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">+</span> <span class="n">d</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">k1</span> <span class="o">*</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">k2</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">])</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span>
+        <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">k1</span> <span class="o">*</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">n</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="_initializer_Q"><a class="viewcode-back" href="../../helper.html#mdgru.helper._initializer_Q">[docs]</a><span class="k">def</span> <span class="nf">_initializer_Q</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Computes a block circulant k1xk1 matrix, consisting of circulant k2xk2 blocks.</span>
+
+<span class="sd">    :param k1: Outer convolution filter size</span>
+<span class="sd">    :param k2: Inner convolution filter size</span>
+<span class="sd">    :return: block circulant matrix with circulant blocks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">k1</span> <span class="o">*</span> <span class="n">k2</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">bc</span> <span class="o">=</span> <span class="n">np_arr_forward</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">)</span>
+    <span class="n">to</span> <span class="o">=</span> <span class="n">bc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">k1</span> <span class="o">*</span> <span class="n">k2</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">to</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">else</span> <span class="o">-</span><span class="n">arr</span><span class="p">[</span><span class="n">to</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k1</span> <span class="o">*</span> <span class="n">k2</span><span class="p">)])</span>
+    <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">skewsymm</span> <span class="o">=</span> <span class="n">np_arr_forward</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">)</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">k1</span> <span class="o">*</span> <span class="n">k2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">la</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">I</span> <span class="o">+</span> <span class="n">skewsymm</span><span class="p">),</span> <span class="n">I</span> <span class="o">-</span> <span class="n">skewsymm</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="initializer_W"><a class="viewcode-back" href="../../helper.html#mdgru.helper.initializer_W">[docs]</a><span class="k">def</span> <span class="nf">initializer_W</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Computes kronecker product between an orthogonal matrix T and a circulant orthogonal matrix Q.</span>
+
+<span class="sd">    Creates a block circulant matrix using the Kronecker product of a orthogonal square matrix T and a circulant</span>
+<span class="sd">    orthogonal square matrix Q.</span>
+
+<span class="sd">    :param n: Number of channels</span>
+<span class="sd">    :param k1: Outer convolution filter size</span>
+<span class="sd">    :param k2: Inner convolution filter size</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">_initializer_Q</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">T</span> <span class="o">=</span> <span class="n">sog</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">Q</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="counter_generator"><a class="viewcode-back" href="../../helper.html#mdgru.helper.counter_generator">[docs]</a><span class="k">def</span> <span class="nf">counter_generator</span><span class="p">(</span><span class="n">maxim</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Generates indices over multidimensional ranges.</span>
+
+<span class="sd">    :param maxim: Number of iterations per dimension</span>
+<span class="sd">    :return: Generator yielding next iteration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">maxim</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">maxim</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="p">(</span><span class="n">maxim</span> <span class="o">-</span> <span class="n">count</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+            <span class="n">lind</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">arr</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">count</span><span class="p">[</span><span class="n">lind</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">count</span><span class="p">[</span><span class="n">lind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">yield</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="compile_arguments"><a class="viewcode-back" href="../../helper.html#mdgru.helper.compile_arguments">[docs]</a><span class="k">def</span> <span class="nf">compile_arguments</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">override_static</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts valid keywords for cls from given keywords and returns the resulting two dicts.</span>
+
+<span class="sd">    :param cls: instance or class having property or attribute &quot;_defaults&quot;, which is a dict of default parameters.</span>
+<span class="sd">    :param transitive: determines if parent classes should also be consulted</span>
+<span class="sd">    :param kw: the keyword dictionary to separate into valid arguments and rest</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">keep_entries</span><span class="p">:</span>
+        <span class="n">kw</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;compile_arguments&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">override_static</span><span class="p">:</span>
+        <span class="n">new_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">compile_arguments</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="n">keep_entries</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">new_kw</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">transitive</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s1">&#39;_defaults&#39;</span><span class="p">):</span>
+                <span class="n">temp_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="n">keep_entries</span><span class="p">)</span>
+                <span class="n">new_kw</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">temp_kw</span><span class="p">)</span>
+    <span class="c1"># compile defaults array from complex _defaults dict:</span>
+    <span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span>
+                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;value&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">}</span>
+    <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="s1">&#39;value&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]</span>
+    <span class="n">new_kw</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">defaults</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+    <span class="n">new_kw</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">new_kw</span><span class="p">,</span> <span class="n">kw</span></div>
+
+
+<div class="viewcode-block" id="collect_parameters"><a class="viewcode-back" href="../../helper.html#mdgru.helper.collect_parameters">[docs]</a><span class="k">def</span> <span class="nf">collect_parameters</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kw_args</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    helper function to collect all parameters defined in cls&#39; _defaults needed for both compile arguments and define arguments</span>
+<span class="sd">    :param cls:</span>
+<span class="sd">    :param kw_args:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">kw_args</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s1">&#39;_defaults&#39;</span><span class="p">):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">collect_parameters</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;help&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">}</span>
+    <span class="n">args</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">args</span></div>
+
+
+<div class="viewcode-block" id="define_arguments"><a class="viewcode-back" href="../../helper.html#mdgru.helper.define_arguments">[docs]</a><span class="k">def</span> <span class="nf">define_arguments</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Requires cls to have field _defaults! Parses all fields defined in _defaults and creates a argparse compatible</span>
+<span class="sd">    structure from them. These are then appended to the parser structure.</span>
+
+<span class="sd">    :param cls: cls which contains (at least an empty) _defaults dict.</span>
+<span class="sd">    :param parser: parser to add parameters to</span>
+<span class="sd">    :return: parser with added parameters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;collect_parameters&#39;</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">collect_parameters</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">collect_parameters</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="n">kw</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;help&#39;</span><span class="p">]}</span>
+
+        <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;nargs&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;nargs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;nargs&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="s1">&#39;value&#39;</span> <span class="ow">in</span> <span class="n">v</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;nargs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;+&#39;</span>
+
+        <span class="n">propname</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;value&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+                    <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;store_true&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;dest&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span>
+                    <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;store_false&#39;</span>
+                    <span class="k">if</span> <span class="s1">&#39;invert_meaning&#39;</span> <span class="ow">in</span> <span class="n">v</span> <span class="ow">and</span> <span class="ow">not</span> <span class="s1">&#39;name&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                        <span class="n">propname</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;invert_meaning&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">key</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">propname</span> <span class="o">=</span> <span class="s2">&quot;no_&quot;</span> <span class="o">+</span> <span class="n">key</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># we do not provide a default, this value is required!</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;required&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="s1">&#39;name&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>  <span class="c1"># overrides invert_meaning!</span>
+            <span class="n">propname</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;dest&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="n">props</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;--&quot;</span> <span class="o">+</span> <span class="n">propname</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;short&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+            <span class="n">props</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;short&#39;</span><span class="p">]]</span> <span class="o">+</span> <span class="n">props</span>
+        <span class="k">if</span> <span class="s1">&#39;alt&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+            <span class="n">props</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;--&#39;</span> <span class="o">+</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;alt&#39;</span><span class="p">]]</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="o">*</span><span class="n">props</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span></div>
+
+
+<div class="viewcode-block" id="harmonize_filter_size"><a class="viewcode-back" href="../../helper.html#mdgru.helper.harmonize_filter_size">[docs]</a><span class="k">def</span> <span class="nf">harmonize_filter_size</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">ndim</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Used in both model classes to set filters to their default values, given either no or incomplete input.</span>
+<span class="sd">    :param fs: filters as specified</span>
+<span class="sd">    :param ndim: number of dimensions</span>
+<span class="sd">    :return: corrected list for filter sizes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">fs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mi">7</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span> <span class="o">!=</span> <span class="n">ndim</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">fs</span> <span class="o">=</span> <span class="p">[</span><span class="n">fs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">fs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">7</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Filter size and number of dimensions for subvolume do not match!&#39;</span><span class="p">)</span>
+            <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fs</span></div>
+
+
+<div class="viewcode-block" id="generate_defaults_info"><a class="viewcode-back" href="../../helper.html#mdgru.helper.generate_defaults_info">[docs]</a><span class="k">def</span> <span class="nf">generate_defaults_info</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adds description for keyword dict to docstring of class cls</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cls: Class to extract _defaults field from to generate additional docstring info from.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">&quot;_defaults&quot;</span><span class="p">):</span>
+
+        <span class="n">desc</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;kw : dict containing the following options.</span><span class="se">\n</span><span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="c1"># try to find Parameters heading:</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">if</span> <span class="s1">&#39;help&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="s1">&#39;value&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&lt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+                        <span class="n">desc</span> <span class="o">+=</span> <span class="s2">&quot;    - **</span><span class="si">{}</span><span class="s2">** [default: </span><span class="si">{}</span><span class="s2">] </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;help&#39;</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">desc</span> <span class="o">+=</span> <span class="s2">&quot;    - **</span><span class="si">{}</span><span class="s2">** </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;help&#39;</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s1">&#39;value&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&lt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+                        <span class="n">desc</span> <span class="o">+=</span> <span class="s2">&quot;    - **</span><span class="si">{}</span><span class="s2">** [default: </span><span class="si">{}</span><span class="s2">]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">desc</span> <span class="o">+=</span> <span class="s2">&quot;    - **</span><span class="si">{}</span><span class="s2">**</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&lt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">desc</span> <span class="o">+=</span> <span class="s2">&quot;    - **</span><span class="si">{}</span><span class="s2">** [default: </span><span class="si">{}</span><span class="s2">]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;        &quot;</span> <span class="o">+</span> <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">desc</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;Parameters\s*</span><span class="se">\n</span><span class="s2">\s*[-]+\s*</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">)):</span>
+                    <span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;(Parameters\s*</span><span class="se">\n</span><span class="s1">\s*[-]+\s*</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="s1">&#39;\g&lt;1&gt;&#39;</span> <span class="o">+</span> <span class="n">desc</span><span class="p">,</span>
+                                                  <span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;([ ]+)(:param.*</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">)):</span>
+                    <span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;([ ]*)(:param.*</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="p">,</span>
+                                                  <span class="s1">&#39;\g&lt;1&gt;\g&lt;2&gt;&#39;</span> <span class="o">+</span> <span class="n">desc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;kw :&#39;</span><span class="p">,</span> <span class="s1">&#39;:param kw:&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                                                  <span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;&quot;&quot;</span>
+
+<span class="s2">        Parameters</span>
+<span class="s2">        ----------</span>
+<span class="s2">&quot;&quot;&quot;</span> <span class="o">+</span> <span class="n">desc</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;    &quot;</span> <span class="o">+</span> <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;Parameters\s*</span><span class="se">\n</span><span class="s2">\s*[-]+\s*</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">)):</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;(Parameters\s*</span><span class="se">\n</span><span class="s1">\s*[-]+\s*</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="s1">&#39;\g&lt;1&gt;&#39;</span> <span class="o">+</span> <span class="n">desc</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;([ ]+)(:param.*</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">)):</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;([ ]*)(:param.*</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="s1">&#39;\g&lt;1&gt;\g&lt;2&gt;&#39;</span> <span class="o">+</span> <span class="n">desc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;kw :&#39;</span><span class="p">,</span> <span class="s1">&#39;:param kw:&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                                     <span class="bp">cls</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;&quot;&quot;</span>
+
+<span class="s2">    Parameters</span>
+<span class="s2">    ----------</span>
+<span class="s2">&quot;&quot;&quot;</span> <span class="o">+</span> <span class="n">desc</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
