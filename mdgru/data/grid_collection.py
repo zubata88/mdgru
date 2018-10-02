@@ -579,13 +579,13 @@ class GridDataCollection(DataCollection):
         if self.whiten:
             if self.whiten_subvolumes:
                 raise Exception('not supported anymore')
-                for i in range(len(tempdata)):
-                    tempdata[i] = tempdata[i] - np.mean(tempdata[i])
-                    tempdata[i] /= np.sqrt(np.mean(tempdata[i] ** 2)) + 1e-20
+                # for i in range(len(tempdata)):
+                #     tempdata[i] = tempdata[i] - np.mean(tempdata[i])
+                #     tempdata[i] /= np.sqrt(np.mean(tempdata[i] ** 2)) + 1e-20
             elif self.half_gaussian_clip:
                 raise Exception('not supported anymore')
-                tempdata = [np.clip((x - means[i]) / (5 * stddevs[i]) - 1, -0.99999, 0.99999) for i, x in
-                            enumerate(tempdata)]
+                # tempdata = [np.clip((x - means[i]) / (5 * stddevs[i]) - 1, -0.99999, 0.99999) for i, x in
+                #             enumerate(tempdata)]
             else:
                 tempdata = [(x - means[i]) / stddevs[i] for i, x in enumerate(tempdata)]
         if self.vary_mean > 0 or self.vary_stddev > 0:

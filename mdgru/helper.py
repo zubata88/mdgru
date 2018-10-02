@@ -216,6 +216,12 @@ def compile_arguments(cls, kw, transitive=False, override_static=False,keep_entr
 
 
 def collect_parameters(cls, kw_args={}):
+    """
+    helper function to collect all parameters defined in cls' _defaults needed for both compile arguments and define arguments
+    :param cls:
+    :param kw_args:
+    :return:
+    """
     args = copy.copy(kw_args)
     for b in cls.__bases__:
         if hasattr(b, '_defaults'):
@@ -226,6 +232,13 @@ def collect_parameters(cls, kw_args={}):
 
 
 def define_arguments(cls, parser):
+    """ Requires cls to have field _defaults! Parses all fields defined in _defaults and creates a argparse compatible
+    structure from them. These are then appended to the parser structure.
+
+    :param cls: cls which contains (at least an empty) _defaults dict.
+    :param parser: parser to add parameters to
+    :return: parser with added parameters
+    """
     if hasattr(cls, 'collect_parameters'):
         args = cls.collect_parameters()
     else:
@@ -271,6 +284,12 @@ def define_arguments(cls, parser):
 
 
 def harmonize_filter_size(fs, ndim):
+    """
+    Used in both model classes to set filters to their default values, given either no or incomplete input.
+    :param fs: filters as specified
+    :param ndim: number of dimensions
+    :return: corrected list for filter sizes
+    """
     if fs is None:
         return [7 for _ in range(ndim)]
     if len(fs) != ndim:
