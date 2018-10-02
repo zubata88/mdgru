@@ -2,22 +2,19 @@ __author__ = "Simon Andermatt"
 __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import torch as th
-from mdgru.helper import argget
+from mdgru.helper import argget, generate_defaults_info
 from mdgru.helper import compile_arguments
 from .mdgru import MDRNN
 
 
 class MDGRUBlock(th.nn.Module):
     """Convenience class combining attributes to be used for multiple MDRNN and voxel-wise fully connected layers.
-        :param inp: input data
-        :param dropout: dropout rate
+        :param num_spatial_dims: Number of spatial dimensions to consider
+        :param dropout: Dropout rate provided as "keep" rate
+        :param num_input: Nuber of input units/channels
         :param num_hidden: number of hidden units, output units of the MDRNN
         :param num_output: number of output units of the voxel-wise fully connected layer
                            (Can be None -> no voxel-wise fully connected layer)
-        :param noactivation: Flag to disable activation of voxel-wise fully connected layer
-        :param name: Name for this particular MDRNN + vw fully connected layer
-        :param kw: Arguments for MDRNN and the vw fully connected layer (can override this class' attributes)
-        :return: Output of the voxelwise fully connected layer and MDRNN mix
     """
     _defaults = {
         "resmdgru": {'value': False, 'help': 'Add a residual connection from each mdgru input to its output, possibly homogenizing dimensions using one 1 conv layer'},
@@ -63,3 +60,6 @@ class MDGRUBlock(th.nn.Module):
 
     def forward(self, input):
         return self.model.forward(input)
+
+
+generate_defaults_info(MDGRUBlock)

@@ -7,15 +7,12 @@ import os
 import subprocess
 import sys
 import numpy as np
-from mdgru.helper import argget, compile_arguments
+from mdgru.helper import argget, compile_arguments, generate_defaults_info
 
 
 class DataCollection(object):
     '''Abstract class for all data handling classes. 
 
-        Args:
-            fetch_fresh_data (bool): Switch to determine if we need to fetch 
-                fresh data from the server
     '''
     _defaults = {'seed': {'help': 'Seed to be used for deterministic random sampling, given no threading is used', 'value': 1234},
                  'nclasses': None,
@@ -27,18 +24,19 @@ class DataCollection(object):
         for k, v in data_kw.items():
             setattr(self, k, v)
         self.randomstate = np.random.RandomState(self.seed)
-        # self.nclasses = argget(kw, 'nclasses', 2)
 
-    def set_states(self, states):
+    def set_states(self, state):
         ''' reset random state generators given the states in "states"
 
-        :param states:
-        :return:
+        Parameters
+        ----------
+        states: object
+            Random generator state
         '''
-        if states is None:
+        if state is None:
             logging.getLogger('eval').warning('could not reproduce state, setting unreproducable random seed')
             self.randomstate.set_seed(np.random.randint(0, 1000000))
-        self.randomstate.set_state(states)
+        self.randomstate.set_state(state)
 
     def get_states(self):
         ''' Get states of this data collection'''
@@ -53,12 +51,15 @@ class DataCollection(object):
         different datasets, the dataset string can be used to choose one, if 
         not, it will be ignored. 
         
-        Args:
-            **kw: batch_size can be set, but has individual default values, 
-                  if not. dataset is also optional, and is ignored where train 
-                  and test dataset are not distinguished.
+        Parameters
+        ----------
+        \*\*kw: keyword args
+            batch_size can be set, amongst other parameters. See implementing methods for
+            more detail.
                   
-        Returns:
+        Returns
+        -------
+        array
             A random sample of length batch_size.
         
         '''
@@ -76,7 +77,9 @@ class DataCollection(object):
         dataset with sequence of vectors has 3, a dataset with sequences of 
         indices has two, etc)
         
-        Returns:
+        Returns
+        -------
+        list
             A shape array of the dimensionality of the data.
             
         '''
@@ -87,6 +90,21 @@ class DataCollection(object):
         '''
         simplified onehotlabels method. we discourage using interpolated labels 
         anyways, hence this only allows integer values in indexlabels
+
+        Parameters
+        ----------
+        indexlabels : ndarray
+            array containing labels or indices for each class, starting at 0 until nclasses-1
+        nclasses : int
+            number of classes
+        zero_out_label : int
+            label to assign probability of zero for the whole probability distribution
+
+        Returns
+        -------
+        ndarray
+            Probabilitydistributions per pixel where at position indexlabels the value is set to 1, otherwise to 0
+
         '''
         if nclasses is None:
             nclasses = self.nclasses
@@ -109,10 +127,20 @@ class DataCollection(object):
     def get_all_tps(folder, featurefiles, maskfiles):
         '''
         computes list of all folders that are subfolders of folder and contain all provided featurefiles and maskfiles.
-        :param folder: location at which timepoints are searched
-        :param featurefiles: necessary featurefiles to be contained in a timepoint
-        :param maskfiles: necessary maskfiles to be contained in a timepoint
-        :return: sorted list of valid timepoints in string format
+
+        Parameters
+        ----------
+        folder: str
+            location at which timepoints are searched
+        featurefiles: list of str
+            necessary featurefiles to be contained in a timepoint
+        maskfiles: list of str
+            necessary maskfiles to be contained in a timepoint
+
+        Returns
+        -------
+        sorted list
+            valid timepoints in string format
         '''
         comm = "find '" + os.path.join(folder, '') + "' -type d -exec test -e {}/" + featurefiles[0]
         for i in featurefiles[1:]:
@@ -128,3 +156,6 @@ class DataCollection(object):
         else:
             # Python 2 code in this block
             return sorted([str(r) for r in res.split() if r])
+
+
+generate_defaults_info(DataCollection)

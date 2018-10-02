@@ -11,7 +11,7 @@ from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import variable_scope as vs
 from tensorflow.python.util import nest
 
-from mdgru.helper import argget, compile_arguments
+from mdgru.helper import argget, compile_arguments, generate_defaults_info
 from mdgru.model import convolution_helper_padding_same, get_modified_xavier_method, \
     get_pseudo_orthogonal_block_circulant_initialization
 
@@ -21,13 +21,16 @@ class CRNNCell(LayerRNNCell):
 
     Property defaults contains default values for all properties of a CGRUCell that are the same for one MDGRU
     and is used to filter valid arguments.
-    :param myshape: Contains shape information on the input tensor.
-    :param num_units: Defines number of output channels.
-    :param activation: Can be used to override tanh as activation function.
-    :param periodic_convolution_x: Enables circular convolution for the input
-    :param periodic_convolution_h: Enables circular convolution for the last output / state
-    :param dropconnectx: Enables dropconnect regularization on weights connecting to input
-    :param dropconnecth: Enables dropconnect regularization on weights connecting to previous state / output
+
+    Parameters
+    ----------
+    myshape : Contains shape information on the input tensor.
+    num_units : Defines number of output channels.
+    activation : Can be used to override tanh as activation function.
+    periodic_convolution_x : Enables circular convolution for the input
+    periodic_convolution_h : Enables circular convolution for the last output / state
+    dropconnectx : Enables dropconnect regularization on weights connecting to input
+    dropconnecth : Enables dropconnect regularization on weights connecting to previous state / output
     """
 
     _defaults = {
@@ -214,3 +217,6 @@ class CRNNCell(LayerRNNCell):
                 uniform = False
             return vs.get_variable(
                 name, filtershape, dtype=dtype, initializer=get_modified_xavier_method(numelem, uniform))
+
+
+generate_defaults_info(CRNNCell)

@@ -4,7 +4,7 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 import numpy as np
 import tensorflow as tf
 
-from mdgru.helper import argget
+from mdgru.helper import argget, generate_defaults_info
 from mdgru.helper import compile_arguments
 from mdgru.model import batch_norm, get_modified_xavier_method
 # CaffeMDGRU is not supported anymore, uncomment at own risk:
@@ -96,3 +96,6 @@ class MDGRUNet(object):
                 return mdgru
             else:
                 return self.vwfc_activation(mdgru)
+
+
+generate_defaults_info(MDGRUNet)

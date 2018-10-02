@@ -5,7 +5,7 @@ from copy import copy, deepcopy
 
 import torch as th
 
-from mdgru.helper import compile_arguments, harmonize_filter_size
+from mdgru.helper import compile_arguments, harmonize_filter_size, generate_defaults_info
 from ..crnn.cgru import CGRUCell
 
 
@@ -13,22 +13,8 @@ class MDRNN(th.nn.Module):
     """MDRNN class originally designed to handle the sum of cGRU computations resulting in one MDGRU.
 
     _defaults contains initial values for most class attributes.
-    :param use_dropconnect_x: Flag if dropconnect regularization should be applied to input weights
-    :param use_dropconnect_h: Flag if dropconnect regularization should be applied to state weights
-    :param return_cgru_results: Flag if instead of a sum, the individual cgru results should be returned
-    :param filter_size_x: Dimensions of filters for the input (the current time dimension is ignored in each cRNN)
-    :param filter_size_h: Dimensions of filters for the state (the current time dimension is ignored in each cRNN)
-    :param crnn_activation: Activation function for the candidate / state / output in each cRNN
-    :param legacy_cgru_addition: Activating old implementation of crnn sum, for backwards compatibility
-    :param crnn_class: Which cRNN class should be used (CGRUCell for MDGRU)
-    :param strides: Defines strides to be applied along each dimension
-
-    :param inputarr: Input data, needs to be in shape [batch, spatialdim1...spatialdimn, channel]
-    :param dropout: Dropoutrate to be applied
-    :param dimensions: which dimensions should be processed with a cRNN (by default all of them)
-    :param num_hidden: How many hidden units / channels does this MDRNN have
-    :param name: What should be the name of this MDRNN
-
+    :param dropout: Dropoutrate to be applied  (provided as keep rate)
+    :param spatial_dimensions: which dimensions should be processed with a cRNN (by default all of them)
     """
     _defaults = {
         "use_dropconnect_x": {'value': True, 'help': "Should Dropconnect be applied to the input?", 'invert_meaning': 'dont_'},
@@ -98,3 +84,6 @@ class MDRNN(th.nn.Module):
             outputs.append(output)
         # transform the sum to a mean over all cgrus (self.cgrus contains birnn)
         return th.sum(th.stack(outputs, dim=0), dim=0) / (len(self.cgrus) * 2)
+
+
+generate_defaults_info(MDRNN)

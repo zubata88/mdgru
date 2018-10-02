@@ -3,7 +3,7 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import tensorflow as tf
 import numpy as np
-from mdgru.helper import argget, compile_arguments
+from mdgru.helper import argget, compile_arguments, generate_defaults_info
 import copy
 from tensorflow.python import pywrap_tensorflow
 import logging
@@ -293,3 +293,6 @@ class GANModel(Model):
         self.momentum = argget(kw, "momentum", 0.9)
         self.nclasses = argget(kw, "nclasses", 2)
         self.fakedata = argget(kw, "fakedata", None)
+
+
+generate_defaults_info(Model)

@@ -16,7 +16,7 @@ from threading import Thread
 
 import numpy as np
 
-from mdgru.helper import argget, force_symlink, notify_user, compile_arguments
+from mdgru.helper import argget, force_symlink, notify_user, compile_arguments, generate_defaults_info
 
 try:
     import _pickle as pickle  # cPickle is now _pickle (TODO: CHECK)
@@ -67,6 +67,13 @@ class Runner(object):
     }
 
     def __init__(self, evaluationinstance, **kw):
+        """
+
+        Parameters
+        ----------
+        evaluationinstance : instance of an evaluation class
+            Will be used to call train and test routines on.
+        """
         self.origargs = copy.deepcopy(kw)
         runner_kw, kw = compile_arguments(Runner, kw, transitive=False)
         for k, v in runner_kw.items():
@@ -427,3 +434,6 @@ class Runner(object):
         if self.notifyme:
             notify_user(self.notifyme['chat_id'], self.notifyme['token'],
                         message='{} has/have finished'.format(" and ".join(self.episodes)))
+
+
+generate_defaults_info(Runner)

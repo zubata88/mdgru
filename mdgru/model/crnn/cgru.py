@@ -7,7 +7,7 @@ from copy import deepcopy
 import tensorflow as tf
 from tensorflow.python.ops import variable_scope as vs
 
-from mdgru.helper import compile_arguments
+from mdgru.helper import compile_arguments, generate_defaults_info
 from mdgru.model import batch_norm
 from mdgru.model.crnn import CRNNCell
 
@@ -124,3 +124,6 @@ class CGRUCell(CRNNCell):
             # Update state/output.
             new_h = z * state + (1 - z) * self.crnn_activation(htwb + htb)
         return new_h, new_h
+
+
+generate_defaults_info(CGRUCell)

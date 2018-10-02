@@ -6,7 +6,7 @@ from copy import copy, deepcopy
 import numpy as np
 import tensorflow as tf
 from mdgru.model import convolution_helper_padding_same
-from mdgru.helper import compile_arguments, harmonize_filter_size
+from mdgru.helper import compile_arguments, harmonize_filter_size, generate_defaults_info
 from ..crnn.cgru import CGRUCell
 
 
@@ -33,7 +33,7 @@ class MDRNN(object):
     :param num_hidden: How many hidden units / channels does this MDRNN have
     :param name: What should be the name of this MDRNN
 
-    """
+"""
     _defaults = {
         "use_dropconnect_x": {'value': True, 'help': "Should dropconnect be applied to the input?", 'invert_meaning': 'dont_'},
         "use_dropconnect_h": {'value': True, 'help': "Should DropConnect be applied to the state?", 'invert_meaning': 'dont_'},
@@ -177,3 +177,6 @@ class MDRNN(object):
                                                        swap_memory=self.swap_memory, initial_state=initial_state)
 
         return tf.reshape(trans_res_flattened, shape=output_shape)
+
+
+generate_defaults_info(MDRNN)

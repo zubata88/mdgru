@@ -21,7 +21,7 @@ from scipy.misc import imsave, imread
 from scipy.ndimage.filters import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.measurements import label
-from mdgru.helper import argget, counter_generator, compile_arguments
+from mdgru.helper import argget, counter_generator, compile_arguments, generate_defaults_info
 from . import DataCollection
 
 
@@ -95,6 +95,20 @@ class GridDataCollection(DataCollection):
     }
 
     def __init__(self, w, p, location=None, tps=None, kw={}):
+        """
+
+        Parameters
+        ----------
+        w : list
+            subvolume/patchsize
+        p : list
+            amount of padding per dimension.
+        location : str, optional
+            Root folder where samples defined by featurefiles and maskfiles lie. Needs to be provided if tps is not.
+        tps : list, optional
+            List of locations or samples defined by featurefiles and maskfiles. Needs to be provided if location is not.
+
+        """
         super(GridDataCollection, self).__init__(kw)
         self.origargs.update({"location": location, "tps": tps})
         self.w = np.ndarray.tolist(w) if not isinstance(w, list) else w
@@ -747,3 +761,6 @@ class ThreadedGridDataCollection(GridDataCollection):
     def _preload_random_sample(self, batchsize, container_id):
         self._batch[container_id], self._batchlabs[container_id] = super(ThreadedGridDataCollection,
                                                                          self).random_sample(batch_size=batchsize)
+
+generate_defaults_info(GridDataCollection)
+generate_defaults_info(ThreadedGridDataCollection)

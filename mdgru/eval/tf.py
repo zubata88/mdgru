@@ -4,7 +4,7 @@ import logging
 import os
 import pickle
 from tensorflow.python import pywrap_tensorflow
-from mdgru.helper import argget, check_if_kw_empty, compile_arguments
+from mdgru.helper import argget, check_if_kw_empty, compile_arguments, generate_defaults_info
 import numpy as np
 import copy
 
@@ -208,3 +208,6 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
         summary = tf.Summary()
         summary.value.add(tag=text, simple_value=value)
         self.train_writer.add_summary(summary)
+
+
+generate_defaults_info(SupervisedEvaluationTensorflow)

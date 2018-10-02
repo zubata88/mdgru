@@ -10,7 +10,7 @@ from abc import abstractmethod
 
 import numpy as np
 
-from mdgru.helper import argget, compile_arguments
+from mdgru.helper import argget, compile_arguments, generate_defaults_info
 
 
 class SupervisedEvaluation(object):
@@ -393,3 +393,6 @@ class SupervisedEvaluation(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
+
+generate_defaults_info(SupervisedEvaluation)
+

@@ -187,3 +187,5 @@ class MDGRUClassificationWithGeneralizedDiceLoss(MDGRUClassification):
             diceLoss = -tf.reduce_mean((2 * total_intersection + eps) / (total_sum + eps))
 
         return diceLoss + (1 - sum(self.dice_loss_weight)) * crossEntropyLoss
+
+

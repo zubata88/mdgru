@@ -53,3 +53,4 @@ class CaffeMDGRU(object):
                              self.dropout if self.use_dropconnecth else None, fsy=fs[0] // 2, fsz=fs[1] // 2,
                              favorspeedovermemory=self.favor_speed_over_memory,
                              use_bernoulli_dropconnect=self.use_bernoulli)
+

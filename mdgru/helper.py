@@ -1,3 +1,5 @@
+import re
+
 __author__ = "Simon Andermatt"
 __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
@@ -189,7 +191,7 @@ def counter_generator(maxim):
         pass
 
 
-def compile_arguments(cls, kw, transitive=False, override_static=False,keep_entries=True):
+def compile_arguments(cls, kw, transitive=False, override_static=False, keep_entries=True):
     """Extracts valid keywords for cls from given keywords and returns the resulting two dicts.
 
     :param cls: instance or class having property or attribute "_defaults", which is a dict of default parameters.
@@ -208,7 +210,8 @@ def compile_arguments(cls, kw, transitive=False, override_static=False,keep_entr
                 temp_kw, kw = compile_arguments(b, kw, transitive=True, keep_entries=keep_entries)
                 new_kw.update(temp_kw)
     # compile defaults array from complex _defaults dict:
-    defaults = {k: v['value'] if isinstance(v, dict) else v for k, v in cls._defaults.items() if not isinstance(v, dict) or 'value' in v}
+    defaults = {k: v['value'] if isinstance(v, dict) else v for k, v in cls._defaults.items() if
+                not isinstance(v, dict) or 'value' in v}
     required = [k for k, v in cls._defaults.items() if isinstance(v, dict) and not 'value' in v]
     new_kw.update({k: argget(kw, k, v) for k, v in defaults.items()})
     new_kw.update({k: argget(kw, k) for k in required})
@@ -271,7 +274,7 @@ def define_arguments(cls, parser):
         else:
             # we do not provide a default, this value is required!
             kw['required'] = True
-        if 'name' in v: #overrides invert_meaning!
+        if 'name' in v:  # overrides invert_meaning!
             propname = v['name']
             kw['dest'] = key
         props = ["--" + propname]
@@ -301,3 +304,68 @@ def harmonize_filter_size(fs, ndim):
             print('Filter size and number of dimensions for subvolume do not match!')
             exit(0)
     return fs
+
+
+def generate_defaults_info(cls):
+    """
+    Adds description for keyword dict to docstring of class cls
+
+    Parameters
+    ----------
+    cls: Class to extract _defaults field from to generate additional docstring info from.
+    """
+    if hasattr(cls, "_defaults"):
+
+        desc = """kw : dict containing the following options.\n"""
+
+        # try to find Parameters heading:
+        for k, v in cls._defaults.items():
+            if isinstance(v, dict):
+                if 'help' in v.keys():
+                    if 'value' in v.keys():
+                        val = str(v['value']).replace('<', '').replace('>', '')
+                        desc += "    - **{}** [default: {}] {}\n".format(k, val, v['help'])
+                    else:
+                        desc += "    - **{}** {}\n".format(k, v['help'])
+                else:
+                    if 'value' in v.keys():
+                        val = str(v['value']).replace('<', '').replace('>', '')
+                        desc += "    - **{}** [default: {}]\n".format(k, val)
+                    else:
+                        desc += "    - **{}**\n".format(k)
+            else:
+                v = str(v).replace('<', '').replace('>', '')
+                desc += "    - **{}** [default: {}]\n".format(k, v)
+
+        if cls.__doc__ is None:
+            desc = "\n".join(["        " + d for d in desc.split('\n') if len(d)]) + "\n"
+            if cls.__init__.__doc__ is None:
+                cls.__init__.__doc__ = desc
+            else:
+                if len(re.findall("Parameters\s*\n\s*[-]+\s*\n", cls.__init__.__doc__)):
+                    cls.__init__.__doc__ = re.sub('(Parameters\s*\n\s*[-]+\s*\n)', '\g<1>' + desc,
+                                                  cls.__init__.__doc__, 1)
+                elif len(re.findall('([ ]+)(:param.*\n)', cls.__init__.__doc__)):
+                    cls.__init__.__doc__ = re.sub('([ ]*)(:param.*\n)',
+                                                  '\g<1>\g<2>' + desc.replace('kw :', ':param kw:', 1),
+                                                  cls.__init__.__doc__, 1)
+                else:
+                    cls.__init__.__doc__ = cls.__init__.__doc__.rstrip() + """
+
+        Parameters
+        ----------
+""" + desc
+
+        else:
+            desc = "\n".join(["    " + d for d in desc.split('\n') if len(d)]) + "\n"
+            if len(re.findall("Parameters\s*\n\s*[-]+\s*\n", cls.__doc__)):
+                cls.__doc__ = re.sub('(Parameters\s*\n\s*[-]+\s*\n)', '\g<1>' + desc, cls.__doc__, 1)
+            elif len(re.findall('([ ]+)(:param.*\n)', cls.__doc__)):
+                cls.__doc__ = re.sub('([ ]*)(:param.*\n)', '\g<1>\g<2>' + desc.replace('kw :', ':param kw:', 1),
+                                     cls.__doc__, 1)
+            else:
+                cls.__doc__ = cls.__doc__.rstrip() + """
+
+    Parameters
+    ----------
+""" + desc

@@ -1,7 +1,7 @@
 from mdgru.eval import SupervisedEvaluation
 import logging
 import os
-from mdgru.helper import argget, check_if_kw_empty
+from mdgru.helper import argget, check_if_kw_empty, generate_defaults_info
 import torch as th
 import numpy as np
 import copy
@@ -108,3 +108,6 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         state = th.load(f)
         self.model.load_state_dict(state["model"])
         self.optimizer.load_state_dict(state["optimizer"])
+
+
+generate_defaults_info(SupervisedEvaluationTorch)

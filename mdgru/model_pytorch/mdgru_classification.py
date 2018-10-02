@@ -80,74 +80,77 @@ class MDGRUClassification(ClassificationModel):
         new_kw.update(mdrnn_kw)
         new_kw.update(block_kw)
         return new_kw, kw
-
-
-class MDGRUClassificationCC(MDGRUClassification):
-    _defaults = {'dice_loss_weight': {'value': 0, 'help': 'dice loss weights to be used'}}
-
-    # 'use_connected_component_dice_loss': {'value': False, 'help': 'Use connected component dice loss, needs connected component labelling in griddatacollection to be performed. experimental', 'type': int}}
-
-    def __init__(self, data_shape, dropout, kw):
-        super(MDGRUClassificationCC, self).__init__(data_shape, dropout, kw)
-        # self.dice_loss_label = argget(kw, "dice_loss_label", [])
-        # self.dice_loss_weight = argget(kw, "dice_loss_weight", []) #here, this should contain one value!
-        my_kw, kw = compile_arguments(MDGRUClassificationCC, kw, transitive=False)
-        for k, v in my_kw.items():
-            setattr(self, k, v)
-        self.ce = th.nn.modules.CrossEntropyLoss()
-
-    def losses(self, prediction, labels):
-        pred = F.softmax(prediction)
-        eps = 1e-8
-        tp = th.FloatTensor([0])
-        if prediction.is_cuda:
-            tp = tp.cuda()
-        nlabs = labels.max().cpu().item()
-        for i in range(nlabs):
-            mask = labels == i + 1
-            tp += th.sum(th.masked_select(pred[:, 1], mask)) / th.sum(mask).float() / (nlabs + 1)
-        mask = labels == 0
-        fp = th.sum(th.masked_select(pred[:, 1], mask)) / th.sum(mask).float()
-        if (nlabs == 0):
-            diceLoss = th.zeros_like(tp)
-        else:
-            diceLoss = 1 - 2 * tp / (tp + 1 + fp)
-        mask = (labels > 0).long()
-
-        #compute my lesion dice:
-        with th.no_grad():
-            nppred = pred[:, 1].detach().cpu().numpy()
-            vals = np.unique(nppred)
-            vals = list(vals)
-            if vals[0] > 0:
-                vals.insert(0, 0)
-            if vals[-1] < 1:
-                vals.append(1)
-            refmask = labels
-            diceLossnp = 0
-            for it in range(len(vals)-1):
-                segmask, numsegs = label(nppred >= vals[it+1])
-                # overlap = False
-                segs = [True for i in range(numsegs)]
-                segs[0] = False
-                diceLosst = []
-                for ti in range(1, nlabs+1):
-                    overlap = False
-                    for si in range(1, numsegs):
-                        #check connection:
-                        d = 2*np.sum((label==ti)*(segmask==si))/(np.sum(label==ti)+np.sum(segmask==si))
-                        if (d > 0):
-                            diceLosst.append(d)
-                            if si in segs:
-                                segs[si] = False
-                            # diceLossNum += 1
-                            overlap = True
-                    if not overlap:
-                        diceLosst += [0]
-                diceLosst += [0 for _ in range(np.sum(segs))]
-                diceLossnp += np.mean(diceLosst)*(vals[it+1]-vals[it])
-                # print(diceLossnp, diceLosst)
-
-
-        return float(np.sum(self.dice_loss_weight)) * diceLoss, float((1 - np.sum(self.dice_loss_weight))) * self.ce(
-            prediction, mask)
+#
+#
+# class MDGRUClassificationCC(MDGRUClassification):
+#     """
+#     Experimental code, don't use!
+#     """
+#     _defaults = {'dice_loss_weight': {'value': 0, 'help': 'dice loss weights to be used'}}
+#
+#     # 'use_connected_component_dice_loss': {'value': False, 'help': 'Use connected component dice loss, needs connected component labelling in griddatacollection to be performed. experimental', 'type': int}}
+#
+#     def __init__(self, data_shape, dropout, kw):
+#         super(MDGRUClassificationCC, self).__init__(data_shape, dropout, kw)
+#         # self.dice_loss_label = argget(kw, "dice_loss_label", [])
+#         # self.dice_loss_weight = argget(kw, "dice_loss_weight", []) #here, this should contain one value!
+#         my_kw, kw = compile_arguments(MDGRUClassificationCC, kw, transitive=False)
+#         for k, v in my_kw.items():
+#             setattr(self, k, v)
+#         self.ce = th.nn.modules.CrossEntropyLoss()
+#
+#     def losses(self, prediction, labels):
+#         pred = F.softmax(prediction)
+#         eps = 1e-8
+#         tp = th.FloatTensor([0])
+#         if prediction.is_cuda:
+#             tp = tp.cuda()
+#         nlabs = labels.max().cpu().item()
+#         for i in range(nlabs):
+#             mask = labels == i + 1
+#             tp += th.sum(th.masked_select(pred[:, 1], mask)) / th.sum(mask).float() / (nlabs + 1)
+#         mask = labels == 0
+#         fp = th.sum(th.masked_select(pred[:, 1], mask)) / th.sum(mask).float()
+#         if (nlabs == 0):
+#             diceLoss = th.zeros_like(tp)
+#         else:
+#             diceLoss = 1 - 2 * tp / (tp + 1 + fp)
+#         mask = (labels > 0).long()
+#
+#         #compute my lesion dice:
+#         with th.no_grad():
+#             nppred = pred[:, 1].detach().cpu().numpy()
+#             vals = np.unique(nppred)
+#             vals = list(vals)
+#             if vals[0] > 0:
+#                 vals.insert(0, 0)
+#             if vals[-1] < 1:
+#                 vals.append(1)
+#             refmask = labels
+#             diceLossnp = 0
+#             for it in range(len(vals)-1):
+#                 segmask, numsegs = label(nppred >= vals[it+1])
+#                 # overlap = False
+#                 segs = [True for i in range(numsegs)]
+#                 segs[0] = False
+#                 diceLosst = []
+#                 for ti in range(1, nlabs+1):
+#                     overlap = False
+#                     for si in range(1, numsegs):
+#                         #check connection:
+#                         d = 2*np.sum((label==ti)*(segmask==si))/(np.sum(label==ti)+np.sum(segmask==si))
+#                         if (d > 0):
+#                             diceLosst.append(d)
+#                             if si in segs:
+#                                 segs[si] = False
+#                             # diceLossNum += 1
+#                             overlap = True
+#                     if not overlap:
+#                         diceLosst += [0]
+#                 diceLosst += [0 for _ in range(np.sum(segs))]
+#                 diceLossnp += np.mean(diceLosst)*(vals[it+1]-vals[it])
+#                 # print(diceLossnp, diceLosst)
+#
+#
+#         return float(np.sum(self.dice_loss_weight)) * diceLoss, float((1 - np.sum(self.dice_loss_weight))) * self.ce(
+#             prediction, mask)

@@ -7,7 +7,7 @@ from copy import deepcopy
 import numpy as np
 import torch as th
 
-from mdgru.helper import argget, compile_arguments
+from mdgru.helper import argget, compile_arguments, generate_defaults_info
 
 
 class CRNNCell(th.nn.Module):
@@ -15,13 +15,14 @@ class CRNNCell(th.nn.Module):
 
     Property defaults contains default values for all properties of a CGRUCell that are the same for one MDGRU
     and is used to filter valid arguments.
-    :param myshape: Contains shape information on the input tensor.
-    :param num_units: Defines number of output channels.
-    :param activation: Can be used to override tanh as activation function.
-    :param periodic_convolution_x: Enables circular convolution for the input
-    :param periodic_convolution_h: Enables circular convolution for the last output / state
-    :param dropconnectx: Enables dropconnect regularization on weights connecting to input
-    :param dropconnecth: Enables dropconnect regularization on weights connecting to previous state / output
+
+    Parameters
+    ----------
+    num_input : number of input channels.
+    num_units : Defines number of output channels.
+    filter_size_x : Defines shape of filter kernel applied to input
+    filter_size_h : Defines shape of filter kernel applied to state
+    strides : Defines strides to be applied when filtering input (not yet implemented here)
     """
 
     _defaults = {
@@ -67,3 +68,4 @@ class CRNNCell(th.nn.Module):
             t.normal_(1, np.sqrt((1 - keep_rate) / keep_rate))
 
 
+generate_defaults_info(CRNNCell)
