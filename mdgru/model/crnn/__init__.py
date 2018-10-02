@@ -17,21 +17,7 @@ from mdgru.model import convolution_helper_padding_same, get_modified_xavier_met
 
 
 class CRNNCell(LayerRNNCell):
-    """Base convolutional RNN method, implements common functions and serves as abstract class.
 
-    Property defaults contains default values for all properties of a CGRUCell that are the same for one MDGRU
-    and is used to filter valid arguments.
-
-    Parameters
-    ----------
-    myshape : Contains shape information on the input tensor.
-    num_units : Defines number of output channels.
-    activation : Can be used to override tanh as activation function.
-    periodic_convolution_x : Enables circular convolution for the input
-    periodic_convolution_h : Enables circular convolution for the last output / state
-    dropconnectx : Enables dropconnect regularization on weights connecting to input
-    dropconnecth : Enables dropconnect regularization on weights connecting to previous state / output
-    """
 
     _defaults = {
         "periodic_convolution_x": False,
@@ -46,6 +32,30 @@ class CRNNCell(LayerRNNCell):
         return tf.nn.tanh
 
     def __init__(self, myshape, num_units, kw):
+        """Base convolutional RNN method, implements common functions and serves as abstract class.
+
+        Property defaults contains default values for all properties of a CGRUCell that are the same for one MDGRU
+        and is used to filter valid arguments.
+
+        Parameters
+        ----------
+        myshape : list
+            Contains shape information on the input tensor.
+        num_units : int
+            Defines number of output channels.
+        activation : tensorflow activation function
+            Can be used to override tanh as activation function.
+        periodic_convolution_x : bool
+            Enables circular convolution for the input
+        periodic_convolution_h : bool
+            Enables circular convolution for the last output / state
+        dropconnectx : tensorflow placeholder or None
+            keeprate of dropconnect regularization on weights connecting to input
+        dropconnecth : tensorflow placeholder or None
+            keeprate of dropconnect regularization on weights connecting to previous state / output
+        use_bernoulli : bool
+            decide if bernoulli or Gaussian distributions should be used for the weight distributions with dropconnect
+        """
         super(CRNNCell, self).__init__()
         crnn_kw, kw = compile_arguments(CRNNCell, kw, transitive=False)
         for k, v in crnn_kw.items():
@@ -115,23 +125,41 @@ class CRNNCell(LayerRNNCell):
     def _convlinear(self, args, output_size, bias, bias_start=0.0,
                     scope=None, dropconnectx=None, dropconnecth=None, dropconnectxmatrix=None, dropconnecthmatrix=None,
                     strides=None, orthogonal_init=True):
-        """Computes the convolution of current input and previous output or state (args[0] and args[1]).
+        """
+        Computes the convolution of current input and previous output or state (args[0] and args[1]).
 
         The two tensors contained in args are convolved with their respective filters. Due to the rnn library of
         tensorflow, spatial dimensions are collapsed and have to be restored before convolution. Also,
         dropconnectmatrices are applied to the weights. If specified, a bias is generated and returned as well.
-        :param args: Current input and last output in a list
-        :param output_size: Number of output channels (separate from myshapes[1][-1], as sometimes this value differs)
-        :param bias: Flag if bias should be used
-        :param bias_start: Flag for bias initialization
-        :param scope: Override standard "ConvLinear" scope
-        :param dropconnectx: Flag if dropconnect should be applied on input weights
-        :param dropconnecth: Flag if dropconnect should be applied on state weights
-        :param dropconnectxmatrix: Dropconnect matrix for input weights
-        :param dropconnecthmatrix: Dropconnect matrix for state weights
-        :param strides: Strides to be applied to the input convolution
-        :param orthogonal_init: Flag if orthogonal initialization should be performed for the state weights
-        :return: 2-tuple of results for state and input, 3-tuple additionally including a bias if requested
+
+        Parameters
+        ----------
+        args : 2-Tuple of ndarrays
+            Current input and last output
+        output_size: int
+            Number of output channels (separate from myshapes[1][-1], as sometimes this value differs)
+        bias: bool
+            Flag if bias should be used
+        bias_start: float
+            Flag for bias initialization
+        scope: str
+            Override standard "ConvLinear" scope
+        dropconnectx:
+            Flag if dropconnect should be applied on input weights
+        dropconnecth:
+            Flag if dropconnect should be applied on state weights
+        dropconnectxmatrix:
+            Dropconnect matrix for input weights
+        dropconnecthmatrix:
+            Dropconnect matrix for state weights
+        strides:
+            Strides to be applied to the input convolution
+        orthogonal_init:
+            Flag if orthogonal initialization should be performed for the state weights
+        
+        Returns
+        -------
+        2-tuple of results for state and input, 3-tuple additionally including a bias if requested
         """
         if args is None or (nest.is_sequence(args) and not args):
             raise ValueError("`args` must be specified")
@@ -219,4 +247,3 @@ class CRNNCell(LayerRNNCell):
                 name, filtershape, dtype=dtype, initializer=get_modified_xavier_method(numelem, uniform))
 
 
-generate_defaults_info(CRNNCell)

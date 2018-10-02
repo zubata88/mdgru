@@ -10,14 +10,7 @@ import copy
 
 
 class SupervisedEvaluationTensorflow(SupervisedEvaluation):
-    '''Base class for all evaluation classes. Child classes implement various
-        test_* methods to test modeldependent aspects.
-    
-    Attributes:
-        sess: tensorflow session. contains all the model data. 
-        saver: tensorflow saver to save or load the model data.
-    
-    '''
+
     _defaults = {'use_tensorboard': {'value': True, 'help': 'Dont use tensorboard', 'invert_meaning': 'dont_'},
                  'image_summaries_each': {'value': 100,
                                           'help': 'Store image summaries in tensorboard every # iterations'},
@@ -27,8 +20,18 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
                               'help': 'manage how much of the memory of the gpu can be used', 'type': float}
                  }
 
-    def __init__(self, modelcls, collectioninst, kw):
-        super(SupervisedEvaluationTensorflow, self).__init__(modelcls, collectioninst, kw)
+    def __init__(self, modelcls, datacls, kw):
+        """
+        Evaluation class for tensorflow backend
+
+        Parameters
+        ----------
+        modelcls: cls
+            Python class defining the model to be evaluated
+        datacls: cls
+            Python class defining data loading and saving
+        """
+        super(SupervisedEvaluationTensorflow, self).__init__(modelcls, datacls, kw)
         eval_kw, kw = compile_arguments(SupervisedEvaluationTensorflow, kw, transitive=False)
         for k, v in eval_kw.items():
             setattr(self, k, v)
@@ -120,7 +123,6 @@ class SupervisedEvaluationTensorflow(SupervisedEvaluation):
         return loss, prediction
 
     def _predict(self, batch, dropout, testing):
-        """ predict given our graph for batch."""
         if testing:
             model = self.test_model
             data = self.test_data

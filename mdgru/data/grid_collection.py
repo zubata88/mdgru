@@ -164,7 +164,20 @@ class GridDataCollection(DataCollection):
         self.sample_counter = 0
 
     def load(self, file, lazy=True):
+        """
+        Handles all data loading from disk. If new filetypes should be allowed, this has to be implemented here.
 
+        Parameters
+        ----------
+        file : str
+            file path of the image / volume to load or folder of the images to load as volume.
+        lazy : bool
+            If set to False, all files are kept in memory once they are loaded.
+
+        Returns
+        -------
+        image data
+        """
         if not lazy:
             if file in self.imagedict.keys():
                 return self.imagedict[file]
@@ -244,6 +257,16 @@ class GridDataCollection(DataCollection):
                     raise Exception('{} not known'.format(ending))
 
     def save(self, data, filename, tporigin=None):
+        """
+        Saves image in data at location filename. Currently, data can only be saved as nifti or png images.
+
+        Parameters
+        ----------
+        data : ndarray containing the image data
+        filename : location to store the image
+        tporigin : used, if the data needs to be stored in the same orientation as the data at tporigin. Only works for nifti files
+
+        """
         try:
             ending = os.path.splitext(self.maskfiles[0])[-1]
         except Exception as e:
@@ -284,6 +307,10 @@ class GridDataCollection(DataCollection):
             imsave(filename + ".png", data.squeeze())
 
     def preload_all(self):
+        """
+        Greedily loads all images into memory
+
+        """
         for tp in self.tps:
             for f in self.featurefiles + self.maskfiles:
                 file = os.path.join(tp, f)
@@ -291,6 +318,14 @@ class GridDataCollection(DataCollection):
                 self.load(file, lazy=False)
 
     def set_states(self, states):
+        """
+        Sets states of random generators according to the states in states
+
+        Parameters
+        ----------
+        states : random generator states
+
+        """
         if states is None:
             logging.getLogger('eval').warning(
                 'could not reproduce state, setting unreproducable random seed for all random states')
@@ -307,6 +342,13 @@ class GridDataCollection(DataCollection):
             self.randomstate.set_state(states['randomstate'])
 
     def get_states(self):
+        """
+        Get the states of all involved random generators
+
+        Returns
+        -------
+        states of random generators
+        """
         states = {}
         if hasattr(self, 'random_mask_state'):
             states['random_mask_state'] = self.random_mask_state.get_state()
@@ -316,26 +358,73 @@ class GridDataCollection(DataCollection):
         return states
 
     def get_shape(self):
+        """
+        Returns the shape of the input data (with the batchsize set to None)
+
+        Returns
+        -------
+        list : shape of input data
+        """
         if not self.channels_first:
             return [None] + self.w + [self.numoffeatures]
         else:
             return [None] + [self.numoffeatures] + self.w
 
     def get_target_shape(self):
+        """
+        Returns the shape of the target data
+
+        Returns
+        -------
+        list : shape of target data
+        """
         if not self.channels_first:
             return [None] + self.w + [self.nclasses]
         else:
             return [None] + [self.nclasses] + self.w
 
     def get_data_dims(self):
+        """
+        Returns the shape of all available data concatenated in the batch dimension
+
+        Returns
+        -------
+        list : shape of all input data
+        """
         return [len(self.tps)] + self.get_shape()[1:]
 
     def subtract_gauss(self, data):
+        """
+        Subtracts gaussian filtered data from itself
+
+        Parameters
+        ----------
+        data : ndarray
+            data to preprocess
+
+        Returns
+        -------
+        ndarray : gaussian filtered data
+        """
         return data - gaussian_filter(np.float32(data),
                                       np.asarray(self.subtractGaussSigma) * 1.0 / np.asarray(
                                           self.pixdim[:len(data.shape)]))
 
     def _get_features_and_masks(self, folder, featurefiles=None, maskfiles=None):
+        """
+        Returns for sample in folder all feature and mask files
+        Parameters
+        ----------
+        folder : str
+            location of sample
+        featurefiles : list of str, optional
+            featurefiles to return
+        maskfiles : list of str, optional
+            maskfiles to return
+        Returns
+        -------
+            tuple of feature and mask ndarrays
+        """
         if callable(folder):
             return folder()
         if featurefiles is None:
@@ -360,6 +449,20 @@ class GridDataCollection(DataCollection):
         return features, masks
 
     def random_sample(self, batch_size=1, dtype=None, tp=None, **kw):
+        """
+        Randomly samples batch_size times from the data, using data augmentation if specified when creating the class
+
+        Parameters
+        ----------
+        batch_size : number of samples to draw
+        dtype : datatype to return
+        tp : specific timepoint / patient to sample from
+        kw: options (not used)
+
+        Returns
+        -------
+        tuple of samples and corresponding label masks
+        """
         batch = []
         labels = []
         for _ in range(batch_size):
@@ -439,6 +542,18 @@ class GridDataCollection(DataCollection):
         return batch, labels
 
     def transformAffine(self, coords):
+        """
+        Transforms coordinates according to the specified data augmentation scheme
+
+        Parameters
+        ----------
+        coords : ndarray
+            original, not augmented pixel coordinates of the subvolume / patch
+
+        Returns
+        -------
+        "augmented" ndarray of coords
+        """
         coordsshape = coords.shape
         dims = coordsshape[0] + 1
         coords = coords.reshape((len(coords), -1))
@@ -471,6 +586,7 @@ class GridDataCollection(DataCollection):
         return coords
 
     def _rotate(self, affine):
+        """ Helper function to rotate an affine matrix"""
         dims = affine.shape[0]
         if not np.isscalar(self.rotation):
             raise Exception('this class requires exactly one entry for rotation!')
@@ -498,13 +614,36 @@ class GridDataCollection(DataCollection):
         return np.matmul(rot, affine)
 
     def _extract_sample(self, features, masks, imin, imax, shapev, needslabels=False, one_hot=True):
-        '''
-        returns for one sample in the batch the extracted features and mask(s).
+        """
+        Returns for one sample in the batch the extracted features and mask(s).
         the required output has shape [wx,wy,wz,f],[wx,wy,wz,c] with wxyz being
         the subvolumesize and f,c the features and classes respectively. Use
         onehot in here if onehot is used, optionally, if at all no one hot
         vector encoded data is used, the flag can be set to False
-        '''
+
+        Parameters
+        ----------
+        features : ndarray
+            input data of full image
+        masks : ndarray
+            respective label maps for the full sample / patient / timepoint
+        imin : list
+            list of starting indices per dimension for the subvolume / patch to be extracted
+        imax : list
+            list of stopping indices per dimension for the subvolume / patch to be extracted
+        shapev : list
+            list defining the shape of features and mask
+        needslabels : bool
+            If set, will return an empty list if no labels are defined in the resulting subvolume / patch, forcing
+            the calling method to call extract sample on a new location
+        one_hot : bool
+            Defines if we return the label data as one hot vectors per voxel / pixel or as label index per voxel / pixel
+
+        Returns
+        -------
+        tuple of extracted data and labels corresponding to the patch / subvolume defined above and the chosen data
+        augmentation scheme
+        """
 
         # prepare containers
         tempdata = np.zeros([len(features)] + self.w, dtype=np.float32)
@@ -622,6 +761,13 @@ class GridDataCollection(DataCollection):
         return tempdata, templabels
 
     def get_volume_batch_generators(self):
+        """
+        Helper method returning a generator to efficiently fully sample a test volume on a predefined grid given w and p
+
+        Returns
+        -------
+        Generator which completely covers the data for each sample in tps in a way defined by w and p
+        """
         # volgeninfo = []
         def create_volgen(shape, w, padding, features, masks):
             w = np.asarray(w)
@@ -651,6 +797,15 @@ class GridDataCollection(DataCollection):
         return volgeninfo(self.tps)
 
     def _get_deform_field_dm(self):
+        """
+        Helper function to get deformation field. First we define a low resolution deformation field, where we sample
+        randomly from $N(0,I deformSigma)$ at each point in the grid. We then use cubic interpolation to upsample the
+        deformation field to our resolution.
+
+        Returns
+        -------
+        Deformation field which will be applied to the regular sampling coordinate ndarray
+        """
         self.deformationStrength = self.deformrandomstate.rand()
         adr = [w // d + 4 for w, d in zip(self.w, self.deform)]
         deformshape = [len(self.w)] + adr
@@ -710,6 +865,7 @@ class GridDataCollection(DataCollection):
 
 
 class ThreadedGridDataCollection(GridDataCollection):
+
     _defaults = {'batch_size': 1,
                  'num_threads': {
                      'help': 'Determines how many threads are used to prefetch data, such that io operations do not cause delay.',
@@ -718,13 +874,28 @@ class ThreadedGridDataCollection(GridDataCollection):
                  }
 
     def __init__(self, featurefiles, maskfiles=[], location=None, tps=None, kw={}):
+        """
+        Threaded version of GridDataCollection. Basically a thin wrapper which employs num_threads threads to preload
+        random samples. This will however result in possibly nonreproducible sampling patterns, as the threads run
+        concurrently.
+
+        Parameters
+        ----------
+        featurefiles : list of str
+            filenames of the different features to consider
+        maskfiles : list of str
+            filenames of the available mask files per patient
+        location : str, optional
+            Location at which all samples containing all of featurefiles and maskfiles lie somewhere in the subfolder
+            structure. Must be provided, if tps is not.
+        tps : paths of all samples to consider. must be provided if location is not set.
+        """
         super(ThreadedGridDataCollection, self).__init__(featurefiles, maskfiles, location, tps, kw)
         data_kw, kw = compile_arguments(ThreadedGridDataCollection, kw, transitive=False)
         for k, v in data_kw.items():
             setattr(self, k, v)
 
         # self.batch_size = argget(kw, 'batchsize', 1)
-        # self.num_threads = argget(kw, 'num_threads', 3)
         self.curr_thread = 0
         self._batch = [None for _ in range(self.num_threads)]
         self._batchlabs = [None for _ in range(self.num_threads)]
@@ -734,6 +905,24 @@ class ThreadedGridDataCollection(GridDataCollection):
             t.start()
 
     def random_sample(self, batch_size=1, dtype=None, tp=None, **kw):
+        """
+        Thin wrapper of GridDataCollections random sample, handling multiple threads to do the heavy lifting
+
+        Parameters
+        ----------
+        batch_size : int
+            batch_size. if this value is different to the one provided previously to the threads, data is discarded
+            and new samples are computed adhering to the new batchsize.
+        dtype :
+            dtype of the returned input data
+        tp : str
+            specific timepoint to load
+        kw : options, not used at the moment
+
+        Returns
+        -------
+        Tuple of randomly sampled and possibly deformed / augmented input data and corresponding labels
+        """
         if dtype is not None or tp is not None:
             logging.getLogger('data').warning(
                 'cant handle any special terms in random sample in this step, will use next one. this will just return preloaded stuff. terms were: {},{},{},{}'.format(

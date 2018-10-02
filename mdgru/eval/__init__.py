@@ -14,6 +14,7 @@ from mdgru.helper import argget, compile_arguments, generate_defaults_info
 
 
 class SupervisedEvaluation(object):
+
     _defaults = {
         'dropout_rate': {'value': 0.5,
                          'help': '"keep rate" for weights using dropconnect. The higher the value, the closer the sampled models to the full model.'},
@@ -65,7 +66,17 @@ class SupervisedEvaluation(object):
     }
 
     def __init__(self, modelcls, datacls, kw):
+        """
+        Handler for the evaluation of model defined in modelcls using data coming from datacls.
 
+        Parameters
+        ----------
+        modelcls : cls
+            Python class defining the model to evaluate
+        datacls : cls
+            Python class implementing the data loading and storing
+
+        """
         self.origargs = copy.copy(kw)
         eval_kw, kw = compile_arguments(SupervisedEvaluation, kw, transitive=False)
         for k, v in eval_kw.items():
@@ -95,28 +106,11 @@ class SupervisedEvaluation(object):
         testkw['ignore_missing_mask'] = True
         self.tedc = datacls(*paramstesting, kw=testkw)
         self.valdc = datacls(*paramsvalidation, kw=valkw)
-        # self.trdc = collectioninst["train"]
-        # self.tedc = collectioninst["test"]
-        # self.valdc = collectioninst["validation"]
-        # self.nclasses = argget(kw, "nclasses", 2, keep=True) #redundant, not used anymore.
         self.currit = 0
 
-        # self.only_save_labels = argget(kw, "only_save_labels", False)
-        # self.batch_size = argget(kw, "batchsize", 1)
-        # self.validate_same = argget(kw, "validate_same", False)
-        # self.evaluate_uncertainty_times = argget(kw, "evaluate_uncertainty_times", 1)
-        # self.evaluate_uncertainty_dropout = argget(kw, "evaluate_uncertainty_dropout",
-        #                                            1.0)  # these standard values ensure that we dont evaluate uncertainty if nothing was provided.
-        # self.evaluate_uncertainty_saveall = argget(kw, "evaluate_uncertainty_saveall", False)
-        # self.show_f05 = argget(kw, "show_f05", True)
-        # self.show_f1 = argget(kw, "show_f1", True)
-        # self.show_f2 = argget(kw, "show_f2", True)
-        # self.show_l2 = argget(kw, "show_l2_loss", True)
         self.show_dice = argget(kw, "show_dice", not self.show_f1)
-        # self.show_cross_entropy = argget(kw, "show_cross_entropy_loss", True)
         self.binary_evaluation = self.show_dice or self.show_f1 or self.show_f05 or self.show_f2
         self.estimatefilename = argget(kw, "estimatefilename", "estimate")
-        # self.print_each = argget(kw, 'print_each', 1)
         self.gpu = argget(kw, "gpus", [0])
         self.get_train_session = lambda: self
         self.get_test_session = lambda: self
@@ -128,10 +122,36 @@ class SupervisedEvaluation(object):
 
     @abstractmethod
     def _predict(self, batch, dropout, testing):
+        """
+        Predict given batch and keeprate dropout.
+
+        Parameters
+        ----------
+        batch : ndarray
+        dropout : float
+            Keeprate for dropconnect
+        testing
+
+        Returns
+        -------
+        ndarray : Prediction based on data batch
+        """
         pass
 
     @abstractmethod
     def _predict_with_loss(self, batch, batchlabs):
+        """
+        Predict for given batch and return loss compared to labels in batchlabs
+
+        Parameters
+        ----------
+        batch : image data
+        batchlabs : corresponding label data
+
+        Returns
+        -------
+        tuple of ndarray prediction and losses
+        """
         pass
 
     @abstractmethod
@@ -140,18 +160,43 @@ class SupervisedEvaluation(object):
 
     @abstractmethod
     def _save(self, f):
+        """
+        Save to file f in current framework
+
+        Parameters
+        ----------
+        f : location to save model at
+
+        """
         pass
 
     @abstractmethod
     def _load(self, f):
+        """
+        Load model in current framework from f
+
+        Parameters
+        ----------
+        f : location of stored model
+
+        """
         pass
 
     @abstractmethod
     def get_globalstep(self):
+        """
+        Return number of iterations this model has been trained in
+
+        Returns
+        -------
+        int : iteration count
+        """
         pass
 
     def train(self):
-        """ Measures and logs time for data sampling and training iteration."""
+        """
+        Measures and logs time when performing data sampling and training iteration.
+        """
         start_time = time.time()
         batch, batchlabs = self.trdc.random_sample(batch_size=self.batch_size)
         time_after_loading = time.time()
@@ -168,7 +213,17 @@ class SupervisedEvaluation(object):
         return loss
 
     def test_scores(self, pred, ref):
-        """ Evaluates all activated scores between ref and pred."""
+        """
+        Evaluates all selected scores between reference data ref and prediction pred.
+
+        Parameters
+        ----------
+        pred : ndarray
+            prediction, as probability distributions per pixel / voxel
+        ref : ndarray
+            labelmap, either as probability distributions per pixel / voxel or as label map
+
+        """
         ref = np.int32(np.expand_dims(ref.squeeze(), 0))
         pred = np.expand_dims(pred.squeeze(), 0)
         if pred.shape != ref.shape:
@@ -206,6 +261,22 @@ class SupervisedEvaluation(object):
         return res
 
     def test_all_random(self, batch_size=None, dc=None, resample=True):
+        """
+        Test random samples
+
+        Parameters
+        ----------
+        batch_size : int
+            minibatch size to compute on
+        dc : datacollection instance, optional
+            datacollection to sample from
+        resample : bool
+            indicates if we need to sample before evaluating
+
+        Returns
+        -------
+        tuple of loss and prediction ndarray
+        """
         if dc is None:
             dc = self.valdc
         if batch_size is None:
@@ -219,6 +290,25 @@ class SupervisedEvaluation(object):
         return loss, prediction
 
     def test_all_available(self, batch_size=None, dc=None, return_results=False, dropout=None, testing=False):
+        """
+        Completely evaluates each full image in tps using grid sampling.
+
+        Parameters
+        ----------
+        batch_size : int
+            minibatch size to compute on
+        dc : datacollection instance, optional
+            datacollection to sample from
+        return_results : bool
+            should results be returned or stored right away?
+        dropout : float
+            keeprate of dropconnect for inference
+        testing
+
+        Returns
+        -------
+        either tuple of predictions and errors or only errors, depending on return_results flag
+        """
         if dc is None:
             dc = self.tedc
 
@@ -333,7 +423,14 @@ class SupervisedEvaluation(object):
             return errs
 
     def load(self, f):
-        '''loads model at location f from disk'''
+        """
+        loads model at location f from disk
+
+        Parameters
+        ----------
+        f : str
+            location of stored model
+        """
         self._load(f)
 
         states = {}
@@ -365,7 +462,14 @@ class SupervisedEvaluation(object):
         self.current_iteration = self.current_iteration
 
     def save(self, f):
-        '''saves model to disk at location f'''
+        """
+        saves model to disk at location f
+
+        Parameters
+        ----------
+        f : str
+            location to save model to
+        """
         ckpt = self._save(f)
         trdc = self.trdc.get_states()
         tedc = self.tedc.get_states()

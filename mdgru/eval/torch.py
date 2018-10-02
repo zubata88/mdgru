@@ -11,18 +11,20 @@ from mdgru.helper import compile_arguments
 
 
 class SupervisedEvaluationTorch(SupervisedEvaluation):
-    '''Base class for all evaluation classes. Child classes implement various
-        test_* methods to test modeldependent aspects.
-
-    Attributes:
-        sess: tensorflow session. contains all the model data.
-        saver: tensorflow saver to save or load the model data.
-
-    '''
     _defaults = {}
 
-    def __init__(self, modelcls, collectioninst, kw):
-        super(SupervisedEvaluationTorch, self).__init__(modelcls, collectioninst, kw)
+    def __init__(self, modelcls, datacls, kw):
+        """
+        Evaluation class for the pytorch backend
+
+        Parameters
+        ----------
+        modelcls: cls
+            Python class defining the model to be evaluated
+        datacls: cls
+            Python class defining the loading and saving of the data being evaluated here
+        """
+        super(SupervisedEvaluationTorch, self).__init__(modelcls, datacls, kw)
         eval_kw, kw = compile_arguments(SupervisedEvaluationTorch, kw, transitive=False)
         for k, v in eval_kw.items():
             setattr(self, k, v)
@@ -46,6 +48,16 @@ class SupervisedEvaluationTorch(SupervisedEvaluation):
         # check_if_kw_empty(self.__class__.__name__, kw, 'eval')
 
     def check_input(self, batch, batchlabs=None):
+        """
+        Method to check correctness of input and convert them to cuda pytorch tensors
+
+        Parameters
+        ----------
+        batch : ndarray
+            input data to be moved to pytorch
+        batchlabs : ndarray
+            label information to be moved to pytorch
+        """
         batch = th.from_numpy(batch)
         if batchlabs is not None:
             batchlabs = th.from_numpy(batchlabs)
