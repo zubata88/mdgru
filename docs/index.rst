@@ -3,21 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to mdgru's documentation!
-=================================
-Basic documentation for the mdgru code repository
-
-Author: Simon Andermatt
-
-.. toctree::
-   :maxdepth: 4  
-   :caption: General
-   
-   includeme
+.. include:: includeme.rst
 
 .. toctree::
    :maxdepth: 4
-   :caption: Modules
+   :caption: Guides
+
+   how_to_use
+   how_to_install
+   
+.. toctree::
+   :maxdepth: 4
+   :caption: API Reference 
 
    RUN_mdgru
    model
