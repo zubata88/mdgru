@@ -156,7 +156,7 @@ class CRNNCell(LayerRNNCell):
             Strides to be applied to the input convolution
         orthogonal_init:
             Flag if orthogonal initialization should be performed for the state weights
-        
+
         Returns
         -------
         2-tuple of results for state and input, 3-tuple additionally including a bias if requested

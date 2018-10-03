@@ -19,8 +19,10 @@ bit, especially to facilitate handling training and testing runs. The
 reported results should still be reproducible though using this
 implementation. 
 
-How to Use 
-''''''''''
+The latest full documentation is avaliable `here <https://zubata88.github.io/mdgru>`_.
+
+How to Use through Examples (Tensorflow Backend) 
+''''''''''''''''''''''''''''''''''''''''''''''''
 
 The file *RUN\_mdgru.py* is used for
 basically all segmentation tasks. For now, please refer to it's help
