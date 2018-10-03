@@ -19,7 +19,7 @@ bit, especially to facilitate handling training and testing runs. The
 reported results should still be reproducible though using this
 implementation. 
 
-The latest full documentation is avaliable `here <https://zubata88.github.io/mdgru>`_.
+The latest full documentation is available `here <https://zubata88.github.io/mdgru>`_.
 
 Papers
 ''''''
