@@ -163,6 +163,9 @@ class GridDataCollection(DataCollection):
         self.numoffeatures = argget(kw, 'numoffeatures', len(self._get_features_and_masks(self.tps[0])[0]))
         self.sample_counter = 0
 
+        if not self.lazy and self.preloadall:
+            self.preload_all()
+
     def load(self, file, lazy=True):
         """
         Handles all data loading from disk. If new filetypes should be allowed, this has to be implemented here.
