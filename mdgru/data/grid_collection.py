@@ -117,7 +117,8 @@ class GridDataCollection(DataCollection):
         data_kw, kw = compile_arguments(GridDataCollection, kw, transitive=False)
         for k, v in data_kw.items():
             setattr(self, k, v)
-
+        if (self.w) != 3:
+            self.correct_orientation = False
         if tps is not None:
             self.tps = []
             [self.tps.extend(DataCollection.get_all_tps(t, self.featurefiles,
