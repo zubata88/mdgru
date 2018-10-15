@@ -92,6 +92,7 @@ class GridDataCollection(DataCollection):
         'connected_components': {'value': False,
                                  'help': 'return labels of connected components for each pixel belonging to a component instead of its label. Only works for binary segmentation and if no one hot encoding is used (with pytorch).'},
         'ignore_missing_mask': False,
+        'save_as': {'value': None, 'help': 'determines the format of the output images / volumes. Must be either .nii.gz for nifti format, .mhd for MHD output, .png .jpeg or any other common 2d image type in the case of 2d data and .raw for a simple data dump. By default it will try to infer the format, otherwise it will use the nifti format as .nii.gz.'}
     }
 
     def __init__(self, w, p, location=None, tps=None, kw={}):
@@ -247,7 +248,7 @@ class GridDataCollection(DataCollection):
                 elif ending in ['.dcm']:
                     f = pydicom.dcmread(file).pixel_array
                     return f
-                elif ending in ['.mha']:
+                elif ending in ['.mha', '.mhd']:
                     f = skio.imread(file, plugin='simpleitk')
                     self.affine = np.eye(4)
                     return f
@@ -272,12 +273,23 @@ class GridDataCollection(DataCollection):
         tporigin : used, if the data needs to be stored in the same orientation as the data at tporigin. Only works for nifti files
 
         """
-        try:
-            ending = os.path.splitext(self.maskfiles[0])[-1]
-        except Exception as e:
-            ending = os.path.splitext(self.featurefiles[0])[-1]
-
-        if ending in ['.nii', '.hdr', '.nii.gz', '.gz'] or len(data.squeeze().shape) > 2:
+        if self.save_as is not None:
+            ending = self.save_as
+        else:
+            try:
+                ending = os.path.splitext(self.maskfiles[0])[-1]
+            except Exception as e:
+                ending = os.path.splitext(self.featurefiles[0])[-1]
+        if ending in ['.mhd']:
+            skio.imsave(filename + ending, data, plugin='simpleitk')
+        elif ending in ['.raw']:
+            data.astype('int16').tofile(filename + ending)
+        elif ending in ['.png', '.jpeg', '.png', '.pgm', '.pnm', '.gif', '.tif', '.tiff']:
+            if np.max(data) <= 1.0 and np.min(data) >= 0:
+                np.int8(np.clip(data * 256, 0, 255))
+                imsave(filename + ending, data.squeeze())
+        else:
+            # ending in ['.nii', '.hdr', '.nii.gz', '.gz', '.dcm'] or len(data.squeeze().shape) > 2:
             if self.correct_orientation and tporigin is not None:
                 # we corrected the orientation and we have the information to undo our wrongs, lets go:
                 aligned_data = Volume(data, np.eye(4), "RAS")  # dummy initialisation if everything else fails
@@ -306,10 +318,7 @@ class GridDataCollection(DataCollection):
                         'could not correct orientation for file {} since tporigin is None: {}'
                             .format(filename, tporigin))
                 nib.save(nib.Nifti1Image(data, self.affine), filename + ".nii.gz")
-        else:
-            if np.max(data) <= 1.0 and np.min(data) >= 0:
-                np.int8(np.clip(data * 256, 0, 255))
-            imsave(filename + ".png", data.squeeze())
+
 
     def preload_all(self):
         """

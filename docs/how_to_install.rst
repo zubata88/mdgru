@@ -19,7 +19,9 @@ corresponding packages. Make sure to use tensorflow v 1.8 for the tensorflow bac
 
     sudo pip3 install torch torchvision visdom
 
-    sudo pip3 install nibabel numpy scipy matplotlib pynrrd scikit-image scikit-learn
+    sudo pip3 install nibabel numpy scipy matplotlib pynrrd
+
+    sudo pip3 install scikit-image scikit-learn simpleitk torch visdom
 
     sudo pip3 install git+https://github.com/spezold/mvloader.git
 
