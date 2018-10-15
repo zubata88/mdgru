@@ -158,6 +158,7 @@ class GridDataCollection(DataCollection):
         oneorn('shift')
         oneorn('presize_for_normalization')
 
+        self.deformrandomstate = np.random.RandomState(self.deformseed)
         if self.choose_mask_at_random:
             self.random_mask_state = np.random.RandomState(argget(kw, 'randommaskseed', 1337))
         self.imagedict = {}
