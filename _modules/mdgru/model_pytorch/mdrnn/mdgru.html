@@ -80,15 +80,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../model.html">Model (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../eval.html">Evaluation module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../data.html">Data loader module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../helper.html">Helper routines and functions</a></li>
@@ -171,7 +172,7 @@
 <span class="kn">from</span> <span class="nn">..crnn.cgru</span> <span class="k">import</span> <span class="n">CGRUCell</span>
 
 
-<div class="viewcode-block" id="MDRNN"><a class="viewcode-back" href="../../../../mdrnn_th.html#mdgru.model_pytorch.mdrnn.mdgru.MDRNN">[docs]</a><span class="k">class</span> <span class="nc">MDRNN</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<div class="viewcode-block" id="MDRNN"><a class="viewcode-back" href="../../../../obs/mdrnn_th.html#mdgru.model_pytorch.mdrnn.mdgru.MDRNN">[docs]</a><span class="k">class</span> <span class="nc">MDRNN</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;MDRNN class originally designed to handle the sum of cGRU computations resulting in one MDGRU.</span>
 
 <span class="sd">    _defaults contains initial values for most class attributes.</span>
@@ -236,7 +237,7 @@
             <span class="n">cgrus</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bicgru</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cgrus</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="n">cgrus</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MDRNN.forward"><a class="viewcode-back" href="../../../../mdrnn_th.html#mdgru.model_pytorch.mdrnn.mdgru.MDRNN.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+<div class="viewcode-block" id="MDRNN.forward"><a class="viewcode-back" href="../../../../mdgru.model_pytorch.mdrnn.html#mdgru.model_pytorch.mdrnn.mdgru.MDRNN.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">cgrus</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_dimensions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgrus</span><span class="p">)):</span>
             <span class="c1"># split tensor along d:</span>

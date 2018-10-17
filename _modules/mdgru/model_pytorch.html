@@ -80,15 +80,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../model.html">Model (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../eval.html">Evaluation module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../data.html">Data loader module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../helper.html">Helper routines and functions</a></li>
@@ -168,7 +169,7 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 
 
-<span class="k">def</span> <span class="nf">init_weights</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+<div class="viewcode-block" id="init_weights"><a class="viewcode-back" href="../../mdgru.model_pytorch.html#mdgru.model_pytorch.init_weights">[docs]</a><span class="k">def</span> <span class="nf">init_weights</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;initialize_weights&#39;</span><span class="p">):</span>
         <span class="n">m</span><span class="o">.</span><span class="n">initialize_weights</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
@@ -178,10 +179,10 @@
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;bias&#39;</span><span class="p">):</span>
                 <span class="n">init</span><span class="o">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">pass</span> <span class="c1">#if not in above list, parameters wont be initialized using the initialization rule.</span>
+            <span class="k">pass</span> <span class="c1">#if not in above list, parameters wont be initialized using the initialization rule.</span></div>
 
 
-<div class="viewcode-block" id="lazy_property"><a class="viewcode-back" href="../../model_pytorch.html#mdgru.model_pytorch.lazy_property">[docs]</a><span class="k">def</span> <span class="nf">lazy_property</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+<div class="viewcode-block" id="lazy_property"><a class="viewcode-back" href="../../obs/model_pytorch.html#mdgru.model_pytorch.lazy_property">[docs]</a><span class="k">def</span> <span class="nf">lazy_property</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;This function computes a property or simply returns it if already computed.&quot;&quot;&quot;</span>
     <span class="n">attribute</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span>
 
@@ -195,7 +196,7 @@
     <span class="k">return</span> <span class="n">wrapper</span></div>
 
 
-<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../model_pytorch.html#mdgru.model_pytorch.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../obs/model_pytorch.html#mdgru.model_pytorch.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract Model class&quot;&quot;&quot;</span>
 
     <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span>
@@ -219,18 +220,18 @@
         <span class="k">pass</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;dimensions&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Model.get_model_name_from_ckpt"><a class="viewcode-back" href="../../model_pytorch.html#mdgru.model_pytorch.Model.get_model_name_from_ckpt">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Model.get_model_name_from_ckpt"><a class="viewcode-back" href="../../obs/model_pytorch.html#mdgru.model_pytorch.Model.get_model_name_from_ckpt">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_model_name_from_ckpt</span><span class="p">(</span><span class="n">_</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;returns root node name of tensorflow graph stored in checkpoint ckpt&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;default&#39;</span></div>
 
-    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Model.set_allowed_gpu_memory_fraction"><a class="viewcode-back" href="../../mdgru.model_pytorch.html#mdgru.model_pytorch.Model.set_allowed_gpu_memory_fraction">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">set_allowed_gpu_memory_fraction</span><span class="p">(</span><span class="n">gpuboundfraction</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;not supported nor needed with pytorch version&#39;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;not supported nor needed with pytorch version&#39;</span><span class="p">)</span></div></div>
         <span class="c1"># tf.GPUOptions(per_process_gpu_memory_fraction=gpuboundfraction)</span>
 
 
-<div class="viewcode-block" id="ClassificationModel"><a class="viewcode-back" href="../../model_pytorch.html#mdgru.model_pytorch.ClassificationModel">[docs]</a><span class="k">class</span> <span class="nc">ClassificationModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="viewcode-block" id="ClassificationModel"><a class="viewcode-back" href="../../obs/model_pytorch.html#mdgru.model_pytorch.ClassificationModel">[docs]</a><span class="k">class</span> <span class="nc">ClassificationModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract model class. &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ClassificationModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
@@ -240,7 +241,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">nclasses</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;nclasses&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="RegressionModel"><a class="viewcode-back" href="../../model_pytorch.html#mdgru.model_pytorch.RegressionModel">[docs]</a><span class="k">class</span> <span class="nc">RegressionModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="viewcode-block" id="RegressionModel"><a class="viewcode-back" href="../../obs/model_pytorch.html#mdgru.model_pytorch.RegressionModel">[docs]</a><span class="k">class</span> <span class="nc">RegressionModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract model class for regression tasks.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">RegressionModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
@@ -250,7 +251,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">momentum</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;momentum&quot;</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ReconstructionModel"><a class="viewcode-back" href="../../model_pytorch.html#mdgru.model_pytorch.ReconstructionModel">[docs]</a><span class="k">class</span> <span class="nc">ReconstructionModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="viewcode-block" id="ReconstructionModel"><a class="viewcode-back" href="../../obs/model_pytorch.html#mdgru.model_pytorch.ReconstructionModel">[docs]</a><span class="k">class</span> <span class="nc">ReconstructionModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract model class for reconstruction tasks.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ReconstructionModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
@@ -259,7 +260,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">nclasses</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;nclasses&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GANModel"><a class="viewcode-back" href="../../model_pytorch.html#mdgru.model_pytorch.GANModel">[docs]</a><span class="k">class</span> <span class="nc">GANModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="viewcode-block" id="GANModel"><a class="viewcode-back" href="../../obs/model_pytorch.html#mdgru.model_pytorch.GANModel">[docs]</a><span class="k">class</span> <span class="nc">GANModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract model class for GANs.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">GANModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>

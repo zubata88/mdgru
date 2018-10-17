@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MDRNN (Tensorflow Backend) &mdash; mdgru 0.2 documentation</title>
+  <title>MDRNN &mdash; mdgru 0.2 documentation</title>
   
 
   
@@ -28,8 +28,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="CRNN (Tensorflow Backend)" href="crnn_tf.html" />
-    <link rel="prev" title="Model (Tensorflow Backend)" href="model.html" /> 
+    <link rel="next" title="Model (Pytorch Backend)" href="mdgru.model_pytorch.html" />
+    <link rel="prev" title="Convolutional RNN" href="mdgru.model.crnn.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -82,19 +82,29 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="model.html">Model (Tensorflow Backend)</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">MDRNN (Tensorflow Backend)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="crnn_tf.html">CRNN (Tensorflow Backend)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="mdgru.model.html">Model (Tensorflow Backend)</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="mdgru.model.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdgru.model.crnn.html">Convolutional RNN</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">MDRNN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-mdgru.model.mdrnn.mdgru">MDGRU</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-mdgru.model.mdrnn">Module contents</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="model_pytorch.html">Model (PyTorch Backend)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mdgru.model.html#module-mdgru.model.mdgru_classification">MDGRUClassification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdgru.model.html#module-mdgru.model">Module Contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluation module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data.html">Data loader module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="helper.html">Helper routines and functions</a></li>
@@ -144,15 +154,15 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-          <li><a href="model.html">Model (Tensorflow Backend)</a> &raquo;</li>
+          <li><a href="mdgru.model.html">Model (Tensorflow Backend)</a> &raquo;</li>
         
-      <li>MDRNN (Tensorflow Backend)</li>
+      <li>MDRNN</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/mdrnn_tf.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/mdgru.model.mdrnn.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -165,59 +175,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-mdgru.model.mdrnn">
-<span id="mdrnn-tensorflow-backend"></span><h1>MDRNN (Tensorflow Backend)<a class="headerlink" href="#module-mdgru.model.mdrnn" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="mdrnn">
+<h1>MDRNN<a class="headerlink" href="#mdrnn" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-mdgru.model.mdrnn.mdgru">
+<span id="mdgru"></span><h2>MDGRU<a class="headerlink" href="#module-mdgru.model.mdrnn.mdgru" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="mdgru.model.mdrnn.MDGRUNet">
-<em class="property">class </em><code class="descclassname">mdgru.model.mdrnn.</code><code class="descname">MDGRUNet</code><span class="sig-paren">(</span><em>data</em>, <em>target</em>, <em>dropout</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdrnn.html#MDGRUNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdrnn.MDGRUNet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Convenience class combining attributes to be used for multiple MDRNN and voxel-wise fully connected layers.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kw</strong> (<em>dict containing the following options.</em>) – <ul class="simple">
-<li><strong>add_e_bn</strong> [default: False]</li>
-<li><strong>resmdgru</strong> [default: False] Add a residual connection around an MDGRU block</li>
-<li><strong>vwfc_activation</strong> [default: function tanh at 0x7f790f886c80]</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="mdgru.model.mdrnn.MDGRUNet.mdgru_bb">
-<code class="descname">mdgru_bb</code><span class="sig-paren">(</span><em>inp</em>, <em>dropout</em>, <em>num_hidden</em>, <em>num_output</em>, <em>noactivation=False</em>, <em>name=None</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdrnn.html#MDGRUNet.mdgru_bb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdrnn.MDGRUNet.mdgru_bb" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convenience function to combine a MDRNN layer with a voxel-wise fully connected layer.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inp</strong> – input data</li>
-<li><strong>dropout</strong> – dropout rate</li>
-<li><strong>num_hidden</strong> – number of hidden units, output units of the MDRNN</li>
-<li><strong>num_output</strong> – number of output units of the voxel-wise fully connected layer
-(Can be None -&gt; no voxel-wise fully connected layer)</li>
-<li><strong>noactivation</strong> – Flag to disable activation of voxel-wise fully connected layer</li>
-<li><strong>name</strong> – Name for this particular MDRNN + vw fully connected layer</li>
-<li><strong>kw</strong> – Arguments for MDRNN and the vw fully connected layer (can override this class’ attributes)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Output of the voxelwise fully connected layer and MDRNN mix</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-<span class="target" id="module-mdgru.model.mdrnn.mdgru"></span><dl class="class">
 <dt id="mdgru.model.mdrnn.mdgru.MDRNN">
 <em class="property">class </em><code class="descclassname">mdgru.model.mdrnn.mdgru.</code><code class="descname">MDRNN</code><span class="sig-paren">(</span><em>inputarr</em>, <em>dropout</em>, <em>dimensions</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdrnn/mdgru.html#MDRNN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdrnn.mdgru.MDRNN" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>MDRNN class originally designed to handle the sum of cGRU computations resulting in one MDGRU.</p>
 <p>_defaults contains initial values for most class attributes.
 :param use_dropconnect_x: Flag if dropconnect regularization should be applied to input weights
@@ -232,7 +197,7 @@
 <li><strong>no_avg_pool</strong> [default: True]</li>
 <li><strong>filter_size_x</strong> [default: [7]] filter sizes for each dimension of the input</li>
 <li><strong>filter_size_h</strong> [default: [7]] filter sizes for each dimension of the state</li>
-<li><strong>crnn_activation</strong> [default: function tanh at 0x7f790f886c80]</li>
+<li><strong>crnn_activation</strong> [default: function tanh at 0x7fc7772d2730]</li>
 <li><strong>legacy_cgru_addition</strong> [default: False] results in worse weight initialization, only use if you know what you are doing!</li>
 <li><strong>crnn_class</strong> [default: class ‘mdgru.model.crnn.cgru.CGRUCell’]</li>
 <li><strong>strides</strong> [default: None]</li>
@@ -266,6 +231,11 @@
 </tr>
 </tbody>
 </table>
+<dl class="attribute">
+<dt id="mdgru.model.mdrnn.mdgru.MDRNN._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'crnn_activation': &lt;function tanh at 0x7fc7772d2730&gt;, 'crnn_class': &lt;class 'mdgru.model.crnn.cgru.CGRUCell'&gt;, 'filter_size_h': {'value': [7], 'help': 'filter sizes for each dimension of the state', 'type': &lt;class 'int'&gt;}, 'filter_size_x': {'value': [7], 'help': 'filter sizes for each dimension of the input', 'type': &lt;class 'int'&gt;}, 'legacy_cgru_addition': {'value': False, 'help': 'results in worse weight initialization, only use if you know what you are doing!'}, 'name': 'mdgru', 'no_avg_pool': True, 'num_hidden': 100, 'return_cgru_results': {'value': False, 'help': 'If provided, returns cgru results as channels instead of a sum over all cgrus', 'name': 'dontsumcgrus'}, 'strides': None, 'swap_memory': {'value': True, 'help': 'Dont switch gpu ram with cpu ram to allow for larger volumes to allow for faster processing', 'invert_meaning': 'dont_'}, 'use_dropconnect_h': {'value': True, 'help': 'Should DropConnect be applied to the state?', 'invert_meaning': 'dont_'}, 'use_dropconnect_x': {'value': True, 'help': 'Should dropconnect be applied to the input?', 'invert_meaning': 'dont_'}, 'use_static_rnn': False}</em><a class="headerlink" href="#mdgru.model.mdrnn.mdgru.MDRNN._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="mdgru.model.mdrnn.mdgru.MDRNN.add_cgru">
 <code class="descname">add_cgru</code><span class="sig-paren">(</span><em>minput, myshape, tempshape, fsx=[7, 7], fsh=[7, 7], strides=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdrnn/mdgru.html#MDRNN.add_cgru"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdrnn.mdgru.MDRNN.add_cgru" title="Permalink to this definition">¶</a></dt>
@@ -274,6 +244,62 @@
 
 </dd></dl>
 
+</div>
+<div class="section" id="module-mdgru.model.mdrnn">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-mdgru.model.mdrnn" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mdgru.model.mdrnn.MDGRUNet">
+<em class="property">class </em><code class="descclassname">mdgru.model.mdrnn.</code><code class="descname">MDGRUNet</code><span class="sig-paren">(</span><em>data</em>, <em>target</em>, <em>dropout</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdrnn.html#MDGRUNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdrnn.MDGRUNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Convenience class combining attributes to be used for multiple MDRNN and voxel-wise fully connected layers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kw</strong> (<em>dict containing the following options.</em>) – <ul class="simple">
+<li><strong>add_e_bn</strong> [default: False]</li>
+<li><strong>resmdgru</strong> [default: False] Add a residual connection around an MDGRU block</li>
+<li><strong>vwfc_activation</strong> [default: function tanh at 0x7fc7772d2730]</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="mdgru.model.mdrnn.MDGRUNet._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'add_e_bn': False, 'resmdgru': {'value': False, 'help': 'Add a residual connection around an MDGRU block'}, 'vwfc_activation': &lt;function tanh at 0x7fc7772d2730&gt;}</em><a class="headerlink" href="#mdgru.model.mdrnn.MDGRUNet._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdrnn.MDGRUNet.mdgru_bb">
+<code class="descname">mdgru_bb</code><span class="sig-paren">(</span><em>inp</em>, <em>dropout</em>, <em>num_hidden</em>, <em>num_output</em>, <em>noactivation=False</em>, <em>name=None</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdrnn.html#MDGRUNet.mdgru_bb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdrnn.MDGRUNet.mdgru_bb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function to combine a MDRNN layer with a voxel-wise fully connected layer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>inp</strong> – input data</li>
+<li><strong>dropout</strong> – dropout rate</li>
+<li><strong>num_hidden</strong> – number of hidden units, output units of the MDRNN</li>
+<li><strong>num_output</strong> – number of output units of the voxel-wise fully connected layer
+(Can be None -&gt; no voxel-wise fully connected layer)</li>
+<li><strong>noactivation</strong> – Flag to disable activation of voxel-wise fully connected layer</li>
+<li><strong>name</strong> – Name for this particular MDRNN + vw fully connected layer</li>
+<li><strong>kw</strong> – Arguments for MDRNN and the vw fully connected layer (can override this class’ attributes)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Output of the voxelwise fully connected layer and MDRNN mix</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -284,10 +310,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="crnn_tf.html" class="btn btn-neutral float-right" title="CRNN (Tensorflow Backend)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="mdgru.model_pytorch.html" class="btn btn-neutral float-right" title="Model (Pytorch Backend)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="model.html" class="btn btn-neutral" title="Model (Tensorflow Backend)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="mdgru.model.crnn.html" class="btn btn-neutral" title="Convolutional RNN" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

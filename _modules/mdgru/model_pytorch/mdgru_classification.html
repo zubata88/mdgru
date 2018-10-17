@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mdgru.model_pytorch.mdgru_classification &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_install.html">How to Install</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../model_pytorch.html">mdgru.model_pytorch</a> &raquo;</li>
+        
+      <li>mdgru.model_pytorch.mdgru_classification</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mdgru.model_pytorch.mdgru_classification</h1><div class="highlight"><pre>
+<span></span><span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Simon Andermatt&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2017 Simon Andermatt&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">argget</span><span class="p">,</span> <span class="n">compile_arguments</span>
+<span class="kn">from</span> <span class="nn">mdgru.model_pytorch.mdrnn</span> <span class="k">import</span> <span class="n">MDGRUBlock</span>
+<span class="kn">from</span> <span class="nn">mdgru.model_pytorch.mdrnn.mdgru</span> <span class="k">import</span> <span class="n">MDRNN</span>
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">collect_parameters</span><span class="p">,</span> <span class="n">define_arguments</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">ClassificationModel</span>
+<span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">th</span>
+<span class="kn">from</span> <span class="nn">mdgru.model_pytorch</span> <span class="k">import</span> <span class="n">init_weights</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage.measurements</span> <span class="k">import</span> <span class="n">label</span>
+
+
+<div class="viewcode-block" id="MDGRUClassification"><a class="viewcode-back" href="../../../mdgru.model_pytorch.html#mdgru.model_pytorch.mdgru_classification.MDGRUClassification">[docs]</a><span class="k">class</span> <span class="nc">MDGRUClassification</span><span class="p">(</span><span class="n">ClassificationModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Provides a full MDGRU default network.</span>
+
+<span class="sd">    Using the parameters fc_channels and mdgru_channels, which have to be lists of the same length, a</span>
+<span class="sd">    MDGRU network of a number of mdgru and voxel-wise fully connected layers can be generated. Strides can be</span>
+<span class="sd">    set for each MDGRU layer as a list of lists of strides per dimension. Furthermore, entries in fc_channels may be</span>
+<span class="sd">    None, when MDGRU layer should be stacked directly after each other.</span>
+
+<span class="sd">    :param fc_channels: Defines the number of channels per voxel-wise fully connected layer</span>
+<span class="sd">    :param mdgru_channels: Defines the number of channels per MDGRU layer</span>
+<span class="sd">    :param strides: list of list defining the strides per dimension per MDGRU layer. None means strides of 1</span>
+<span class="sd">    :param data_shape: subvolume size</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_shape</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MDGRUClassification</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data_shape</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+        <span class="n">my_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">MDGRUClassification</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">my_kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc_channels</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;fc_channels&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nclasses</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mdgru_channels</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;mdgru_channels&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strides</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mdgru_channels</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_shape</span> <span class="o">=</span> <span class="n">data_shape</span>
+        <span class="c1"># create logits:</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">num_spatial_dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+        <span class="n">last_output_channel_size</span> <span class="o">=</span> <span class="n">data_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">it</span><span class="p">,</span> <span class="p">(</span><span class="n">mdgru</span><span class="p">,</span> <span class="n">fcc</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mdgru_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fc_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">strides</span><span class="p">)):</span>
+            <span class="n">mdgru_kw</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">mdgru_kw</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">it</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mdgru_channels</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">mdgru_kw</span><span class="p">[</span><span class="s2">&quot;noactivation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mdgru_kw</span><span class="p">[</span><span class="s2">&quot;strides&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_spatial_dims</span><span class="p">)]</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">else</span> <span class="n">s</span>
+            <span class="n">logits</span> <span class="o">+=</span> <span class="p">[</span><span class="n">MDGRUBlock</span><span class="p">(</span><span class="n">num_spatial_dims</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">,</span> <span class="n">last_output_channel_size</span><span class="p">,</span> <span class="n">mdgru</span><span class="p">,</span> <span class="n">fcc</span><span class="p">,</span> <span class="n">mdgru_kw</span><span class="p">)]</span>
+            <span class="n">last_output_channel_size</span> <span class="o">=</span> <span class="n">fcc</span> <span class="k">if</span> <span class="n">fcc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">mdgru</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">logits</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losses</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MDGRUClassification.prediction"><a class="viewcode-back" href="../../../mdgru.model_pytorch.html#mdgru.model_pytorch.mdgru_classification.MDGRUClassification.prediction">[docs]</a>    <span class="k">def</span> <span class="nf">prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Provides prediction in the form of a discrete probability distribution per voxel&quot;&quot;&quot;</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">batch</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pred</span></div>
+
+<div class="viewcode-block" id="MDGRUClassification.initialize"><a class="viewcode-back" href="../../../mdgru.model_pytorch.html#mdgru.model_pytorch.mdgru_classification.MDGRUClassification.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">init_weights</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MDGRUClassification.collect_parameters"><a class="viewcode-back" href="../../../mdgru.model_pytorch.html#mdgru.model_pytorch.mdgru_classification.MDGRUClassification.collect_parameters">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">collect_parameters</span><span class="p">():</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">collect_parameters</span><span class="p">(</span><span class="n">MDGRUBlock</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">collect_parameters</span><span class="p">(</span><span class="n">MDRNN</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">collect_parameters</span><span class="p">(</span><span class="n">MDRNN</span><span class="o">.</span><span class="n">_defaults</span><span class="p">[</span><span class="s1">&#39;crnn_class&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">],</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">args</span></div>
+
+<div class="viewcode-block" id="MDGRUClassification.compile_arguments"><a class="viewcode-back" href="../../../mdgru.model_pytorch.html#mdgru.model_pytorch.mdgru_classification.MDGRUClassification.compile_arguments">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">compile_arguments</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">block_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">MDGRUBlock</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="n">keep_entries</span><span class="p">)</span>
+        <span class="n">mdrnn_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">MDRNN</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="n">keep_entries</span><span class="p">)</span>
+        <span class="n">crnn_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">MDRNN</span><span class="o">.</span><span class="n">_defaults</span><span class="p">[</span><span class="s1">&#39;crnn_class&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">],</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                        <span class="n">keep_entries</span><span class="o">=</span><span class="n">keep_entries</span><span class="p">)</span>
+        <span class="n">new_kw</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">new_kw</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">crnn_kw</span><span class="p">)</span>
+        <span class="n">new_kw</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">mdrnn_kw</span><span class="p">)</span>
+        <span class="n">new_kw</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">block_kw</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_kw</span><span class="p">,</span> <span class="n">kw</span></div></div>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># class MDGRUClassificationCC(MDGRUClassification):</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     Experimental code, don&#39;t use!</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     _defaults = {&#39;dice_loss_weight&#39;: {&#39;value&#39;: 0, &#39;help&#39;: &#39;dice loss weights to be used&#39;}}</span>
+<span class="c1">#</span>
+<span class="c1">#     # &#39;use_connected_component_dice_loss&#39;: {&#39;value&#39;: False, &#39;help&#39;: &#39;Use connected component dice loss, needs connected component labelling in griddatacollection to be performed. experimental&#39;, &#39;type&#39;: int}}</span>
+<span class="c1">#</span>
+<span class="c1">#     def __init__(self, data_shape, dropout, kw):</span>
+<span class="c1">#         super(MDGRUClassificationCC, self).__init__(data_shape, dropout, kw)</span>
+<span class="c1">#         # self.dice_loss_label = argget(kw, &quot;dice_loss_label&quot;, [])</span>
+<span class="c1">#         # self.dice_loss_weight = argget(kw, &quot;dice_loss_weight&quot;, []) #here, this should contain one value!</span>
+<span class="c1">#         my_kw, kw = compile_arguments(MDGRUClassificationCC, kw, transitive=False)</span>
+<span class="c1">#         for k, v in my_kw.items():</span>
+<span class="c1">#             setattr(self, k, v)</span>
+<span class="c1">#         self.ce = th.nn.modules.CrossEntropyLoss()</span>
+<span class="c1">#</span>
+<span class="c1">#     def losses(self, prediction, labels):</span>
+<span class="c1">#         pred = F.softmax(prediction)</span>
+<span class="c1">#         eps = 1e-8</span>
+<span class="c1">#         tp = th.FloatTensor([0])</span>
+<span class="c1">#         if prediction.is_cuda:</span>
+<span class="c1">#             tp = tp.cuda()</span>
+<span class="c1">#         nlabs = labels.max().cpu().item()</span>
+<span class="c1">#         for i in range(nlabs):</span>
+<span class="c1">#             mask = labels == i + 1</span>
+<span class="c1">#             tp += th.sum(th.masked_select(pred[:, 1], mask)) / th.sum(mask).float() / (nlabs + 1)</span>
+<span class="c1">#         mask = labels == 0</span>
+<span class="c1">#         fp = th.sum(th.masked_select(pred[:, 1], mask)) / th.sum(mask).float()</span>
+<span class="c1">#         if (nlabs == 0):</span>
+<span class="c1">#             diceLoss = th.zeros_like(tp)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             diceLoss = 1 - 2 * tp / (tp + 1 + fp)</span>
+<span class="c1">#         mask = (labels &gt; 0).long()</span>
+<span class="c1">#</span>
+<span class="c1">#         #compute my lesion dice:</span>
+<span class="c1">#         with th.no_grad():</span>
+<span class="c1">#             nppred = pred[:, 1].detach().cpu().numpy()</span>
+<span class="c1">#             vals = np.unique(nppred)</span>
+<span class="c1">#             vals = list(vals)</span>
+<span class="c1">#             if vals[0] &gt; 0:</span>
+<span class="c1">#                 vals.insert(0, 0)</span>
+<span class="c1">#             if vals[-1] &lt; 1:</span>
+<span class="c1">#                 vals.append(1)</span>
+<span class="c1">#             refmask = labels</span>
+<span class="c1">#             diceLossnp = 0</span>
+<span class="c1">#             for it in range(len(vals)-1):</span>
+<span class="c1">#                 segmask, numsegs = label(nppred &gt;= vals[it+1])</span>
+<span class="c1">#                 # overlap = False</span>
+<span class="c1">#                 segs = [True for i in range(numsegs)]</span>
+<span class="c1">#                 segs[0] = False</span>
+<span class="c1">#                 diceLosst = []</span>
+<span class="c1">#                 for ti in range(1, nlabs+1):</span>
+<span class="c1">#                     overlap = False</span>
+<span class="c1">#                     for si in range(1, numsegs):</span>
+<span class="c1">#                         #check connection:</span>
+<span class="c1">#                         d = 2*np.sum((label==ti)*(segmask==si))/(np.sum(label==ti)+np.sum(segmask==si))</span>
+<span class="c1">#                         if (d &gt; 0):</span>
+<span class="c1">#                             diceLosst.append(d)</span>
+<span class="c1">#                             if si in segs:</span>
+<span class="c1">#                                 segs[si] = False</span>
+<span class="c1">#                             # diceLossNum += 1</span>
+<span class="c1">#                             overlap = True</span>
+<span class="c1">#                     if not overlap:</span>
+<span class="c1">#                         diceLosst += [0]</span>
+<span class="c1">#                 diceLosst += [0 for _ in range(np.sum(segs))]</span>
+<span class="c1">#                 diceLossnp += np.mean(diceLosst)*(vals[it+1]-vals[it])</span>
+<span class="c1">#                 # print(diceLossnp, diceLosst)</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#         return float(np.sum(self.dice_loss_weight)) * diceLoss, float((1 - np.sum(self.dice_loss_weight))) * self.ce(</span>
+<span class="c1">#             prediction, mask)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

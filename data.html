@@ -82,17 +82,22 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model.html">Model (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluation module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Data loader module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data loader module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-mdgru.data">DataCollection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-mdgru.data.grid_collection">GridDataCollection</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="helper.html">Helper routines and functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="runner.html">Runner module</a></li>
 </ul>
@@ -159,12 +164,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-mdgru.data">
-<span id="data-loader-module"></span><h1>Data loader module<a class="headerlink" href="#module-mdgru.data" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="data-loader-module">
+<h1>Data loader module<a class="headerlink" href="#data-loader-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-mdgru.data">
+<span id="datacollection"></span><h2>DataCollection<a class="headerlink" href="#module-mdgru.data" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="mdgru.data.DataCollection">
 <em class="property">class </em><code class="descclassname">mdgru.data.</code><code class="descname">DataCollection</code><span class="sig-paren">(</span><em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data.html#DataCollection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.DataCollection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>Abstract class for all data handling classes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -178,6 +185,11 @@
 </tr>
 </tbody>
 </table>
+<dl class="attribute">
+<dt id="mdgru.data.DataCollection._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'nclasses': None, 'seed': {'help': 'Seed to be used for deterministic random sampling, given no threading is used', 'value': 1234}}</em><a class="headerlink" href="#mdgru.data.DataCollection._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="mdgru.data.DataCollection._one_hot_vectorize">
 <code class="descname">_one_hot_vectorize</code><span class="sig-paren">(</span><em>indexlabels</em>, <em>nclasses=None</em>, <em>zero_out_label=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data.html#DataCollection._one_hot_vectorize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.DataCollection._one_hot_vectorize" title="Permalink to this definition">¶</a></dt>
@@ -242,6 +254,11 @@ indices has two, etc)</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="mdgru.data.DataCollection.get_shape">
+<code class="descname">get_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data.html#DataCollection.get_shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.DataCollection.get_shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mdgru.data.DataCollection.get_states">
 <code class="descname">get_states</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data.html#DataCollection.get_states"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.DataCollection.get_states" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get states of this data collection</p>
@@ -288,10 +305,13 @@ more detail.</td>
 
 </dd></dl>
 
-<span class="target" id="module-mdgru.data.grid_collection"></span><dl class="class">
+</div>
+<div class="section" id="module-mdgru.data.grid_collection">
+<span id="griddatacollection"></span><h2>GridDataCollection<a class="headerlink" href="#module-mdgru.data.grid_collection" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
 <dt id="mdgru.data.grid_collection.GridDataCollection">
 <em class="property">class </em><code class="descclassname">mdgru.data.grid_collection.</code><code class="descname">GridDataCollection</code><span class="sig-paren">(</span><em>w</em>, <em>p</em>, <em>location=None</em>, <em>tps=None</em>, <em>kw={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#mdgru.data.DataCollection" title="mdgru.data.DataCollection"><code class="xref py py-class docutils literal notranslate"><span class="pre">mdgru.data.DataCollection</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#mdgru.data.DataCollection" title="mdgru.data.DataCollection"><code class="xref py py-class docutils literal"><span class="pre">mdgru.data.DataCollection</span></code></a></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -334,6 +354,7 @@ more detail.</td>
 <li><strong>truncated_deform</strong> [default: False] deformations with displacements of maximum 3 times gausssigma in each spatial direction</li>
 <li><strong>connected_components</strong> [default: False] return labels of connected components for each pixel belonging to a component instead of its label. Only works for binary segmentation and if no one hot encoding is used (with pytorch).</li>
 <li><strong>ignore_missing_mask</strong> [default: False]</li>
+<li><strong>save_as</strong> [default: None] determines the format of the output images / volumes. Must be either .nii.gz for nifti format, .mhd for MHD output, .png .jpeg or any other common 2d image type in the case of 2d data and .raw for a simple data dump. By default it will try to infer the format, otherwise it will use the nifti format as .nii.gz.</li>
 </ul>
 </li>
 <li><strong>w</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – subvolume/patchsize</li>
@@ -345,14 +366,80 @@ more detail.</td>
 </tr>
 </tbody>
 </table>
+<dl class="attribute">
+<dt id="mdgru.data.grid_collection.GridDataCollection._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'channels_first': False, 'choose_mask_at_random': {'value': False, 'help': 'if multiple masks are provided, we select one at random for each sample'}, 'connected_components': {'value': False, 'help': 'return labels of connected components for each pixel belonging to a component instead of its label. Only works for binary segmentation and if no one hot encoding is used (with pytorch).'}, 'correct_orientation': {'value': True, 'invert_meaning': 'dont_', 'help': 'Do not correct for the nifti orientation (for example, if header information cannot be trusted but all data arrays are correctly aligned'}, 'deform': {'value': [0], 'help': 'Deformation grid spacing in pixels. If zero, no deformation will be applied', 'type': &lt;class 'int'&gt;}, 'deformSigma': {'value': [0], 'help': 'Given a deformation grid spacing, this determines the standard deviations for each dimension of the random deformation vectors.', 'type': &lt;class 'float'&gt;}, 'deformseed': {'value': 1234, 'help': 'defines the random seed used for the deformation variables', 'type': &lt;class 'int'&gt;}, 'each_with_labels': {'value': 0, 'type': &lt;class 'int'&gt;, 'help': 'Force each n-th sample to contain labelled data'}, 'featurefiles': {'help': 'Filenames of featurefiles.', 'nargs': '+', 'short': 'f'}, 'gaussiannoise': {'value': False, 'help': 'Random multiplicative Gaussian noise on the input data with given std and mean 1'}, 'half_gaussian_clip': False, 'ignore_missing_mask': False, 'interpolate_always': {'value': False, 'help': 'Should we also interpolate when using no deformation grids (forces to use same pathways).'}, 'interpolation_order': {'value': 3, 'help': 'Spline order interpolation. Values lower than 3 are: 0: nearest, 1: linear, 2: cubic.'}, 'lazy': {'value': True, 'help': 'Do not load values lazily', 'invert_meaning': 'non'}, 'maskfiles': {'value': [], 'help': 'Filenames of mask file(s) to be used as reference', 'short': 'm', 'nargs': '+'}, 'minlabel': {'value': 1, 'type': &lt;class 'int'&gt;, 'help': 'Minimum label to count for each_with_label functionality'}, 'mirror': {'value': [0], 'help': 'Activate random mirroring along the specified axes during training', 'type': &lt;class 'bool'&gt;}, 'nooriginal': {'value': False, 'help': 'Do not use original data, only gauss filtered'}, 'padding_rule': {'value': 'constant', 'help': 'Rule on how to add values outside the image boundaries. options are: (‘constant’, ‘nearest’, ‘reflect’ or ‘wrap’'}, 'perform_one_hot_encoding': {'value': True, 'help': 'Do not one hot encode target', 'invert_meaning': 'dont_'}, 'preloadall': False, 'presize_for_normalization': {'value': [None], 'help': 'Supply fixed sizes for the calculation of mean and stddev (only suitable with option whiten set)'}, 'pyramid_sampling': False, 'regression': False, 'rotation': {'value': 0, 'help': 'Amount in radians to randomly rotate the input around a randomly drawn vector', 'type': &lt;class 'float'&gt;}, 'save_as': {'value': None, 'help': 'determines the format of the output images / volumes. Must be either .nii.gz for nifti format, .mhd for MHD output, .png .jpeg or any other common 2d image type in the case of 2d data and .raw for a simple data dump. By default it will try to infer the format, otherwise it will use the nifti format as .nii.gz.'}, 'scaling': {'value': [0], 'help': 'Amount ot randomly scale images, per dimension, or for all dimensions, as a factor (e.g. 1.25)', 'type': &lt;class 'float'&gt;}, 'shift': {'value': [0], 'help': 'In order to sample outside of discrete coordinates, this can be set to 1 on the relevant axes', 'type': &lt;class 'float'&gt;}, 'softlabels': False, 'subtractGaussSigma': {'value': [5], 'type': &lt;class 'int'&gt;, 'help': 'Standard deviations to use for gaussian filtered image during highpass filtering data augmentation step. No arguments deactivates the feature. Can have 1 or nfeatures entries', 'nargs': '*'}, 'truncated_deform': {'value': False, 'help': 'deformations with displacements of maximum 3 times gausssigma in each spatial direction'}, 'vary_mean': 0, 'vary_stddev': 0, 'whiten': {'value': True, 'invert_meaning': 'dont_', 'help': 'Dont whiten data to mean 0 and std 1.'}, 'whiten_subvolumes': {'value': False, 'help': 'Whiten subvolumes to mean 0 and std 1 (usually it makes more sense to do so on whole volumes)'}, 'zero_out_label': None}</em><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="mdgru.data.grid_collection.GridDataCollection._extract_sample">
 <code class="descname">_extract_sample</code><span class="sig-paren">(</span><em>features</em>, <em>masks</em>, <em>imin</em>, <em>imax</em>, <em>shapev</em>, <em>needslabels=False</em>, <em>one_hot=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection._extract_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection._extract_sample" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns for one sample in the batch the extracted features and mask(s).
+<dd><p>Returns for one sample in the batch the extracted features and mask(s).
 the required output has shape [wx,wy,wz,f],[wx,wy,wz,c] with wxyz being
 the subvolumesize and f,c the features and classes respectively. Use
 onehot in here if onehot is used, optionally, if at all no one hot
 vector encoded data is used, the flag can be set to False</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>features</strong> (<em>ndarray</em>) – input data of full image</li>
+<li><strong>masks</strong> (<em>ndarray</em>) – respective label maps for the full sample / patient / timepoint</li>
+<li><strong>imin</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – list of starting indices per dimension for the subvolume / patch to be extracted</li>
+<li><strong>imax</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – list of stopping indices per dimension for the subvolume / patch to be extracted</li>
+<li><strong>shapev</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – list defining the shape of features and mask</li>
+<li><strong>needslabels</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – If set, will return an empty list if no labels are defined in the resulting subvolume / patch, forcing
+the calling method to call extract sample on a new location</li>
+<li><strong>one_hot</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – Defines if we return the label data as one hot vectors per voxel / pixel or as label index per voxel / pixel</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><em>tuple of extracted data and labels corresponding to the patch / subvolume defined above and the chosen data</em></li>
+<li><em>augmentation scheme</em></li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.GridDataCollection._get_deform_field_dm">
+<code class="descname">_get_deform_field_dm</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection._get_deform_field_dm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection._get_deform_field_dm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to get deformation field. First we define a low resolution deformation field, where we sample
+randomly from $N(0,I deformSigma)$ at each point in the grid. We then use cubic interpolation to upsample the
+deformation field to our resolution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>Deformation field which will be applied to the regular sampling coordinate ndarray</em></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.GridDataCollection._get_features_and_masks">
+<code class="descname">_get_features_and_masks</code><span class="sig-paren">(</span><em>folder</em>, <em>featurefiles=None</em>, <em>maskfiles=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection._get_features_and_masks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection._get_features_and_masks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns for sample in folder all feature and mask files
+:param folder: location of sample
+:type folder: str
+:param featurefiles: featurefiles to return
+:type featurefiles: list of str, optional
+:param maskfiles: maskfiles to return
+:type maskfiles: list of str, optional</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>tuple of feature and mask ndarrays</em></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -378,9 +465,20 @@ anyways, hence this only allows integer values in indexlabels</p>
 </table>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
+<dt id="mdgru.data.grid_collection.GridDataCollection._rotate">
+<code class="descname">_rotate</code><span class="sig-paren">(</span><em>affine</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection._rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection._rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to rotate an affine matrix</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.data.grid_collection.GridDataCollection.affine">
+<code class="descname">affine</code><em class="property"> = array([[1., 0., 0., 0.],        [0., 1., 0., 0.],        [0., 0., 1., 0.],        [0., 0., 0., 1.]])</em><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.affine" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mdgru.data.grid_collection.GridDataCollection.get_all_tps">
-<em class="property">static </em><code class="descname">get_all_tps</code><span class="sig-paren">(</span><em>folder</em>, <em>featurefiles</em>, <em>maskfiles</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.get_all_tps" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_all_tps</code><span class="sig-paren">(</span><em>folder</em>, <em>featurefiles</em>, <em>maskfiles</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.get_all_tps" title="Permalink to this definition">¶</a></dt>
 <dd><p>computes list of all folders that are subfolders of folder and contain all provided featurefiles and maskfiles.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -403,16 +501,26 @@ anyways, hence this only allows integer values in indexlabels</p>
 <dl class="method">
 <dt id="mdgru.data.grid_collection.GridDataCollection.get_data_dims">
 <code class="descname">get_data_dims</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.get_data_dims"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.get_data_dims" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the dimensionality of the whole collection (even if samples
-are returned/computed on the fly, the theoretical size is returned).
-Has between two and three entries (Depending on the type of data. A
-dataset with sequence of vectors has 3, a dataset with sequences of
-indices has two, etc)</p>
+<dd><p>Returns the shape of all available data concatenated in the batch dimension</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>list</em> – A shape array of the dimensionality of the data.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>list</strong> (<em>shape of all input data</em>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.GridDataCollection.get_shape">
+<code class="descname">get_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.get_shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.get_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the shape of the input data (with the batchsize set to None)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>list</strong> (<em>shape of input data</em>)</td>
 </tr>
 </tbody>
 </table>
@@ -421,23 +529,100 @@ indices has two, etc)</p>
 <dl class="method">
 <dt id="mdgru.data.grid_collection.GridDataCollection.get_states">
 <code class="descname">get_states</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.get_states"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.get_states" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get states of this data collection</p>
+<dd><p>Get the states of all involved random generators</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>states of random generators</em></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.GridDataCollection.get_target_shape">
+<code class="descname">get_target_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.get_target_shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.get_target_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the shape of the target data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>list</strong> (<em>shape of target data</em>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.GridDataCollection.get_volume_batch_generators">
+<code class="descname">get_volume_batch_generators</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.get_volume_batch_generators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.get_volume_batch_generators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method returning a generator to efficiently fully sample a test volume on a predefined grid given w and p</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>Generator which completely covers the data for each sample in tps in a way defined by w and p</em></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.data.grid_collection.GridDataCollection.labellist">
+<code class="descname">labellist</code><em class="property"> = None</em><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.labellist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.GridDataCollection.load">
+<code class="descname">load</code><span class="sig-paren">(</span><em>file</em>, <em>lazy=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles all data loading from disk. If new filetypes should be allowed, this has to be implemented here.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – file path of the image / volume to load or folder of the images to load as volume.</li>
+<li><strong>lazy</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – If set to False, all files are kept in memory once they are loaded.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>image data</em></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.data.grid_collection.GridDataCollection.pixdim">
+<code class="descname">pixdim</code><em class="property"> = array([1, 1, 1, 1, 1, 1, 1])</em><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.pixdim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.GridDataCollection.preload_all">
+<code class="descname">preload_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.preload_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.preload_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Greedily loads all images into memory</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="mdgru.data.grid_collection.GridDataCollection.random_sample">
 <code class="descname">random_sample</code><span class="sig-paren">(</span><em>batch_size=1</em>, <em>dtype=None</em>, <em>tp=None</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.random_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.random_sample" title="Permalink to this definition">¶</a></dt>
-<dd><p>Randomly samples from our dataset. If the implementation knows
-different datasets, the dataset string can be used to choose one, if
-not, it will be ignored.</p>
+<dd><p>Randomly samples batch_size times from the data, using data augmentation if specified when creating the class</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>**kw</strong> (<em>keyword args</em>) – batch_size can be set, amongst other parameters. See implementing methods for
-more detail.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>batch_size</strong> (<em>number of samples to draw</em>) – </li>
+<li><strong>dtype</strong> (<em>datatype to return</em>) – </li>
+<li><strong>tp</strong> (<em>specific timepoint / patient to sample from</em>) – </li>
+<li><strong>kw</strong> (<em>options</em><em> (</em><em>not used</em><em>)</em>) – </li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>array</em> – A random sample of length batch_size.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple of samples and corresponding label masks</em></p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -450,36 +635,178 @@ more detail.</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="mdgru.data.grid_collection.GridDataCollection.set_states">
-<code class="descname">set_states</code><span class="sig-paren">(</span><em>states</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.set_states"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.set_states" title="Permalink to this definition">¶</a></dt>
-<dd><p>reset random state generators given the states in “states”</p>
+<dt id="mdgru.data.grid_collection.GridDataCollection.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>data</em>, <em>filename</em>, <em>tporigin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves image in data at location filename. Currently, data can only be saved as nifti or png images.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>states</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><em>object</em></a>) – Random generator state</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<em>ndarray containing the image data</em>) – </li>
+<li><strong>filename</strong> (<em>location to store the image</em>) – </li>
+<li><strong>tporigin</strong> (<em>used</em><em>, </em><em>if the data needs to be stored in the same orientation as the data at tporigin. Only works for nifti files</em>) – </li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.GridDataCollection.set_states">
+<code class="descname">set_states</code><span class="sig-paren">(</span><em>states</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.set_states"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.set_states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets states of random generators according to the states in states</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>states</strong> (<em>random generator states</em>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.GridDataCollection.subtract_gauss">
+<code class="descname">subtract_gauss</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.subtract_gauss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.subtract_gauss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtracts gaussian filtered data from itself</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<em>ndarray</em>) – data to preprocess</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>ndarray</strong> (<em>gaussian filtered data</em>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.GridDataCollection.transformAffine">
+<code class="descname">transformAffine</code><span class="sig-paren">(</span><em>coords</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#GridDataCollection.transformAffine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.transformAffine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms coordinates according to the specified data augmentation scheme</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>coords</strong> (<em>ndarray</em>) – original, not augmented pixel coordinates of the subvolume / patch</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>“augmented” ndarray of coords</em></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.data.grid_collection.GridDataCollection.w">
+<code class="descname">w</code><em class="property"> = [64, 64]</em><a class="headerlink" href="#mdgru.data.grid_collection.GridDataCollection.w" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="mdgru.data.grid_collection.ThreadedGridDataCollection">
 <em class="property">class </em><code class="descclassname">mdgru.data.grid_collection.</code><code class="descname">ThreadedGridDataCollection</code><span class="sig-paren">(</span><em>featurefiles</em>, <em>maskfiles=[]</em>, <em>location=None</em>, <em>tps=None</em>, <em>kw={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#ThreadedGridDataCollection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#mdgru.data.grid_collection.GridDataCollection" title="mdgru.data.grid_collection.GridDataCollection"><code class="xref py py-class docutils literal notranslate"><span class="pre">mdgru.data.grid_collection.GridDataCollection</span></code></a></p>
-<p>kw : dict containing the following options.
-- <strong>batch_size</strong> [default: 1]
-- <strong>num_threads</strong> [default: 3] Determines how many threads are used to prefetch data, such that io operations do not cause delay.</p>
+<dd><p>Bases: <a class="reference internal" href="#mdgru.data.grid_collection.GridDataCollection" title="mdgru.data.grid_collection.GridDataCollection"><code class="xref py py-class docutils literal"><span class="pre">mdgru.data.grid_collection.GridDataCollection</span></code></a></p>
+<p>Threaded version of GridDataCollection. Basically a thin wrapper which employs num_threads threads to preload
+random samples. This will however result in possibly nonreproducible sampling patterns, as the threads run
+concurrently.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>kw</strong> (<em>dict containing the following options.</em>) – <ul>
+<li><strong>batch_size</strong> [default: 1]</li>
+<li><strong>num_threads</strong> [default: 3] Determines how many threads are used to prefetch data, such that io operations do not cause delay.</li>
+</ul>
+</li>
+<li><strong>featurefiles</strong> (<em>list of str</em>) – filenames of the different features to consider</li>
+<li><strong>maskfiles</strong> (<em>list of str</em>) – filenames of the available mask files per patient</li>
+<li><strong>location</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>, </em><em>optional</em>) – Location at which all samples containing all of featurefiles and maskfiles lie somewhere in the subfolder
+structure. Must be provided, if tps is not.</li>
+<li><strong>tps</strong> (<em>paths of all samples to consider. must be provided if location is not set.</em>) – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'batch_size': 1, 'num_threads': {'help': 'Determines how many threads are used to prefetch data, such that io operations do not cause delay.', 'value': 3, 'type': &lt;class 'int'&gt;}}</em><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="mdgru.data.grid_collection.ThreadedGridDataCollection._extract_sample">
 <code class="descname">_extract_sample</code><span class="sig-paren">(</span><em>features</em>, <em>masks</em>, <em>imin</em>, <em>imax</em>, <em>shapev</em>, <em>needslabels=False</em>, <em>one_hot=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection._extract_sample" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns for one sample in the batch the extracted features and mask(s).
+<dd><p>Returns for one sample in the batch the extracted features and mask(s).
 the required output has shape [wx,wy,wz,f],[wx,wy,wz,c] with wxyz being
 the subvolumesize and f,c the features and classes respectively. Use
 onehot in here if onehot is used, optionally, if at all no one hot
 vector encoded data is used, the flag can be set to False</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>features</strong> (<em>ndarray</em>) – input data of full image</li>
+<li><strong>masks</strong> (<em>ndarray</em>) – respective label maps for the full sample / patient / timepoint</li>
+<li><strong>imin</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – list of starting indices per dimension for the subvolume / patch to be extracted</li>
+<li><strong>imax</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – list of stopping indices per dimension for the subvolume / patch to be extracted</li>
+<li><strong>shapev</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – list defining the shape of features and mask</li>
+<li><strong>needslabels</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – If set, will return an empty list if no labels are defined in the resulting subvolume / patch, forcing
+the calling method to call extract sample on a new location</li>
+<li><strong>one_hot</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – Defines if we return the label data as one hot vectors per voxel / pixel or as label index per voxel / pixel</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><em>tuple of extracted data and labels corresponding to the patch / subvolume defined above and the chosen data</em></li>
+<li><em>augmentation scheme</em></li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection._get_deform_field_dm">
+<code class="descname">_get_deform_field_dm</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection._get_deform_field_dm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to get deformation field. First we define a low resolution deformation field, where we sample
+randomly from $N(0,I deformSigma)$ at each point in the grid. We then use cubic interpolation to upsample the
+deformation field to our resolution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>Deformation field which will be applied to the regular sampling coordinate ndarray</em></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection._get_features_and_masks">
+<code class="descname">_get_features_and_masks</code><span class="sig-paren">(</span><em>folder</em>, <em>featurefiles=None</em>, <em>maskfiles=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection._get_features_and_masks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns for sample in folder all feature and mask files
+:param folder: location of sample
+:type folder: str
+:param featurefiles: featurefiles to return
+:type featurefiles: list of str, optional
+:param maskfiles: maskfiles to return
+:type maskfiles: list of str, optional</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>tuple of feature and mask ndarrays</em></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -505,9 +832,25 @@ anyways, hence this only allows integer values in indexlabels</p>
 </table>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection._preload_random_sample">
+<code class="descname">_preload_random_sample</code><span class="sig-paren">(</span><em>batchsize</em>, <em>container_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#ThreadedGridDataCollection._preload_random_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection._preload_random_sample" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection._rotate">
+<code class="descname">_rotate</code><span class="sig-paren">(</span><em>affine</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection._rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to rotate an affine matrix</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.affine">
+<code class="descname">affine</code><em class="property"> = array([[1., 0., 0., 0.],        [0., 1., 0., 0.],        [0., 0., 1., 0.],        [0., 0., 0., 1.]])</em><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.affine" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.get_all_tps">
-<em class="property">static </em><code class="descname">get_all_tps</code><span class="sig-paren">(</span><em>folder</em>, <em>featurefiles</em>, <em>maskfiles</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.get_all_tps" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_all_tps</code><span class="sig-paren">(</span><em>folder</em>, <em>featurefiles</em>, <em>maskfiles</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.get_all_tps" title="Permalink to this definition">¶</a></dt>
 <dd><p>computes list of all folders that are subfolders of folder and contain all provided featurefiles and maskfiles.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -530,16 +873,26 @@ anyways, hence this only allows integer values in indexlabels</p>
 <dl class="method">
 <dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.get_data_dims">
 <code class="descname">get_data_dims</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.get_data_dims" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the dimensionality of the whole collection (even if samples
-are returned/computed on the fly, the theoretical size is returned).
-Has between two and three entries (Depending on the type of data. A
-dataset with sequence of vectors has 3, a dataset with sequences of
-indices has two, etc)</p>
+<dd><p>Returns the shape of all available data concatenated in the batch dimension</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>list</em> – A shape array of the dimensionality of the data.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>list</strong> (<em>shape of all input data</em>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.get_shape">
+<code class="descname">get_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.get_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the shape of the input data (with the batchsize set to None)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>list</strong> (<em>shape of input data</em>)</td>
 </tr>
 </tbody>
 </table>
@@ -548,23 +901,101 @@ indices has two, etc)</p>
 <dl class="method">
 <dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.get_states">
 <code class="descname">get_states</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.get_states" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get states of this data collection</p>
+<dd><p>Get the states of all involved random generators</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>states of random generators</em></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.get_target_shape">
+<code class="descname">get_target_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.get_target_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the shape of the target data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>list</strong> (<em>shape of target data</em>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.get_volume_batch_generators">
+<code class="descname">get_volume_batch_generators</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.get_volume_batch_generators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method returning a generator to efficiently fully sample a test volume on a predefined grid given w and p</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>Generator which completely covers the data for each sample in tps in a way defined by w and p</em></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.labellist">
+<code class="descname">labellist</code><em class="property"> = None</em><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.labellist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.load">
+<code class="descname">load</code><span class="sig-paren">(</span><em>file</em>, <em>lazy=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles all data loading from disk. If new filetypes should be allowed, this has to be implemented here.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – file path of the image / volume to load or folder of the images to load as volume.</li>
+<li><strong>lazy</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – If set to False, all files are kept in memory once they are loaded.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>image data</em></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.pixdim">
+<code class="descname">pixdim</code><em class="property"> = array([1, 1, 1, 1, 1, 1, 1])</em><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.pixdim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.preload_all">
+<code class="descname">preload_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.preload_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Greedily loads all images into memory</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.random_sample">
 <code class="descname">random_sample</code><span class="sig-paren">(</span><em>batch_size=1</em>, <em>dtype=None</em>, <em>tp=None</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/data/grid_collection.html#ThreadedGridDataCollection.random_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.random_sample" title="Permalink to this definition">¶</a></dt>
-<dd><p>Randomly samples from our dataset. If the implementation knows
-different datasets, the dataset string can be used to choose one, if
-not, it will be ignored.</p>
+<dd><p>Thin wrapper of GridDataCollections random sample, handling multiple threads to do the heavy lifting</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>**kw</strong> (<em>keyword args</em>) – batch_size can be set, amongst other parameters. See implementing methods for
-more detail.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – batch_size. if this value is different to the one provided previously to the threads, data is discarded
+and new samples are computed adhering to the new batchsize.</li>
+<li><strong>dtype</strong> – dtype of the returned input data</li>
+<li><strong>tp</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – specific timepoint to load</li>
+<li><strong>kw</strong> (<em>options</em><em>, </em><em>not used at the moment</em>) – </li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>array</em> – A random sample of length batch_size.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>Tuple of randomly sampled and possibly deformed / augmented input data and corresponding labels</em></p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -577,21 +1008,78 @@ more detail.</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.set_states">
-<code class="descname">set_states</code><span class="sig-paren">(</span><em>states</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.set_states" title="Permalink to this definition">¶</a></dt>
-<dd><p>reset random state generators given the states in “states”</p>
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>data</em>, <em>filename</em>, <em>tporigin=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves image in data at location filename. Currently, data can only be saved as nifti or png images.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>states</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><em>object</em></a>) – Random generator state</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<em>ndarray containing the image data</em>) – </li>
+<li><strong>filename</strong> (<em>location to store the image</em>) – </li>
+<li><strong>tporigin</strong> (<em>used</em><em>, </em><em>if the data needs to be stored in the same orientation as the data at tporigin. Only works for nifti files</em>) – </li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.set_states">
+<code class="descname">set_states</code><span class="sig-paren">(</span><em>states</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.set_states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets states of random generators according to the states in states</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>states</strong> (<em>random generator states</em>) – </td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
+<dl class="method">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.subtract_gauss">
+<code class="descname">subtract_gauss</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.subtract_gauss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtracts gaussian filtered data from itself</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<em>ndarray</em>) – data to preprocess</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>ndarray</strong> (<em>gaussian filtered data</em>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.transformAffine">
+<code class="descname">transformAffine</code><span class="sig-paren">(</span><em>coords</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.transformAffine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms coordinates according to the specified data augmentation scheme</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>coords</strong> (<em>ndarray</em>) – original, not augmented pixel coordinates of the subvolume / patch</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>“augmented” ndarray of coords</em></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.data.grid_collection.ThreadedGridDataCollection.w">
+<code class="descname">w</code><em class="property"> = [64, 64]</em><a class="headerlink" href="#mdgru.data.grid_collection.ThreadedGridDataCollection.w" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 
 

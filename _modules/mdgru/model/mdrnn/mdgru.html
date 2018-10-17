@@ -80,15 +80,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../model.html">Model (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../eval.html">Evaluation module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../data.html">Data loader module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../helper.html">Helper routines and functions</a></li>
@@ -172,7 +173,7 @@
 <span class="kn">from</span> <span class="nn">..crnn.cgru</span> <span class="k">import</span> <span class="n">CGRUCell</span>
 
 
-<div class="viewcode-block" id="MDRNN"><a class="viewcode-back" href="../../../../mdrnn_tf.html#mdgru.model.mdrnn.mdgru.MDRNN">[docs]</a><span class="k">class</span> <span class="nc">MDRNN</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="MDRNN"><a class="viewcode-back" href="../../../../obs/mdrnn_tf.html#mdgru.model.mdrnn.mdgru.MDRNN">[docs]</a><span class="k">class</span> <span class="nc">MDRNN</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;MDRNN class originally designed to handle the sum of cGRU computations resulting in one MDGRU.</span>
 
 <span class="sd">    _defaults contains initial values for most class attributes.</span>
@@ -306,7 +307,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">add_n</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MDRNN.add_cgru"><a class="viewcode-back" href="../../../../mdrnn_tf.html#mdgru.model.mdrnn.mdgru.MDRNN.add_cgru">[docs]</a>    <span class="k">def</span> <span class="nf">add_cgru</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minput</span><span class="p">,</span> <span class="n">myshape</span><span class="p">,</span> <span class="n">tempshape</span><span class="p">,</span> <span class="n">fsx</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="n">fsh</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MDRNN.add_cgru"><a class="viewcode-back" href="../../../../obs/mdrnn_tf.html#mdgru.model.mdrnn.mdgru.MDRNN.add_cgru">[docs]</a>    <span class="k">def</span> <span class="nf">add_cgru</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minput</span><span class="p">,</span> <span class="n">myshape</span><span class="p">,</span> <span class="n">tempshape</span><span class="p">,</span> <span class="n">fsx</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="n">fsh</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Convenience method to unify the cRNN computation, gets input and shape and returns the cRNNs results.&quot;&quot;&quot;</span>
         <span class="n">kw</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crnn_kw</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_dropconnect_h</span><span class="p">:</span>

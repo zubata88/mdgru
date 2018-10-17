@@ -80,15 +80,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../model.html">Model (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../eval.html">Evaluation module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../data.html">Data loader module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../helper.html">Helper routines and functions</a></li>
@@ -171,7 +172,8 @@
 <span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">argget</span><span class="p">,</span> <span class="n">compile_arguments</span><span class="p">,</span> <span class="n">generate_defaults_info</span>
 
 
-<span class="k">class</span> <span class="nc">SupervisedEvaluation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="SupervisedEvaluation"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation">[docs]</a><span class="k">class</span> <span class="nc">SupervisedEvaluation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
     <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;dropout_rate&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
                          <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;keep rate&quot; for weights using dropconnect. The higher the value, the closer the sampled models to the full model.&#39;</span><span class="p">},</span>
@@ -223,7 +225,17 @@
     <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelcls</span><span class="p">,</span> <span class="n">datacls</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handler for the evaluation of model defined in modelcls using data coming from datacls.</span>
 
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        modelcls : cls</span>
+<span class="sd">            Python class defining the model to evaluate</span>
+<span class="sd">        datacls : cls</span>
+<span class="sd">            Python class implementing the data loading and storing</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">origargs</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
         <span class="n">eval_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">SupervisedEvaluation</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">eval_kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -253,63 +265,97 @@
         <span class="n">testkw</span><span class="p">[</span><span class="s1">&#39;ignore_missing_mask&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tedc</span> <span class="o">=</span> <span class="n">datacls</span><span class="p">(</span><span class="o">*</span><span class="n">paramstesting</span><span class="p">,</span> <span class="n">kw</span><span class="o">=</span><span class="n">testkw</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">valdc</span> <span class="o">=</span> <span class="n">datacls</span><span class="p">(</span><span class="o">*</span><span class="n">paramsvalidation</span><span class="p">,</span> <span class="n">kw</span><span class="o">=</span><span class="n">valkw</span><span class="p">)</span>
-        <span class="c1"># self.trdc = collectioninst[&quot;train&quot;]</span>
-        <span class="c1"># self.tedc = collectioninst[&quot;test&quot;]</span>
-        <span class="c1"># self.valdc = collectioninst[&quot;validation&quot;]</span>
-        <span class="c1"># self.nclasses = argget(kw, &quot;nclasses&quot;, 2, keep=True) #redundant, not used anymore.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">currit</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="c1"># self.only_save_labels = argget(kw, &quot;only_save_labels&quot;, False)</span>
-        <span class="c1"># self.batch_size = argget(kw, &quot;batchsize&quot;, 1)</span>
-        <span class="c1"># self.validate_same = argget(kw, &quot;validate_same&quot;, False)</span>
-        <span class="c1"># self.evaluate_uncertainty_times = argget(kw, &quot;evaluate_uncertainty_times&quot;, 1)</span>
-        <span class="c1"># self.evaluate_uncertainty_dropout = argget(kw, &quot;evaluate_uncertainty_dropout&quot;,</span>
-        <span class="c1">#                                            1.0)  # these standard values ensure that we dont evaluate uncertainty if nothing was provided.</span>
-        <span class="c1"># self.evaluate_uncertainty_saveall = argget(kw, &quot;evaluate_uncertainty_saveall&quot;, False)</span>
-        <span class="c1"># self.show_f05 = argget(kw, &quot;show_f05&quot;, True)</span>
-        <span class="c1"># self.show_f1 = argget(kw, &quot;show_f1&quot;, True)</span>
-        <span class="c1"># self.show_f2 = argget(kw, &quot;show_f2&quot;, True)</span>
-        <span class="c1"># self.show_l2 = argget(kw, &quot;show_l2_loss&quot;, True)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">show_dice</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;show_dice&quot;</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f1</span><span class="p">)</span>
-        <span class="c1"># self.show_cross_entropy = argget(kw, &quot;show_cross_entropy_loss&quot;, True)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">binary_evaluation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_dice</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f1</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f05</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_f2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">estimatefilename</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;estimatefilename&quot;</span><span class="p">,</span> <span class="s2">&quot;estimate&quot;</span><span class="p">)</span>
-        <span class="c1"># self.print_each = argget(kw, &#39;print_each&#39;, 1)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gpu</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;gpus&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">get_train_session</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">get_test_session</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span>
 
-    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="SupervisedEvaluation._train"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation._train">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">_train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Performs one training iteration in respective framework and returns loss(es)&quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;This needs to be implemented depending on the framework&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;This needs to be implemented depending on the framework&quot;</span><span class="p">)</span></div>
 
-    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="SupervisedEvaluation._predict"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation._predict">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">_predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">testing</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict given batch and keeprate dropout.</span>
 
-    <span class="nd">@abstractmethod</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        batch : ndarray</span>
+<span class="sd">        dropout : float</span>
+<span class="sd">            Keeprate for dropconnect</span>
+<span class="sd">        testing</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray : Prediction based on data batch</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="SupervisedEvaluation._predict_with_loss"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation._predict_with_loss">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">_predict_with_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batchlabs</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict for given batch and return loss compared to labels in batchlabs</span>
 
-    <span class="nd">@abstractmethod</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        batch : image data</span>
+<span class="sd">        batchlabs : corresponding label data</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of ndarray prediction and losses</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="SupervisedEvaluation._set_session"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation._set_session">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">_set_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sess</span><span class="p">,</span> <span class="n">cachefolder</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="k">pass</span></div>
 
-    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="SupervisedEvaluation._save"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation._save">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save to file f in current framework</span>
 
-    <span class="nd">@abstractmethod</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        f : location to save model at</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="SupervisedEvaluation._load"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation._load">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">_load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load model in current framework from f</span>
 
-    <span class="nd">@abstractmethod</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        f : location of stored model</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="SupervisedEvaluation.get_globalstep"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation.get_globalstep">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">get_globalstep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return number of iterations this model has been trained in</span>
 
-    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Measures and logs time for data sampling and training iteration.&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int : iteration count</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="SupervisedEvaluation.train"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation.train">[docs]</a>    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Measures and logs time when performing data sampling and training iteration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">batch</span><span class="p">,</span> <span class="n">batchlabs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trdc</span><span class="o">.</span><span class="n">random_sample</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
         <span class="n">time_after_loading</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
@@ -323,10 +369,20 @@
                                                    <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">time_after_loading</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
                                                    <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
                                                    <span class="n">loss</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">loss</span>
+        <span class="k">return</span> <span class="n">loss</span></div>
 
-    <span class="k">def</span> <span class="nf">test_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">ref</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Evaluates all activated scores between ref and pred.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SupervisedEvaluation.test_scores"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation.test_scores">[docs]</a>    <span class="k">def</span> <span class="nf">test_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">ref</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluates all selected scores between reference data ref and prediction pred.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pred : ndarray</span>
+<span class="sd">            prediction, as probability distributions per pixel / voxel</span>
+<span class="sd">        ref : ndarray</span>
+<span class="sd">            labelmap, either as probability distributions per pixel / voxel or as label map</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="mi">0</span><span class="p">))</span>
         <span class="n">pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">pred</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">ref</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
@@ -361,9 +417,25 @@
             <span class="n">res</span><span class="p">[</span><span class="s2">&quot;cross_entropy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ref</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">pred</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">show_l2</span><span class="p">:</span>
             <span class="n">res</span><span class="p">[</span><span class="s2">&quot;l2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">ref</span> <span class="o">-</span> <span class="n">pred</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">res</span>
+        <span class="k">return</span> <span class="n">res</span></div>
 
-    <span class="k">def</span> <span class="nf">test_all_random</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resample</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="SupervisedEvaluation.test_all_random"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation.test_all_random">[docs]</a>    <span class="k">def</span> <span class="nf">test_all_random</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resample</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Test random samples</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        batch_size : int</span>
+<span class="sd">            minibatch size to compute on</span>
+<span class="sd">        dc : datacollection instance, optional</span>
+<span class="sd">            datacollection to sample from</span>
+<span class="sd">        resample : bool</span>
+<span class="sd">            indicates if we need to sample before evaluating</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of loss and prediction ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">dc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">dc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valdc</span>
         <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -374,9 +446,28 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">testbatch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">testbatchlabs</span> <span class="o">=</span> <span class="n">dc</span><span class="o">.</span><span class="n">random_sample</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
         <span class="n">loss</span><span class="p">,</span> <span class="n">prediction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict_with_loss</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">testbatch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">testbatchlabs</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">prediction</span>
+        <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">prediction</span></div>
 
-    <span class="k">def</span> <span class="nf">test_all_available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_results</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="SupervisedEvaluation.test_all_available"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation.test_all_available">[docs]</a>    <span class="k">def</span> <span class="nf">test_all_available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_results</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Completely evaluates each full image in tps using grid sampling.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        batch_size : int</span>
+<span class="sd">            minibatch size to compute on</span>
+<span class="sd">        dc : datacollection instance, optional</span>
+<span class="sd">            datacollection to sample from</span>
+<span class="sd">        return_results : bool</span>
+<span class="sd">            should results be returned or stored right away?</span>
+<span class="sd">        dropout : float</span>
+<span class="sd">            keeprate of dropconnect for inference</span>
+<span class="sd">        testing</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        either tuple of predictions and errors or only errors, depending on return_results flag</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">dc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">dc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tedc</span>
 
@@ -488,10 +579,17 @@
         <span class="k">if</span> <span class="n">return_results</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">full_vols</span><span class="p">,</span> <span class="n">errs</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">errs</span>
+            <span class="k">return</span> <span class="n">errs</span></div>
 
-    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;loads model at location f from disk&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="SupervisedEvaluation.load"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        loads model at location f from disk</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        f : str</span>
+<span class="sd">            location of stored model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
         <span class="n">states</span> <span class="o">=</span> <span class="p">{}</span>
@@ -520,10 +618,17 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="s1">&#39;iteration&#39;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span></div>
 
-    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;saves model to disk at location f&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="SupervisedEvaluation.save"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        saves model to disk at location f</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        f : str</span>
+<span class="sd">            location to save model to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ckpt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         <span class="n">trdc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trdc</span><span class="o">.</span><span class="n">get_states</span><span class="p">()</span>
         <span class="n">tedc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tedc</span><span class="o">.</span><span class="n">get_states</span><span class="p">()</span>
@@ -538,19 +643,19 @@
         <span class="n">states</span><span class="p">[</span><span class="s1">&#39;epoch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span>
         <span class="n">states</span><span class="p">[</span><span class="s1">&#39;iteration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_iteration</span>
         <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span> <span class="o">+</span> <span class="s2">&quot;.pickle&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">ckpt</span>
+        <span class="k">return</span> <span class="n">ckpt</span></div>
 
-    <span class="k">def</span> <span class="nf">add_summary_simple_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;this needs to be implemented and only works with tensorflow backend.&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="SupervisedEvaluation.add_summary_simple_value"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation.add_summary_simple_value">[docs]</a>    <span class="k">def</span> <span class="nf">add_summary_simple_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;this needs to be implemented and only works with tensorflow backend.&quot;</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">set_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sess</span><span class="p">,</span> <span class="n">cachefolder</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="k">return</span> <span class="kc">None</span>
+<div class="viewcode-block" id="SupervisedEvaluation.set_session"><a class="viewcode-back" href="../../eval.html#mdgru.eval.tf.SupervisedEvaluation.set_session">[docs]</a>    <span class="k">def</span> <span class="nf">set_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sess</span><span class="p">,</span> <span class="n">cachefolder</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
     <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span>
 
     <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="k">pass</span></div>
 
 <span class="n">generate_defaults_info</span><span class="p">(</span><span class="n">SupervisedEvaluation</span><span class="p">)</span>
 

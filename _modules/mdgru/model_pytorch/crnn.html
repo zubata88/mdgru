@@ -80,15 +80,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../model.html">Model (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../eval.html">Evaluation module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data loader module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../helper.html">Helper routines and functions</a></li>
@@ -170,7 +171,7 @@
 <span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">argget</span><span class="p">,</span> <span class="n">compile_arguments</span><span class="p">,</span> <span class="n">generate_defaults_info</span>
 
 
-<div class="viewcode-block" id="CRNNCell"><a class="viewcode-back" href="../../../crnn_th.html#mdgru.model_pytorch.crnn.CRNNCell">[docs]</a><span class="k">class</span> <span class="nc">CRNNCell</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<div class="viewcode-block" id="CRNNCell"><a class="viewcode-back" href="../../../obs/crnn_th.html#mdgru.model_pytorch.crnn.CRNNCell">[docs]</a><span class="k">class</span> <span class="nc">CRNNCell</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base convolutional RNN method, implements common functions and serves as abstract class.</span>
 
 <span class="sd">    Property defaults contains default values for all properties of a CGRUCell that are the same for one MDGRU</span>
@@ -213,7 +214,7 @@
     <span class="k">def</span> <span class="nf">state_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_units</span>
 
-<div class="viewcode-block" id="CRNNCell._get_dropconnect"><a class="viewcode-back" href="../../../crnn_th.html#mdgru.model_pytorch.crnn.CRNNCell._get_dropconnect">[docs]</a>    <span class="k">def</span> <span class="nf">_get_dropconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">keep_rate_training</span><span class="p">,</span> <span class="n">keep_rate_testing</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="CRNNCell._get_dropconnect"><a class="viewcode-back" href="../../../obs/crnn_th.html#mdgru.model_pytorch.crnn.CRNNCell._get_dropconnect">[docs]</a>    <span class="k">def</span> <span class="nf">_get_dropconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">keep_rate_training</span><span class="p">,</span> <span class="n">keep_rate_testing</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Creates factors to be applied to filters to achieve either Bernoulli or Gaussian dropconnect.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="n">keep_rate</span> <span class="o">=</span> <span class="n">keep_rate_training</span>

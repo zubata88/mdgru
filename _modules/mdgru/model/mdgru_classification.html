@@ -1,0 +1,411 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mdgru.model.mdgru_classification &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_install.html">How to Install</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../model.html">mdgru.model</a> &raquo;</li>
+        
+      <li>mdgru.model.mdgru_classification</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mdgru.model.mdgru_classification</h1><div class="highlight"><pre>
+<span></span><span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Simon Andermatt&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2017 Simon Andermatt&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">argget</span><span class="p">,</span> <span class="n">collect_parameters</span><span class="p">,</span> <span class="n">define_arguments</span><span class="p">,</span> <span class="n">compile_arguments</span>
+<span class="kn">from</span> <span class="nn">mdgru.model</span> <span class="k">import</span> <span class="n">save_summary_for_nd_images</span>
+<span class="kn">from</span> <span class="nn">mdgru.model.mdrnn</span> <span class="k">import</span> <span class="n">MDGRUNet</span>
+<span class="kn">from</span> <span class="nn">mdgru.model.mdrnn.mdgru</span> <span class="k">import</span> <span class="n">MDRNN</span>
+<span class="kn">from</span> <span class="nn">mdgru.model</span> <span class="k">import</span> <span class="n">ClassificationModel</span>
+<span class="kn">from</span> <span class="nn">mdgru.model</span> <span class="k">import</span> <span class="n">lazy_property</span>
+
+
+<div class="viewcode-block" id="MDGRUClassification"><a class="viewcode-back" href="../../../mdgru.model.html#mdgru.model.mdgru_classification.MDGRUClassification">[docs]</a><span class="k">class</span> <span class="nc">MDGRUClassification</span><span class="p">(</span><span class="n">ClassificationModel</span><span class="p">,</span> <span class="n">MDGRUNet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Provides a full MDGRU default network.</span>
+
+<span class="sd">    Using this class,</span>
+<span class="sd">    Using the parameters fc_channels and mdgru_channels, which have to be lists of the same length, a</span>
+<span class="sd">    MDGRU network of a number of mdgru and voxel-wise fully connected layers can be generated. Strides can be</span>
+<span class="sd">    set for each MDGRU layer as a list of lists of strides per dimension. Furthermore, entries in fc_channels may be</span>
+<span class="sd">    None, when MDGRU layer should be stacked directly after each other.</span>
+
+<span class="sd">    :param ignore_label: Implements omitting a certain label, usage of this parameter is discouraged.</span>
+<span class="sd">    :param fc_channels: Defines the number of channels per voxel-wise fully connected layer</span>
+<span class="sd">    :param mdgru_channels: Defines the number of channels per MDGRU layer</span>
+<span class="sd">    :param strides: list of list defining the strides per dimension per MDGRU layer. None means strides of 1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MDGRUClassification</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ignore_label</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;ignore_label&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc_channels</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;fc_channels&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nclasses</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mdgru_channels</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;mdgru_channels&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strides</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mdgru_channels</span><span class="p">])</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">logits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Provides the logits of the prediction&quot;&quot;&quot;</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">for</span> <span class="n">it</span><span class="p">,</span> <span class="p">(</span><span class="n">mdgruc</span><span class="p">,</span> <span class="n">fcc</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mdgru_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fc_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">strides</span><span class="p">)):</span>
+            <span class="n">kw</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">it</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mdgru_channels</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">kw</span><span class="p">[</span><span class="s2">&quot;bne&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">kw</span><span class="p">[</span><span class="s2">&quot;noactivation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">kw</span><span class="p">[</span><span class="s2">&quot;strides&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">())</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)]</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">else</span> <span class="n">s</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mdgru_bb</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">,</span> <span class="n">mdgruc</span><span class="p">,</span> <span class="n">fcc</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">it</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">istraining</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">h</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Provides prediction in the form of a discrete probability distribution per voxel&quot;&quot;&quot;</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logits</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tensorboard</span><span class="p">:</span>
+            <span class="n">save_summary_for_nd_images</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">])</span>
+            <span class="n">save_summary_for_nd_images</span><span class="p">(</span><span class="s2">&quot;prediction&quot;</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">pred</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">costs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cross entropy cost function&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">begin</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)]</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)]</span>
+            <span class="n">begin</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_label</span>
+            <span class="n">size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">ignore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_label</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logits</span> <span class="o">*=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">ignore</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># this will set all to zero that are going to be ignored</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logits</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_label</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ignore</span> <span class="o">*</span> <span class="mf">1e30</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax_cross_entropy_with_logits_v2</span><span class="p">(</span><span class="n">logits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">logits</span><span class="p">,</span>
+                                                       <span class="n">labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">loss</span> <span class="o">*=</span> <span class="n">tf</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">ignore</span><span class="p">)</span> <span class="o">/</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ignore</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tensorboard</span><span class="p">:</span>
+            <span class="n">save_summary_for_nd_images</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">])</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s2">&quot;segloss&quot;</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">loss</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">loss</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Optimization routine using the Adadelta optimizer&quot;&quot;&quot;</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">AdadeltaOptimizer</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">momentum</span><span class="p">)</span>
+        <span class="n">rets</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="n">global_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">global_step</span><span class="p">)</span>
+        <span class="c1"># call prediction to at least initialize everything once:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prediction</span>
+        <span class="k">return</span> <span class="n">rets</span>
+
+<div class="viewcode-block" id="MDGRUClassification.collect_parameters"><a class="viewcode-back" href="../../../mdgru.model.html#mdgru.model.mdgru_classification.MDGRUClassification.collect_parameters">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">collect_parameters</span><span class="p">():</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">collect_parameters</span><span class="p">(</span><span class="n">MDGRUNet</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">collect_parameters</span><span class="p">(</span><span class="n">MDRNN</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">collect_parameters</span><span class="p">(</span><span class="n">MDRNN</span><span class="o">.</span><span class="n">_defaults</span><span class="p">[</span><span class="s1">&#39;crnn_class&#39;</span><span class="p">],</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">args</span></div>
+
+<div class="viewcode-block" id="MDGRUClassification.compile_arguments"><a class="viewcode-back" href="../../../mdgru.model.html#mdgru.model.mdgru_classification.MDGRUClassification.compile_arguments">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">compile_arguments</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="c1"># block_kw, kw = compile_arguments(MDGRUBlock, kw, transitive=True)</span>
+        <span class="n">mdrnn_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">MDRNN</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="n">keep_entries</span><span class="p">)</span>
+        <span class="n">crnn_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">MDRNN</span><span class="o">.</span><span class="n">_defaults</span><span class="p">[</span><span class="s1">&#39;crnn_class&#39;</span><span class="p">],</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keep_entries</span><span class="o">=</span><span class="n">keep_entries</span><span class="p">)</span>
+        <span class="n">new_kw</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">new_kw</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">crnn_kw</span><span class="p">)</span>
+        <span class="n">new_kw</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">mdrnn_kw</span><span class="p">)</span>
+        <span class="c1"># new_kw.update(block_kw)</span>
+        <span class="k">return</span> <span class="n">new_kw</span><span class="p">,</span> <span class="n">kw</span></div></div>
+
+<div class="viewcode-block" id="MDGRUClassificationWithDiceLoss"><a class="viewcode-back" href="../../../mdgru.model.html#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss">[docs]</a><span class="k">class</span> <span class="nc">MDGRUClassificationWithDiceLoss</span><span class="p">(</span><span class="n">MDGRUClassification</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MDGRUClassificationWithDiceLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_label</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;dice_loss_label&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_weight</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;dice_loss_weight&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dice_autoweighted</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;dice_autoweighted&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_label</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_weight</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dice_autoweighted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;dice_loss_label and dice_loss_weight need to be of the same length&quot;</span><span class="p">)</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">costs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># get standard entropy loss</span>
+        <span class="n">crossEntropyLoss</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">MDGRUClassificationWithDiceLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">costs</span>
+
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-8</span>
+
+        <span class="c1"># calc soft dice loss, loop over all declared dice loss labels</span>
+        <span class="n">diceLoss</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dice_autoweighted</span><span class="p">:</span>
+            <span class="n">batchDiceLoss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">batch_size</span><span class="p">])</span>
+            <span class="n">batchtotalWeight</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">batch_size</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_label</span><span class="p">:</span>
+                <span class="n">intersection</span> <span class="o">=</span>      <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+                <span class="n">sum_prediction</span> <span class="o">=</span>    <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+                <span class="n">sum_target</span> <span class="o">=</span>        <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+                <span class="n">w_all_batches</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">sum_target</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># to prevent infty if label is not in the sample</span>
+                <span class="n">batchtotalWeight</span> <span class="o">+=</span> <span class="n">w_all_batches</span>
+                <span class="n">batchDiceLoss</span> <span class="o">+=</span> <span class="n">w_all_batches</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">intersection</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">sum_prediction</span> <span class="o">+</span> <span class="n">sum_target</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+            <span class="n">diceLoss</span> <span class="o">=</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_weight</span><span class="p">)</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">batchDiceLoss</span> <span class="o">/</span> <span class="n">batchtotalWeight</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_weight</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_label</span><span class="p">):</span>
+                <span class="n">intersection</span> <span class="o">=</span>      <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+                <span class="n">sum_prediction</span> <span class="o">=</span>    <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+                <span class="n">sum_target</span> <span class="o">=</span>        <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+                <span class="n">diceLoss</span> <span class="o">-=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">intersection</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">sum_prediction</span> <span class="o">+</span> <span class="n">sum_target</span> <span class="o">+</span> <span class="n">eps</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">diceLoss</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_weight</span><span class="p">))</span> <span class="o">*</span> <span class="n">crossEntropyLoss</span></div>
+
+
+<div class="viewcode-block" id="MDGRUClassificationWithGeneralizedDiceLoss"><a class="viewcode-back" href="../../../mdgru.model.html#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss">[docs]</a><span class="k">class</span> <span class="nc">MDGRUClassificationWithGeneralizedDiceLoss</span><span class="p">(</span><span class="n">MDGRUClassification</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MDGRUClassificationWithGeneralizedDiceLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_label</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;dice_loss_label&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_weight</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;dice_loss_weight&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dice_autoweighted</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">&quot;dice_autoweighted&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_label</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_weight</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dice_autoweighted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;dice_loss_label and dice_loss_weight need to be of the same length&quot;</span><span class="p">)</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">costs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># get standard entropy loss</span>
+        <span class="n">crossEntropyLoss</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">MDGRUClassificationWithGeneralizedDiceLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">costs</span>
+
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
+        <span class="n">ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-8</span>
+
+        <span class="c1"># calc soft dice loss, loop over all declared dice loss labels</span>
+        <span class="n">diceLoss</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">total_intersection</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">batch_size</span><span class="p">])</span>
+        <span class="n">total_sum</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">batch_size</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dice_autoweighted</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_label</span><span class="p">:</span>
+                <span class="n">sum_prediction</span> <span class="o">=</span>        <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+                <span class="n">sum_target</span> <span class="o">=</span>            <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+                <span class="n">w_all_batches</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">sum_target</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># to prevent infty if label is not in the sample</span>
+                <span class="n">total_sum</span> <span class="o">+=</span> <span class="n">w_all_batches</span> <span class="o">*</span> <span class="p">(</span><span class="n">sum_prediction</span> <span class="o">+</span> <span class="n">sum_target</span><span class="p">)</span>
+                <span class="n">total_intersection</span> <span class="o">+=</span> <span class="n">w_all_batches</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+            <span class="n">diceLoss</span> <span class="o">=</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_weight</span><span class="p">)</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">total_intersection</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">total_sum</span> <span class="o">+</span> <span class="n">eps</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_weight</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_label</span><span class="p">):</span>
+                <span class="n">total_intersection</span> <span class="o">+=</span>     <span class="n">w</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+                <span class="n">total_sum</span> <span class="o">+=</span>    <span class="n">w</span> <span class="o">*</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]))</span>
+            <span class="n">diceLoss</span> <span class="o">=</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">total_intersection</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">total_sum</span> <span class="o">+</span> <span class="n">eps</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">diceLoss</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dice_loss_weight</span><span class="p">))</span> <span class="o">*</span> <span class="n">crossEntropyLoss</span></div>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

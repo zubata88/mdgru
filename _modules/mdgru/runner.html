@@ -1,0 +1,657 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mdgru.runner &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how_to_install.html">How to Install</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>mdgru.runner</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for mdgru.runner</h1><div class="highlight"><pre>
+<span></span><span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Simon Andermatt&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright (C) 2017 Simon Andermatt&quot;</span>
+
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">signal</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span> <span class="k">as</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="k">import</span> <span class="n">Thread</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">mdgru.helper</span> <span class="k">import</span> <span class="n">argget</span><span class="p">,</span> <span class="n">force_symlink</span><span class="p">,</span> <span class="n">notify_user</span><span class="p">,</span> <span class="n">compile_arguments</span><span class="p">,</span> <span class="n">generate_defaults_info</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">_pickle</span> <span class="k">as</span> <span class="nn">pickle</span>  <span class="c1"># cPickle is now _pickle (TODO: CHECK)</span>
+<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="n">ignore_signal</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="Runner"><a class="viewcode-back" href="../../runner.html#mdgru.runner.Runner">[docs]</a><span class="k">class</span> <span class="nc">Runner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">ignore_signal</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;test_each&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">2500</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;validate after # training iterations&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;validate_each&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;save_each&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;save after # training iterations&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;plot_each&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">2500</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">},</span>  <span class="c1"># , &#39;help&#39;: &#39;plot each # training iterations&#39;},</span>
+        <span class="s1">&#39;test_size&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="s1">&#39;test_iters&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                       <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;number of validations to perform on random samples. Only makes sense if full_image_validation is not set&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;validation_iterations&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;test_first&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span><span class="s1">&#39;Perform validation on the untrained model as well.&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;validate_first&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;perform_full_image_validation&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;invert_meaning&#39;</span><span class="p">:</span> <span class="s1">&#39;dont_&#39;</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Use random samples instead of the complete validation images&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;save_validation_results&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;invert_meaning&#39;</span><span class="p">:</span> <span class="s1">&#39;dont_&#39;</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Do not save validation results on the disk&#39;</span> <span class="p">},</span>
+        <span class="s1">&#39;notifyme&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;nargs&#39;</span><span class="p">:</span><span class="s1">&#39;?&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+                                  <span class="s1">&#39;help&#39;</span><span class="p">:</span><span class="s1">&#39;Experimental feature that when something goes amiss, &#39;</span>
+                                       <span class="s1">&#39;this telegram chat id will be used to inform the &#39;</span>
+                                       <span class="s1">&#39;respective user of the error. This requires a file called config.json&#39;</span>
+                                       <span class="s1">&#39; in the same folder as this file, containing a simple dict structure as&#39;</span>
+                                       <span class="s1">&#39; follows: {&quot;chat_id&quot;: CHATID, &quot;token&quot;: TOKEN}, where CHATID and TOKEN &#39;</span>
+                                       <span class="s1">&#39;have to be created with Telegrams BotFather. The chatid from config can be &#39;</span>
+                                       <span class="s1">&#39;overriden using a parameter together with this option.&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;results_to_csv&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Do not create csv with validation results&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;checkpointfiles&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;provide checkpointfile for this template. If no modelname is provided, &#39;</span>
+                                       <span class="s1">&#39;we will infer one from this file. Multiple files are only allowed if &#39;</span>
+                                       <span class="s1">&#39;only_test is set. If the same number of optionnames are provided, they will &#39;</span>
+                                       <span class="s1">&#39;be used to name the different results. If only one optionname is provided, they &#39;</span>
+                                       <span class="s1">&#39;will be numbered in order and the checkpoint filename will be included in the &#39;</span>
+                                       <span class="s1">&#39;result file.&#39;</span><span class="p">,</span> <span class="s1">&#39;nargs&#39;</span><span class="p">:</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span><span class="s1">&#39;ckpt&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;epochs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span><span class="s1">&#39;Number of times through the training dataset. Cant be used together with &quot;iterations&quot;&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;iterations&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Number of iterations to perform. Can only be set and makes sense if epochs is 1&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;only_test&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Only perform testing. Requires at least one ckpt&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;only_train&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span> <span class="s1">&#39;Only perform training and validation.&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;experimentloc&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/experiments&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;optionname&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;nargs&#39;</span><span class="p">:</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;help&#39;</span><span class="p">:</span><span class="s1">&#39;name for chosen set of options, if multiple checkpoints provided, there needs to be 1 or the same number of names here&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;fullparameters&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluationinstance</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        evaluationinstance : instance of an evaluation class</span>
+<span class="sd">            Will be used to call train and test routines on.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">origargs</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">runner_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">Runner</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">runner_kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_each</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_each</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_each</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifyme</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># import json</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;../config.json&#39;</span><span class="p">))</span>
+                <span class="n">nm</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">chat_id</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">],</span> <span class="n">token</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">])</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">nm</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">notifyme</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">finally</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">notifyme</span> <span class="o">=</span> <span class="n">nm</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="c1"># we give up</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;notifyme id not understood&#39;</span><span class="p">)</span>
+
+        <span class="c1"># prelogging:</span>
+        <span class="c1"># experiments = argget(kw, &#39;experimentloc&#39;, os.path.expanduser(&#39;~/experiments&#39;))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runfile</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()</span> <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;RUN.*\.py&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">])][</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optionname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optionname</span> <span class="o">=</span> <span class="p">[</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fullparameters</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()]</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optionname</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optionname</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">optionname</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimatefilenames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optionname</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optionname</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">pf</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optionname</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pf</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">40</span><span class="p">:</span>
+                <span class="n">pf</span> <span class="o">=</span> <span class="n">pf</span><span class="p">[:</span><span class="mi">39</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optionname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">experiments_postfix</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">pf</span>
+        <span class="n">experiments_nots</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experimentloc</span><span class="p">,</span>
+                                        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">runfile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">runfile</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;RUN_&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">4</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments_postfix</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">experiments_nots</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cachefolder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">,</span> <span class="s1">&#39;cache&#39;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cachefolder</span><span class="p">)</span>
+        <span class="c1"># logging:</span>
+        <span class="n">loggers</span> <span class="o">=</span> <span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;runner&#39;</span><span class="p">,</span> <span class="s1">&#39;helper&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">]]</span>
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1"> </span><span class="si">%(name)s</span><span class="se">\t</span><span class="si">%(levelname)s</span><span class="s1">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">logfile</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s1">&#39;logfile&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cachefolder</span><span class="p">,</span> <span class="s1">&#39;log.txt&#39;</span><span class="p">))</span>
+        <span class="n">fh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">logfile</span><span class="p">)</span>
+        <span class="n">fh</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s1">&#39;logfileloglvl&#39;</span><span class="p">,</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">))</span>
+        <span class="n">fh</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+
+        <span class="n">ch</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
+        <span class="n">ch</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+        <span class="n">ch</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s1">&#39;loglvl&#39;</span><span class="p">,</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">logger</span> <span class="ow">in</span> <span class="n">loggers</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">origargs</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;arg </span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origargs</span><span class="p">[</span><span class="n">k</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ev</span> <span class="o">=</span> <span class="n">evaluationinstance</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">origargs</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;eval/data/model&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;arg </span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">origargs</span><span class="p">[</span><span class="n">k</span><span class="p">]))</span>
+        <span class="c1"># for k in self.ev.trdc.origargs:</span>
+        <span class="c1">#     logging.getLogger(&#39;data&#39;).info(&#39; trdc arg {}:{}&#39;.format(k, self.ev.trdc.origargs[k]))</span>
+        <span class="c1"># for k in self.ev.tedc.origargs:</span>
+        <span class="c1">#     logging.getLogger(&#39;data&#39;).info(&#39; tedc arg {}:{}&#39;.format(k, self.ev.tedc.origargs[k]))</span>
+        <span class="c1"># for k in self.ev.valdc.origargs:</span>
+        <span class="c1">#     logging.getLogger(&#39;data&#39;).info(&#39;valdc arg {}:{}&#39;.format(k, self.ev.valdc.origargs[k]))</span>
+        <span class="c1"># for k in self.ev.model.origargs:</span>
+        <span class="c1">#     logging.getLogger(&#39;model&#39;).info(&#39;arg {}:{}&#39;.format(k, self.ev.model.origargs[k]))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">only_train</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">trdc</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">tedc</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">valdc</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">trdc</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episodes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">only_test</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">trdc</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">tedc</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">valdc</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">tedc</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episodes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;evaluate&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episodes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;evaluate&#39;</span><span class="p">]</span>
+        <span class="c1"># self.episodes = argget(kw, &#39;episodes&#39;, [&#39;train&#39;, &#39;evaluate&#39;])</span>
+        <span class="c1"># self.epochs = argget(kw, &#39;epochs&#39;, 1)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">its_per_epoch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">trdc</span><span class="o">.</span><span class="n">get_data_dims</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">its_per_epoch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span>
+        <span class="c1"># self.its_per_epoch = argget(kw, &#39;its_per_epoch&#39;, self.ev.trdc.get_data_dims()[0] // self.ev.batch_size)</span>
+        <span class="c1"># self.checkpointfiles = argget(kw, &#39;checkpointfiles&#39;, None)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimatefilenames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optionname</span><span class="c1">#argget(kw, &#39;estimatefilenames&#39;, None)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpointfiles</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">&#39;train&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">episodes</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpointfiles</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Multiple checkpoints are only allowed if only testing is performed.&#39;</span><span class="p">)</span>
+                <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">checkpointfiles</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpointfiles</span><span class="p">]</span>
+        <span class="c1"># if not isinstance(self.estimatefilenames, list):</span>
+        <span class="c1">#     self.estimatefilenames = [self.estimatefilenames]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpointfiles</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimatefilenames</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimatefilenames</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Optionnames must match number of checkpoint files or have length 1!&#39;</span><span class="p">)</span>
+                <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">estimatefilenames</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">estimatefilenames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;-</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+                                          <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpointfiles</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotfolder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">,</span> <span class="s1">&#39;plot&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_scaling</span> <span class="o">=</span> <span class="n">argget</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s1">&#39;plot_scaling&#39;</span><span class="p">,</span> <span class="mf">1e-8</span><span class="p">)</span>
+
+
+        <span class="c1"># self.display_each = argget(kw, &#39;display_each&#39;, 100)</span>
+        <span class="c1"># self.test_each = argget(kw, &#39;test_each&#39;, 100)</span>
+        <span class="c1"># self.save_each = argget(kw, &#39;save_each&#39;, self.test_each)</span>
+        <span class="c1"># self.plot_each = argget(kw, &#39;plot_each&#39;, self.test_each)</span>
+        <span class="c1"># self.test_size = argget(kw, &#39;test_size&#39;, 1)  # batch_size for tests</span>
+        <span class="c1"># self.test_iters = argget(kw, &#39;test_iters&#39;, 1)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_test_pick_iteration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_each</span><span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_first</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="c1"># self._test_pick_iteration = argget(kw, &#39;test_first&#39;, ifset=0, default=self.test_each - 1)</span>
+        <span class="c1"># self.perform_full_image_validation = argget(kw, &#39;perform_full_image_validation&#39;, 1)</span>
+        <span class="c1"># self.save_validation_results = argget(kw, &#39;show_testing_results&#39;, False)</span>
+        <span class="n">force_symlink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">experiments_nots</span><span class="p">,</span> <span class="s2">&quot;latest&quot;</span><span class="p">))</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plotfolder</span><span class="p">)</span>
+        <span class="c1"># self.notifyme = argget(kw, &#39;notifyme&#39;, False)</span>
+        <span class="c1"># self.results_to_csv = argget(kw, &#39;results_to_csv&#39;, False)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_losses</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_losses</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val_losses</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># remove full parameters since it would not be an ignored parameter and confuse us</span>
+        <span class="c1"># kw.pop(&#39;fullparameters&#39;)</span>
+        <span class="k">if</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;the following args were ignored: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kw</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Runner.validation"><a class="viewcode-back" href="../../runner.html#mdgru.runner.Runner.validation">[docs]</a>    <span class="k">def</span> <span class="nf">validation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">showIt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()):</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_iters</span><span class="p">):</span>
+            <span class="n">allres</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">testbatches</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">testlabs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">perform_full_image_validation</span><span class="p">:</span>
+                <span class="n">res</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">test_all_available</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_size</span><span class="p">,</span> <span class="n">dc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">valdc</span><span class="p">,</span>
+                                                        <span class="n">return_results</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">allres</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">error</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">test_all_random</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_size</span><span class="p">,</span> <span class="n">dc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">valdc</span><span class="p">)</span>
+                <span class="n">currtp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">valdc</span><span class="o">.</span><span class="n">tps</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">valdc</span><span class="o">.</span><span class="n">curr_tps</span><span class="p">]</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">currtp</span><span class="p">)</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="n">filename</span><span class="p">,</span> <span class="n">currtp</span><span class="p">,</span> <span class="n">result</span><span class="p">]</span>
+                <span class="n">allres</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">error</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+                        <span class="n">error</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ce&#39;</span><span class="p">:</span> <span class="n">error</span><span class="p">}</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+                <span class="n">testbatches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">testbatch</span><span class="p">)</span>
+                <span class="n">testlabs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">testbatchlabs</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">ee</span> <span class="ow">in</span> <span class="n">error</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">ee</span><span class="p">))</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">save_all_res</span><span class="p">(</span><span class="n">cachefolder</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">dc</span><span class="p">,</span> <span class="n">tname</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">rit</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rr</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">showIt</span><span class="p">:</span>
+                        <span class="n">dc</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cachefolder</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">-</span><span class="si">{}</span><span class="s1">-</span><span class="si">{}</span><span class="s1">-pred&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tname</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rit</span><span class="p">)),</span>
+                                <span class="n">tporigin</span><span class="o">=</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="n">dc</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)),</span>
+                                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cachefolder</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">-am&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tname</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rit</span><span class="p">)),</span> <span class="n">tporigin</span><span class="o">=</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;saved validation test files in cache&quot;</span><span class="p">)</span>
+
+            <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">save_all_res</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cachefolder</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">valdc</span><span class="p">,</span> <span class="n">name</span><span class="p">,))</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="n">errors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">errors</span><span class="p">))</span>
+
+        <span class="n">minerrors</span><span class="p">,</span> <span class="n">avgerrors</span><span class="p">,</span> <span class="n">medianerrors</span><span class="p">,</span> <span class="n">maxerrors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_min_mean_median_max_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;min    errors </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minerrors</span><span class="p">))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;mean   errors </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">avgerrors</span><span class="p">))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;median errors </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">medianerrors</span><span class="p">))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;max    errors </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">maxerrors</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_to_csv</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_error_to_csv</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="s1">&#39;validation_scores.csv&#39;</span><span class="p">,</span> <span class="n">minerrors</span><span class="p">,</span> <span class="n">avgerrors</span><span class="p">,</span> <span class="n">medianerrors</span><span class="p">,</span> <span class="n">maxerrors</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">avgerrors</span></div>
+
+<div class="viewcode-block" id="Runner._finish"><a class="viewcode-back" href="../../runner.html#mdgru.runner.Runner._finish">[docs]</a>    <span class="k">def</span> <span class="nf">_finish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signal</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">signal</span><span class="p">:</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;interrupt&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;final&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifyme</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">signal</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">notify_user</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">notifyme</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifyme</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">],</span> <span class="n">message</span><span class="o">=</span><span class="s1">&#39;Process was killed&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cachefolder</span><span class="p">,</span> <span class="s1">&#39;trainloss.pickle&#39;</span><span class="p">),</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_losses</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cachefolder</span><span class="p">,</span> <span class="s1">&#39;valloss.pickle&#39;</span><span class="p">),</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val_losses</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cachefolder</span><span class="p">,</span> <span class="s1">&#39;testloss.pickle&#39;</span><span class="p">),</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_losses</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Runner.train"><a class="viewcode-back" href="../../runner.html#mdgru.runner.Runner.train">[docs]</a>    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">Runner</span><span class="o">.</span><span class="n">ignore_signal</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># lets the signal handler work only once</span>
+
+        <span class="k">def</span> <span class="nf">signal_handler</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;You pressed Ctrl+C! shutting down&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">Runner</span><span class="o">.</span><span class="n">ignore_signal</span><span class="p">:</span>
+                    <span class="k">return</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="n">ignore_signal</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_finish</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;If you press Ctrl+C, we save the model before exit&#39;</span><span class="p">)</span>
+        <span class="c1"># train</span>
+        <span class="n">epoch</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">starttime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">epochs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">current_epoch</span><span class="p">,</span> <span class="n">epochs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">=</span> <span class="n">epoch</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;epoch </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">: running for </span><span class="si">{}</span><span class="s2"> batches of </span><span class="si">{}</span><span class="s2">:&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">its_per_epoch</span><span class="p">,</span>
+                                                                    <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">batch_size</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">current_iteration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">its_per_epoch</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="n">it</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+                <span class="c1"># logging.getLogger(&#39;runner&#39;).info(</span>
+                <span class="c1">#    &quot;with img loading: {} {}&quot;.format(time.time() - a, np.asarray(loss).flatten()))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">train_losses</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">epoch</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="n">loss</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">it</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_each</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_each</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_first</span> <span class="ow">and</span> <span class="n">it</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                    <span class="n">error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation</span><span class="p">(</span><span class="n">showIt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">save_validation_results</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">it</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">val_losses</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">epoch</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="p">[</span><span class="n">e</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_scaling</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">error</span><span class="o">.</span><span class="n">items</span><span class="p">()]])</span>
+
+                    <span class="n">difftime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">starttime</span>
+                    <span class="n">divisor</span> <span class="o">=</span> <span class="p">(</span><span class="n">it</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">epoch</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">its_per_epoch</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2"> of </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2"> in </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">| </span><span class="si">{}</span><span class="s2"> left&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">its_per_epoch</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span>
+                                                                  <span class="n">difftime</span><span class="p">,</span>
+                                                                  <span class="n">difftime</span> <span class="o">/</span> <span class="n">divisor</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">its_per_epoch</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span>
+                                                                  <span class="n">difftime</span> <span class="o">/</span> <span class="n">divisor</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">its_per_epoch</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span> <span class="o">-</span> <span class="n">difftime</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">it</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_each</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_each</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;temp-epoch</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;temp&#39;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">current_iteration</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_finish</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Runner.save"><a class="viewcode-back" href="../../runner.html#mdgru.runner.Runner.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="n">abspath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cachefolder</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checkpointfiles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">abspath</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Saved checkpoint </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpointfiles</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="Runner.write_error_to_csv"><a class="viewcode-back" href="../../runner.html#mdgru.runner.Runner.write_error_to_csv">[docs]</a>    <span class="k">def</span> <span class="nf">write_error_to_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">minerrors</span><span class="p">,</span> <span class="n">avgerrors</span><span class="p">,</span> <span class="n">medianerrors</span><span class="p">,</span> <span class="n">maxerrors</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cachefolder</span><span class="p">,</span> <span class="n">filename</span><span class="p">),</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+
+                <span class="n">globalstep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">get_globalstep</span><span class="p">()</span>
+                <span class="n">currenttime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+                <span class="n">ckptfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpointfiles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># if self.checkpointfile is a list -&gt; adapt ckptfile</span>
+
+                <span class="n">evaluationWriter</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">csvfile</span><span class="p">)</span>
+                <span class="n">evaluationWriter</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span>
+                    <span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">errors</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">))]</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;checkpoint&#39;</span><span class="p">,</span> <span class="s1">&#39;iteration&#39;</span><span class="p">,</span>
+                                                                                          <span class="s1">&#39;time-stamp&#39;</span><span class="p">,</span> <span class="s1">&#39;score&#39;</span><span class="p">,</span>
+                                                                                          <span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">,</span>
+                                                                                          <span class="s1">&#39;median&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">key</span><span class="p">])):</span>
+                            <span class="n">evaluationWriter</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">key</span><span class="p">]</span>
+                                                      <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;label&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">)]</span>
+                                                      <span class="o">+</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">errors</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="n">label</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">))]</span>
+                                                      <span class="o">+</span> <span class="p">[</span><span class="n">ckptfile</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">globalstep</span><span class="p">),</span> <span class="n">currenttime</span><span class="p">,</span> <span class="n">key</span><span class="p">]</span>
+                                                      <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;label&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">)]</span>
+                                                      <span class="o">+</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">minerrors</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">label</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">avgerrors</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">label</span><span class="p">]),</span>
+                                                         <span class="nb">str</span><span class="p">(</span><span class="n">medianerrors</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">label</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">maxerrors</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">label</span><span class="p">])])</span>
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="n">evaluationWriter</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">key</span><span class="p">]</span>
+                                                  <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;all_labels&#39;</span><span class="p">]</span>
+                                                  <span class="o">+</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">errors</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">))]</span>
+                                                  <span class="o">+</span> <span class="p">[</span><span class="n">ckptfile</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">globalstep</span><span class="p">),</span> <span class="n">currenttime</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="s1">&#39;all_labels&#39;</span><span class="p">]</span>
+                                                  <span class="o">+</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">minerrors</span><span class="p">[</span><span class="n">key</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">avgerrors</span><span class="p">[</span><span class="n">key</span><span class="p">]),</span>
+                                                     <span class="nb">str</span><span class="p">(</span><span class="n">medianerrors</span><span class="p">[</span><span class="n">key</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">maxerrors</span><span class="p">[</span><span class="n">key</span><span class="p">])])</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;could not write error to &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Runner.calc_min_mean_median_max_errors"><a class="viewcode-back" href="../../runner.html#mdgru.runner.Runner.calc_min_mean_median_max_errors">[docs]</a>    <span class="k">def</span> <span class="nf">calc_min_mean_median_max_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">errors</span><span class="p">):</span>
+        <span class="n">avgerrors</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">minerrors</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">medianerrors</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">maxerrors</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="p">[</span><span class="n">errors</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">))</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+            <span class="n">avgerrors</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">minerrors</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">medianerrors</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">maxerrors</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">use_tensorboard</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">avgerrors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">vv</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">add_summary_simple_value</span><span class="p">(</span><span class="s1">&#39;validation-mean-</span><span class="si">{}</span><span class="s1">-</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">c</span><span class="p">),</span> <span class="n">vv</span><span class="p">)</span>
+
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;could not save </span><span class="si">{}</span><span class="s1"> as scalar summary value&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vv</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">minerrors</span><span class="p">,</span> <span class="n">avgerrors</span><span class="p">,</span> <span class="n">medianerrors</span><span class="p">,</span> <span class="n">maxerrors</span></div>
+
+<div class="viewcode-block" id="Runner.test"><a class="viewcode-back" href="../../runner.html#mdgru.runner.Runner.test">[docs]</a>    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">tedc</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">tedc</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">test_all_available</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_to_csv</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">):</span>
+            <span class="n">minerrors</span><span class="p">,</span> <span class="n">avgerrors</span><span class="p">,</span> <span class="n">medianerrors</span><span class="p">,</span> <span class="n">maxerrors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_min_mean_median_max_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_error_to_csv</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="s1">&#39;testing_scores.csv&#39;</span><span class="p">,</span> <span class="n">minerrors</span><span class="p">,</span> <span class="n">avgerrors</span><span class="p">,</span> <span class="n">medianerrors</span><span class="p">,</span> <span class="n">maxerrors</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Runner.run"><a class="viewcode-back" href="../../runner.html#mdgru.runner.Runner.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="c1"># save this file as txt to cachefolder:</span>
+
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runfile</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cachefolder</span><span class="p">,</span> <span class="s1">&#39;runfile.py&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="s2">&quot;train&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">episodes</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">get_train_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">set_session</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cachefolder</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpointfiles</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpointfiles</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s2">&quot;test&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">episodes</span> <span class="ow">or</span> <span class="s2">&quot;evaluate&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">episodes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">use_tensorboard</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># no need, since we evaluate everything anyways.</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">get_test_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">set_session</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cachefolder</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">est</span><span class="p">,</span> <span class="n">ckpt</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimatefilenames</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpointfiles</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">ckpt</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ckpt</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">estimatefilename</span> <span class="o">=</span> <span class="n">est</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">test</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifyme</span><span class="p">:</span>
+            <span class="n">notify_user</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">notifyme</span><span class="p">[</span><span class="s1">&#39;chat_id&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifyme</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">],</span>
+                        <span class="n">message</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> has/have finished&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot; and &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episodes</span><span class="p">)))</span></div></div>
+
+
+<span class="n">generate_defaults_info</span><span class="p">(</span><span class="n">Runner</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

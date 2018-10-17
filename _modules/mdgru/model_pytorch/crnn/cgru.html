@@ -80,15 +80,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../model.html">Model (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../eval.html">Evaluation module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../data.html">Data loader module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../helper.html">Helper routines and functions</a></li>
@@ -172,7 +173,7 @@
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="k">import</span> <span class="n">init</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="k">import</span> <span class="n">functional</span> <span class="k">as</span> <span class="n">F</span>
 
-<div class="viewcode-block" id="CGRUCell"><a class="viewcode-back" href="../../../../crnn_th.html#mdgru.model_pytorch.crnn.cgru.CGRUCell">[docs]</a><span class="k">class</span> <span class="nc">CGRUCell</span><span class="p">(</span><span class="n">CRNNCell</span><span class="p">):</span>
+<div class="viewcode-block" id="CGRUCell"><a class="viewcode-back" href="../../../../obs/crnn_th.html#mdgru.model_pytorch.crnn.cgru.CGRUCell">[docs]</a><span class="k">class</span> <span class="nc">CGRUCell</span><span class="p">(</span><span class="n">CRNNCell</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Convolutional gated recurrent unit.</span>
 
 <span class="sd">    This class processes n-d data along the last dimension using a gated recurrent unit, which uses n-1 d convolutions</span>
@@ -223,15 +224,15 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropconnectx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;dropconnect_x_candidate&quot;</span><span class="p">,</span> <span class="n">th</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_x_candidate</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">initialize_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CGRUCell.initialize_weights"><a class="viewcode-back" href="../../../../mdgru.model_pytorch.crnn.html#mdgru.model_pytorch.crnn.cgru.CGRUCell.initialize_weights">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bias_x_gates</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill_</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bias_x_candidate</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill_</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">init</span><span class="o">.</span><span class="n">xavier_normal_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_x_gates</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
         <span class="n">init</span><span class="o">.</span><span class="n">xavier_normal_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_x_candidate</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
         <span class="n">init</span><span class="o">.</span><span class="n">xavier_normal_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_h_gates</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-        <span class="n">init</span><span class="o">.</span><span class="n">xavier_normal_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_h_candidate</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">init</span><span class="o">.</span><span class="n">xavier_normal_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_h_candidate</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CGRUCell.forward"><a class="viewcode-back" href="../../../../crnn_th.html#mdgru.model_pytorch.crnn.cgru.CGRUCell.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+<div class="viewcode-block" id="CGRUCell.forward"><a class="viewcode-back" href="../../../../mdgru.model_pytorch.crnn.html#mdgru.model_pytorch.crnn.cgru.CGRUCell.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
         <span class="n">weights_h_gates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_h_gates</span>
         <span class="n">weights_h_candidate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_h_candidate</span>
         <span class="n">weights_x_gates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_x_gates</span>

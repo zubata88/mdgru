@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Python Module Index &mdash; mdgru 0.2 documentation</title>
+  <title>How to Install &mdash; mdgru 0.2 documentation</title>
   
 
   
@@ -28,9 +28,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
- 
-
-
+    <link rel="next" title="Start script" href="RUN_mdgru.html" />
+    <link rel="prev" title="How to Use through Examples (Tensorflow Backend)" href="how_to_use.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -84,9 +83,9 @@
             
             
               <p class="caption"><span class="caption-text">Guides</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="how_to_install.html">How to Install</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">How to Install</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -142,10 +141,14 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Python Module Index</li>
+      <li>How to Install</li>
     
     
       <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/how_to_install.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
     
@@ -157,74 +160,49 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
+  <div class="section" id="how-to-install">
+<h1>How to Install<a class="headerlink" href="#how-to-install" title="Permalink to this headline">¶</a></h1>
+<p>Requirements (on ubuntu) can be installed
+using the following lines of code. On other systems, use the
+corresponding packages. Make sure to use tensorflow v 1.8 for the tensorflow backend.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">cmake</span> <span class="n">python3</span><span class="o">-</span><span class="n">pip</span> <span class="n">curl</span> <span class="n">git</span> <span class="n">python3</span><span class="o">-</span><span class="n">dicom</span>
 
-   <h1>Python Module Index</h1>
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">pip</span>
 
-   <div class="modindex-jumpbox">
-   <a href="#cap-m"><strong>m</strong></a> | 
-   <a href="#cap-r"><strong>r</strong></a>
-   </div>
+<span class="c1"># either with a gpu, and cuda + cudnn installed:</span>
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="s2">&quot;tensorflow-gpu&gt;=1.8&quot;</span>
+<span class="c1"># or</span>
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="s2">&quot;tensorflow&gt;=1.8&quot;</span>
 
-   <table class="indextable modindextable">
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-m"><td></td><td>
-       <strong>m</strong></td><td></td></tr>
-     <tr>
-       <td><img src="_static/minus.png" class="toggler"
-              id="toggle-1" style="display: none" alt="-" /></td>
-       <td>
-       <code class="xref">mdgru</code></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="data.html#module-mdgru.data"><code class="xref">mdgru.data</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="eval.html#module-mdgru.eval"><code class="xref">mdgru.eval</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="eval.html#module-mdgru.eval.tf"><code class="xref">mdgru.eval.tf</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="helper.html#module-mdgru.helper"><code class="xref">mdgru.helper</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="mdgru.model.html#module-mdgru.model.mdgru_classification"><code class="xref">mdgru.model.mdgru_classification</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="mdgru.model_pytorch.html#module-mdgru.model_pytorch.mdgru_classification"><code class="xref">mdgru.model_pytorch.mdgru_classification</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="runner.html#module-mdgru.runner"><code class="xref">mdgru.runner</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-r"><td></td><td>
-       <strong>r</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="RUN_mdgru.html#module-RUN_mdgru"><code class="xref">RUN_mdgru</code></a></td><td>
-       <em></em></td></tr>
-   </table>
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">torch</span> <span class="n">torchvision</span> <span class="n">visdom</span>
+
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">nibabel</span> <span class="n">numpy</span> <span class="n">scipy</span> <span class="n">matplotlib</span> <span class="n">pynrrd</span>
+
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">scikit</span><span class="o">-</span><span class="n">image</span> <span class="n">scikit</span><span class="o">-</span><span class="n">learn</span> <span class="n">simpleitk</span> <span class="n">torch</span> <span class="n">visdom</span>
+
+<span class="n">sudo</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">spezold</span><span class="o">/</span><span class="n">mvloader</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+<p>Or simply install mdgru from github using pip:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip3</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">zubata88</span><span class="o">/</span><span class="n">mdgru</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+</div>
 
 
            </div>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="RUN_mdgru.html" class="btn btn-neutral float-right" title="Start script" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="how_to_use.html" class="btn btn-neutral" title="How to Use through Examples (Tensorflow Backend)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

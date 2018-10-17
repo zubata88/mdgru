@@ -29,7 +29,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Data loader module" href="data.html" />
-    <link rel="prev" title="CRNN (PyTorch Backend)" href="crnn_th.html" /> 
+    <link rel="prev" title="Multi-dimensional GRU" href="mdgru.model_pytorch.mdrnn.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -82,16 +82,22 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model.html">Model (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_pytorch.html">Model (PyTorch Backend)</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Evaluation module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#supervised-evaluation">Supervised Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-mdgru.eval.tf">Tensorflow Backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-mdgru.eval.torch">Pytorch Backend</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="data.html">Data loader module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="helper.html">Helper routines and functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="runner.html">Runner module</a></li>
@@ -159,109 +165,476 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-mdgru.eval">
-<span id="evaluation-module"></span><h1>Evaluation module<a class="headerlink" href="#module-mdgru.eval" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-mdgru.eval.tf"></span><dl class="class">
-<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow">
-<em class="property">class </em><code class="descclassname">mdgru.eval.tf.</code><code class="descname">SupervisedEvaluationTensorflow</code><span class="sig-paren">(</span><em>modelcls</em>, <em>collectioninst</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mdgru.eval.SupervisedEvaluation</span></code></p>
-<dl class="docutils">
-<dt>Base class for all evaluation classes. Child classes implement various</dt>
-<dd>test_* methods to test modeldependent aspects.</dd>
-</dl>
-<dl class="attribute">
-<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow.sess">
-<code class="descname">sess</code><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow.sess" title="Permalink to this definition">¶</a></dt>
-<dd><p>tensorflow session. contains all the model data.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow.saver">
-<code class="descname">saver</code><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow.saver" title="Permalink to this definition">¶</a></dt>
-<dd><p>tensorflow saver to save or load the model data.</p>
-</dd></dl>
-
+  <div class="section" id="evaluation-module">
+<h1>Evaluation module<a class="headerlink" href="#evaluation-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="supervised-evaluation">
+<h2>Supervised Evaluation<a class="headerlink" href="#supervised-evaluation" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-mdgru.eval"></span><dl class="class">
+<dt id="mdgru.eval.SupervisedEvaluation">
+<em class="property">class </em><code class="descclassname">mdgru.eval.</code><code class="descname">SupervisedEvaluation</code><span class="sig-paren">(</span><em>modelcls</em>, <em>datacls</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Handler for the evaluation of model defined in modelcls using data coming from datacls.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kw</strong> (<em>dict containing the following options.</em>) – <ul class="simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>kw</strong> (<em>dict containing the following options.</em>) – <ul>
+<li><strong>dropout_rate</strong> [default: 0.5] “keep rate” for weights using dropconnect. The higher the value, the closer the sampled models to the full model.</li>
+<li><strong>namespace</strong> [default: default] override default model name (if no ckpt is provided). Probably not a good idea!</li>
+<li><strong>only_save_labels</strong> [default: False] save only labels and no probability distributions</li>
+<li><strong>validate_same</strong> [default: True] always pick other random samples for validation!</li>
+<li><strong>evaluate_uncertainty_times</strong> [default: 1] Number times we want to evaluate one volume. This only makes sense using a keep rate of less than 1 during evaluation (dropout_during_evaluation less than 1)</li>
+<li><strong>evaluate_uncertainty_dropout</strong> [default: 1.0] Keeprate of weights during evaluation. Useful to visualize uncertainty in conjunction with a number of samples per volume</li>
+<li><strong>evaluate_uncertainty_saveall</strong> [default: False] Save each evaluation sample per volume. Without this flag, only the standard deviation and mean over all samples is kept.</li>
+<li><strong>show_f05</strong> [default: True]</li>
+<li><strong>show_f1</strong> [default: True]</li>
+<li><strong>show_f2</strong> [default: True]</li>
+<li><strong>show_l2</strong> [default: True]</li>
+<li><strong>show_cross_entropy</strong> [default: True]</li>
+<li><strong>print_each</strong> [default: 1] print execution time and losses each # iterations</li>
+<li><strong>batch_size</strong> [default: 1] Minibatchsize</li>
+<li><strong>datapath</strong> path where training, validation and testing folders lie. Can also be some other path, as long as the other locations are provided as absolute paths. An experimentsfolder will be created in this folder, where all runs and checkpoint files will be saved.</li>
+<li><strong>locationtraining</strong> [default: None] absolute or relative path to datapath to the training data. Either a list of paths to the sample folders or one path to a folder where samples should be automatically determined.</li>
+<li><strong>locationtesting</strong> [default: None] absolute or relative path to datapath to the testing data. Either a list of paths to the sample folders or one path to a folder where samples should be automatically determined.</li>
+<li><strong>locationvalidation</strong> [default: None] absolute or relative path to datapath to the validation data. Either a list of paths to the sample folders or one path to a folder where samples should be automatically determined.</li>
+<li><strong>output_dims</strong> number of output channels, e.g. number of classes the model needs to create a probability distribution over.</li>
+<li><strong>windowsize</strong> window size to be used during training, validation and testing, if not specified otherwise</li>
+<li><strong>padding</strong> [default: [0]] padding to be used during training, validation and testing, if not specified otherwise. During training, the padding specifies the amount a patch is allowed to reach outside of the image along all dimensions, during testing, it specifies also the amount of overlap needed between patches.</li>
+<li><strong>windowsizetesting</strong> [default: None] override windowsize for testing</li>
+<li><strong>windowsizevalidation</strong> [default: None]</li>
+<li><strong>paddingtesting</strong> [default: None] override padding for testing</li>
+<li><strong>paddingvalidation</strong> [default: None]</li>
+<li><strong>testbatchsize</strong> [default: 1] batchsize for testing</li>
+</ul>
+</li>
+<li><strong>modelcls</strong> (<em>cls</em>) – Python class defining the model to evaluate</li>
+<li><strong>datacls</strong> (<em>cls</em>) – Python class implementing the data loading and storing</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="mdgru.eval.SupervisedEvaluation._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'batch_size': {'value': 1, 'help': 'Minibatchsize', 'type': &lt;class 'int'&gt;, 'name': 'batchsize', 'short': 'b'}, 'datapath': {'help': 'path where training, validation and testing folders lie. Can also be some other path, as long as the other locations are provided as absolute paths. An experimentsfolder will be created in this folder, where all runs and checkpoint files will be saved.'}, 'dropout_rate': {'value': 0.5, 'help': '&quot;keep rate&quot; for weights using dropconnect. The higher the value, the closer the sampled models to the full model.'}, 'evaluate_uncertainty_dropout': {'value': 1.0, 'type': &lt;class 'float'&gt;, 'help': 'Keeprate of weights during evaluation. Useful to visualize uncertainty in conjunction with a number of samples per volume', 'name': 'dropout_during_evaluation'}, 'evaluate_uncertainty_saveall': {'value': False, 'help': 'Save each evaluation sample per volume. Without this flag, only the standard deviation and mean over all samples is kept.', 'name': 'save_individual_evaluations'}, 'evaluate_uncertainty_times': {'value': 1, 'type': &lt;class 'int'&gt;, 'help': 'Number times we want to evaluate one volume. This only makes sense using a keep rate of less than 1 during evaluation (dropout_during_evaluation less than 1)', 'name': 'number_of_evaluation_samples'}, 'locationtesting': {'value': None, 'help': 'absolute or relative path to datapath to the testing data. Either a list of paths to the sample folders or one path to a folder where samples should be automatically determined.', 'nargs': '+'}, 'locationtraining': {'value': None, 'help': 'absolute or relative path to datapath to the training data. Either a list of paths to the sample folders or one path to a folder where samples should be automatically determined.', 'nargs': '+'}, 'locationvalidation': {'value': None, 'help': 'absolute or relative path to datapath to the validation data. Either a list of paths to the sample folders or one path to a folder where samples should be automatically determined.', 'nargs': '+'}, 'namespace': {'value': 'default', 'help': 'override default model name (if no ckpt is provided). Probably not a good idea!', 'alt': ['modelname']}, 'only_save_labels': {'value': False, 'help': 'save only labels and no probability distributions'}, 'output_dims': {'help': 'number of output channels, e.g. number of classes the model needs to create a probability distribution over.', 'type': &lt;class 'int'&gt;, 'alt': ['nclasses']}, 'padding': {'help': 'padding to be used during training, validation and testing, if not specified otherwise. During training, the padding specifies the amount a patch is allowed to reach outside of the image along all dimensions, during testing, it specifies also the amount of overlap needed between patches.', 'value': [0], 'nargs': '+', 'short': 'p', 'type': &lt;class 'int'&gt;}, 'paddingtesting': {'value': None, 'help': 'override padding for testing', 'nargs': '+', 'type': &lt;class 'int'&gt;}, 'paddingvalidation': None, 'print_each': {'value': 1, 'help': 'print execution time and losses each # iterations', 'type': &lt;class 'int'&gt;}, 'show_cross_entropy': True, 'show_f05': True, 'show_f1': True, 'show_f2': True, 'show_l2': True, 'testbatchsize': {'value': 1, 'help': 'batchsize for testing'}, 'validate_same': {'value': True, 'help': 'always pick other random samples for validation!', 'invert_meaning': 'dont_'}, 'windowsize': {'type': &lt;class 'int'&gt;, 'short': 'w', 'help': 'window size to be used during training, validation and testing, if not specified otherwise', 'nargs': '+'}, 'windowsizetesting': {'value': None, 'help': 'override windowsize for testing', 'nargs': '+', 'type': &lt;class 'int'&gt;}, 'windowsizevalidation': None}</em><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation._load">
+<code class="descname">_load</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation._load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation._load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load model in current framework from f</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>f</strong> (<em>location of stored model</em>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation._predict">
+<code class="descname">_predict</code><span class="sig-paren">(</span><em>batch</em>, <em>dropout</em>, <em>testing</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation._predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation._predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict given batch and keeprate dropout.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>batch</strong> (<em>ndarray</em>) – </li>
+<li><strong>dropout</strong> (<a class="reference internal" href="mdgru.model_pytorch.html#mdgru.model_pytorch.mdgru_classification.MDGRUClassification.float" title="mdgru.model_pytorch.mdgru_classification.MDGRUClassification.float"><em>float</em></a>) – Keeprate for dropconnect</li>
+<li><strong>testing</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>ndarray</strong> (<em>Prediction based on data batch</em>)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation._predict_with_loss">
+<code class="descname">_predict_with_loss</code><span class="sig-paren">(</span><em>batch</em>, <em>batchlabs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation._predict_with_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation._predict_with_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict for given batch and return loss compared to labels in batchlabs</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>batch</strong> (<em>image data</em>) – </li>
+<li><strong>batchlabs</strong> (<em>corresponding label data</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple of ndarray prediction and losses</em></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation._save">
+<code class="descname">_save</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation._save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation._save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save to file f in current framework</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>f</strong> (<em>location to save model at</em>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation._set_session">
+<code class="descname">_set_session</code><span class="sig-paren">(</span><em>sess</em>, <em>cachefolder</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation._set_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation._set_session" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation._train">
+<code class="descname">_train</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation._train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation._train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs one training iteration in respective framework and returns loss(es)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation.add_summary_simple_value">
+<code class="descname">add_summary_simple_value</code><span class="sig-paren">(</span><em>text</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation.add_summary_simple_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation.add_summary_simple_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation.get_globalstep">
+<code class="descname">get_globalstep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation.get_globalstep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation.get_globalstep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return number of iterations this model has been trained in</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>int</strong> (<em>iteration count</em>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation.load">
+<code class="descname">load</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>loads model at location f from disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – location of stored model</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>saves model to disk at location f</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – location to save model to</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation.set_session">
+<code class="descname">set_session</code><span class="sig-paren">(</span><em>sess</em>, <em>cachefolder</em>, <em>train=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation.set_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation.set_session" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation.test_all_available">
+<code class="descname">test_all_available</code><span class="sig-paren">(</span><em>batch_size=None</em>, <em>dc=None</em>, <em>return_results=False</em>, <em>dropout=None</em>, <em>testing=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation.test_all_available"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation.test_all_available" title="Permalink to this definition">¶</a></dt>
+<dd><p>Completely evaluates each full image in tps using grid sampling.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – minibatch size to compute on</li>
+<li><strong>dc</strong> (<em>datacollection instance</em><em>, </em><em>optional</em>) – datacollection to sample from</li>
+<li><strong>return_results</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – should results be returned or stored right away?</li>
+<li><strong>dropout</strong> (<a class="reference internal" href="mdgru.model_pytorch.html#mdgru.model_pytorch.mdgru_classification.MDGRUClassification.float" title="mdgru.model_pytorch.mdgru_classification.MDGRUClassification.float"><em>float</em></a>) – keeprate of dropconnect for inference</li>
+<li><strong>testing</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>either tuple of predictions and errors or only errors, depending on return_results flag</em></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation.test_all_random">
+<code class="descname">test_all_random</code><span class="sig-paren">(</span><em>batch_size=None</em>, <em>dc=None</em>, <em>resample=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation.test_all_random"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation.test_all_random" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test random samples</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – minibatch size to compute on</li>
+<li><strong>dc</strong> (<em>datacollection instance</em><em>, </em><em>optional</em>) – datacollection to sample from</li>
+<li><strong>resample</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – indicates if we need to sample before evaluating</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple of loss and prediction ndarray</em></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation.test_scores">
+<code class="descname">test_scores</code><span class="sig-paren">(</span><em>pred</em>, <em>ref</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation.test_scores"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation.test_scores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates all selected scores between reference data ref and prediction pred.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pred</strong> (<em>ndarray</em>) – prediction, as probability distributions per pixel / voxel</li>
+<li><strong>ref</strong> (<em>ndarray</em>) – labelmap, either as probability distributions per pixel / voxel or as label map</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.SupervisedEvaluation.train">
+<code class="descname">train</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval.html#SupervisedEvaluation.train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.SupervisedEvaluation.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Measures and logs time when performing data sampling and training iteration.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-mdgru.eval.tf">
+<span id="tensorflow-backend"></span><h2>Tensorflow Backend<a class="headerlink" href="#module-mdgru.eval.tf" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow">
+<em class="property">class </em><code class="descclassname">mdgru.eval.tf.</code><code class="descname">SupervisedEvaluationTensorflow</code><span class="sig-paren">(</span><em>modelcls</em>, <em>datacls</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mdgru.eval.SupervisedEvaluation" title="mdgru.eval.SupervisedEvaluation"><code class="xref py py-class docutils literal"><span class="pre">mdgru.eval.SupervisedEvaluation</span></code></a></p>
+<p>Evaluation class for tensorflow backend</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>kw</strong> (<em>dict containing the following options.</em>) – <ul>
 <li><strong>use_tensorboard</strong> [default: True] Dont use tensorboard</li>
 <li><strong>image_summaries_each</strong> [default: 100] Store image summaries in tensorboard every # iterations</li>
 <li><strong>restore_optimistically</strong> [default: False]</li>
 <li><strong>only_cpu</strong> [default: False] Only use cpu</li>
 <li><strong>gpubound</strong> [default: 1.0] manage how much of the memory of the gpu can be used</li>
 </ul>
+</li>
+<li><strong>modelcls</strong> (<em>cls</em>) – Python class defining the model to be evaluated</li>
+<li><strong>datacls</strong> (<em>cls</em>) – Python class defining data loading and saving</li>
+</ul>
 </td>
 </tr>
 </tbody>
 </table>
+<dl class="attribute">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'gpubound': {'value': 1.0, 'name': 'gpu_bound_fraction', 'help': 'manage how much of the memory of the gpu can be used', 'type': &lt;class 'float'&gt;}, 'image_summaries_each': {'value': 100, 'help': 'Store image summaries in tensorboard every # iterations'}, 'only_cpu': {'value': False, 'help': 'Only use cpu'}, 'restore_optimistically': False, 'use_tensorboard': {'value': True, 'help': 'Dont use tensorboard', 'invert_meaning': 'dont_'}}</em><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow._load">
+<code class="descname">_load</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow._load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow._load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow._optimistic_restore">
+<code class="descname">_optimistic_restore</code><span class="sig-paren">(</span><em>session</em>, <em>save_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow._optimistic_restore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow._optimistic_restore" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow._predict">
 <code class="descname">_predict</code><span class="sig-paren">(</span><em>batch</em>, <em>dropout</em>, <em>testing</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow._predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow._predict" title="Permalink to this definition">¶</a></dt>
-<dd><p>predict given our graph for batch.</p>
-</dd></dl>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow._predict_with_loss">
+<code class="descname">_predict_with_loss</code><span class="sig-paren">(</span><em>batch</em>, <em>batchlabs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow._predict_with_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow._predict_with_loss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow._save">
+<code class="descname">_save</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow._save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow._save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow._set_session">
+<code class="descname">_set_session</code><span class="sig-paren">(</span><em>sess</em>, <em>cachefolder</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow._set_session" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow._train">
 <code class="descname">_train</code><span class="sig-paren">(</span><em>batch</em>, <em>batchlabs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow._train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow._train" title="Permalink to this definition">¶</a></dt>
-<dd><p>Performs one training iteration in respective framework and returns loss(es)</p>
-</dd></dl>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow.add_summary_simple_value">
+<code class="descname">add_summary_simple_value</code><span class="sig-paren">(</span><em>text</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow.add_summary_simple_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow.add_summary_simple_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow.get_globalstep">
+<code class="descname">get_globalstep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow.get_globalstep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow.get_globalstep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow.load">
 <code class="descname">load</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>loads model at location f from disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – location of stored model</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow.save">
 <code class="descname">save</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>saves model to disk at location f</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – location to save model to</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow.set_session">
+<code class="descname">set_session</code><span class="sig-paren">(</span><em>sess</em>, <em>cachefolder</em>, <em>train=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/tf.html#SupervisedEvaluationTensorflow.set_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow.set_session" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow.test_all_available">
+<code class="descname">test_all_available</code><span class="sig-paren">(</span><em>batch_size=None</em>, <em>dc=None</em>, <em>return_results=False</em>, <em>dropout=None</em>, <em>testing=False</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow.test_all_available" title="Permalink to this definition">¶</a></dt>
+<dd><p>Completely evaluates each full image in tps using grid sampling.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – minibatch size to compute on</li>
+<li><strong>dc</strong> (<em>datacollection instance</em><em>, </em><em>optional</em>) – datacollection to sample from</li>
+<li><strong>return_results</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – should results be returned or stored right away?</li>
+<li><strong>dropout</strong> (<a class="reference internal" href="mdgru.model_pytorch.html#mdgru.model_pytorch.mdgru_classification.MDGRUClassification.float" title="mdgru.model_pytorch.mdgru_classification.MDGRUClassification.float"><em>float</em></a>) – keeprate of dropconnect for inference</li>
+<li><strong>testing</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>either tuple of predictions and errors or only errors, depending on return_results flag</em></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow.test_all_random">
+<code class="descname">test_all_random</code><span class="sig-paren">(</span><em>batch_size=None</em>, <em>dc=None</em>, <em>resample=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow.test_all_random" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test random samples</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – minibatch size to compute on</li>
+<li><strong>dc</strong> (<em>datacollection instance</em><em>, </em><em>optional</em>) – datacollection to sample from</li>
+<li><strong>resample</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – indicates if we need to sample before evaluating</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple of loss and prediction ndarray</em></p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow.test_scores">
 <code class="descname">test_scores</code><span class="sig-paren">(</span><em>pred</em>, <em>ref</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow.test_scores" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates all activated scores between ref and pred.</p>
+<dd><p>Evaluates all selected scores between reference data ref and prediction pred.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pred</strong> (<em>ndarray</em>) – prediction, as probability distributions per pixel / voxel</li>
+<li><strong>ref</strong> (<em>ndarray</em>) – labelmap, either as probability distributions per pixel / voxel or as label map</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="mdgru.eval.tf.SupervisedEvaluationTensorflow.train">
 <code class="descname">train</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.tf.SupervisedEvaluationTensorflow.train" title="Permalink to this definition">¶</a></dt>
-<dd><p>Measures and logs time for data sampling and training iteration.</p>
+<dd><p>Measures and logs time when performing data sampling and training iteration.</p>
 </dd></dl>
 
 </dd></dl>
 
-<span class="target" id="module-mdgru.eval.torch"></span><dl class="class">
+</div>
+<div class="section" id="module-mdgru.eval.torch">
+<span id="pytorch-backend"></span><h2>Pytorch Backend<a class="headerlink" href="#module-mdgru.eval.torch" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
 <dt id="mdgru.eval.torch.SupervisedEvaluationTorch">
-<em class="property">class </em><code class="descclassname">mdgru.eval.torch.</code><code class="descname">SupervisedEvaluationTorch</code><span class="sig-paren">(</span><em>modelcls</em>, <em>collectioninst</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/torch.html#SupervisedEvaluationTorch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mdgru.eval.SupervisedEvaluation</span></code></p>
-<dl class="docutils">
-<dt>Base class for all evaluation classes. Child classes implement various</dt>
-<dd>test_* methods to test modeldependent aspects.</dd>
-</dl>
-<dl class="attribute">
-<dt id="mdgru.eval.torch.SupervisedEvaluationTorch.sess">
-<code class="descname">sess</code><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch.sess" title="Permalink to this definition">¶</a></dt>
-<dd><p>tensorflow session. contains all the model data.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="mdgru.eval.torch.SupervisedEvaluationTorch.saver">
-<code class="descname">saver</code><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch.saver" title="Permalink to this definition">¶</a></dt>
-<dd><p>tensorflow saver to save or load the model data.</p>
-</dd></dl>
-
+<em class="property">class </em><code class="descclassname">mdgru.eval.torch.</code><code class="descname">SupervisedEvaluationTorch</code><span class="sig-paren">(</span><em>modelcls</em>, <em>datacls</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/torch.html#SupervisedEvaluationTorch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mdgru.eval.SupervisedEvaluation" title="mdgru.eval.SupervisedEvaluation"><code class="xref py py-class docutils literal"><span class="pre">mdgru.eval.SupervisedEvaluation</span></code></a></p>
+<p>Evaluation class for the pytorch backend</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kw</strong> (<em>dict containing the following options.</em>) – </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>kw</strong> (<em>dict containing the following options.</em>) – </li>
+<li><strong>modelcls</strong> (<em>cls</em>) – Python class defining the model to be evaluated</li>
+<li><strong>datacls</strong> (<em>cls</em>) – Python class defining the loading and saving of the data being evaluated here</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
+<dl class="attribute">
+<dt id="mdgru.eval.torch.SupervisedEvaluationTorch._defaults">
+<code class="descname">_defaults</code><em class="property"> = {}</em><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="mdgru.eval.torch.SupervisedEvaluationTorch._load">
 <code class="descname">_load</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/torch.html#SupervisedEvaluationTorch._load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch._load" title="Permalink to this definition">¶</a></dt>
@@ -287,37 +660,150 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="mdgru.eval.torch.SupervisedEvaluationTorch._set_session">
+<code class="descname">_set_session</code><span class="sig-paren">(</span><em>sess</em>, <em>cachefolder</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch._set_session" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mdgru.eval.torch.SupervisedEvaluationTorch._train">
 <code class="descname">_train</code><span class="sig-paren">(</span><em>batch</em>, <em>batchlabs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/torch.html#SupervisedEvaluationTorch._train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch._train" title="Permalink to this definition">¶</a></dt>
 <dd><p>set inputs and run torch training iteration</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="mdgru.eval.torch.SupervisedEvaluationTorch.add_summary_simple_value">
+<code class="descname">add_summary_simple_value</code><span class="sig-paren">(</span><em>text</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch.add_summary_simple_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.torch.SupervisedEvaluationTorch.check_input">
+<code class="descname">check_input</code><span class="sig-paren">(</span><em>batch</em>, <em>batchlabs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/torch.html#SupervisedEvaluationTorch.check_input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch.check_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to check correctness of input and convert them to cuda pytorch tensors</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>batch</strong> (<em>ndarray</em>) – input data to be moved to pytorch</li>
+<li><strong>batchlabs</strong> (<em>ndarray</em>) – label information to be moved to pytorch</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.torch.SupervisedEvaluationTorch.get_globalstep">
+<code class="descname">get_globalstep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/eval/torch.html#SupervisedEvaluationTorch.get_globalstep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch.get_globalstep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="mdgru.eval.torch.SupervisedEvaluationTorch.load">
 <code class="descname">load</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>loads model at location f from disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – location of stored model</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="mdgru.eval.torch.SupervisedEvaluationTorch.save">
 <code class="descname">save</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>saves model to disk at location f</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>f</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – location to save model to</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.torch.SupervisedEvaluationTorch.set_session">
+<code class="descname">set_session</code><span class="sig-paren">(</span><em>sess</em>, <em>cachefolder</em>, <em>train=False</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch.set_session" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.torch.SupervisedEvaluationTorch.test_all_available">
+<code class="descname">test_all_available</code><span class="sig-paren">(</span><em>batch_size=None</em>, <em>dc=None</em>, <em>return_results=False</em>, <em>dropout=None</em>, <em>testing=False</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch.test_all_available" title="Permalink to this definition">¶</a></dt>
+<dd><p>Completely evaluates each full image in tps using grid sampling.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – minibatch size to compute on</li>
+<li><strong>dc</strong> (<em>datacollection instance</em><em>, </em><em>optional</em>) – datacollection to sample from</li>
+<li><strong>return_results</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – should results be returned or stored right away?</li>
+<li><strong>dropout</strong> (<a class="reference internal" href="mdgru.model_pytorch.html#mdgru.model_pytorch.mdgru_classification.MDGRUClassification.float" title="mdgru.model_pytorch.mdgru_classification.MDGRUClassification.float"><em>float</em></a>) – keeprate of dropconnect for inference</li>
+<li><strong>testing</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>either tuple of predictions and errors or only errors, depending on return_results flag</em></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.eval.torch.SupervisedEvaluationTorch.test_all_random">
+<code class="descname">test_all_random</code><span class="sig-paren">(</span><em>batch_size=None</em>, <em>dc=None</em>, <em>resample=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch.test_all_random" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test random samples</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – minibatch size to compute on</li>
+<li><strong>dc</strong> (<em>datacollection instance</em><em>, </em><em>optional</em>) – datacollection to sample from</li>
+<li><strong>resample</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – indicates if we need to sample before evaluating</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple of loss and prediction ndarray</em></p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="mdgru.eval.torch.SupervisedEvaluationTorch.test_scores">
 <code class="descname">test_scores</code><span class="sig-paren">(</span><em>pred</em>, <em>ref</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch.test_scores" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates all activated scores between ref and pred.</p>
+<dd><p>Evaluates all selected scores between reference data ref and prediction pred.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pred</strong> (<em>ndarray</em>) – prediction, as probability distributions per pixel / voxel</li>
+<li><strong>ref</strong> (<em>ndarray</em>) – labelmap, either as probability distributions per pixel / voxel or as label map</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="mdgru.eval.torch.SupervisedEvaluationTorch.train">
 <code class="descname">train</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.eval.torch.SupervisedEvaluationTorch.train" title="Permalink to this definition">¶</a></dt>
-<dd><p>Measures and logs time for data sampling and training iteration.</p>
+<dd><p>Measures and logs time when performing data sampling and training iteration.</p>
 </dd></dl>
 
 </dd></dl>
 
+</div>
 </div>
 
 
@@ -331,7 +817,7 @@
         <a href="data.html" class="btn btn-neutral float-right" title="Data loader module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="crnn_th.html" class="btn btn-neutral" title="CRNN (PyTorch Backend)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="mdgru.model_pytorch.mdrnn.html" class="btn btn-neutral" title="Multi-dimensional GRU" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -81,15 +81,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model.html">Model (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluation module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data.html">Data loader module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="helper.html">Helper routines and functions</a></li>
@@ -160,6 +161,94 @@
             
   <div class="section" id="module-mdgru.runner">
 <span id="runner-module"></span><h1>Runner module<a class="headerlink" href="#module-mdgru.runner" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="mdgru.runner.Runner">
+<em class="property">class </em><code class="descclassname">mdgru.runner.</code><code class="descname">Runner</code><span class="sig-paren">(</span><em>evaluationinstance</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/runner.html#Runner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.runner.Runner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>kw</strong> (<em>dict containing the following options.</em>) – <ul>
+<li><strong>test_each</strong> [default: 2500] validate after # training iterations</li>
+<li><strong>save_each</strong> [default: None] save after # training iterations</li>
+<li><strong>plot_each</strong> [default: 2500]</li>
+<li><strong>test_size</strong> [default: 1]</li>
+<li><strong>test_iters</strong> [default: 1] number of validations to perform on random samples. Only makes sense if full_image_validation is not set</li>
+<li><strong>test_first</strong> [default: False] Perform validation on the untrained model as well.</li>
+<li><strong>perform_full_image_validation</strong> [default: True] Use random samples instead of the complete validation images</li>
+<li><strong>save_validation_results</strong> [default: True] Do not save validation results on the disk</li>
+<li><strong>notifyme</strong> [default: None] Experimental feature that when something goes amiss, this telegram chat id will be used to inform the respective user of the error. This requires a file called config.json in the same folder as this file, containing a simple dict structure as follows: {“chat_id”: CHATID, “token”: TOKEN}, where CHATID and TOKEN have to be created with Telegrams BotFather. The chatid from config can be overriden using a parameter together with this option.</li>
+<li><strong>results_to_csv</strong> [default: True] Do not create csv with validation results</li>
+<li><strong>checkpointfiles</strong> [default: None] provide checkpointfile for this template. If no modelname is provided, we will infer one from this file. Multiple files are only allowed if only_test is set. If the same number of optionnames are provided, they will be used to name the different results. If only one optionname is provided, they will be numbered in order and the checkpoint filename will be included in the result file.</li>
+<li><strong>epochs</strong> [default: 1] Number of times through the training dataset. Cant be used together with “iterations”</li>
+<li><strong>iterations</strong> [default: None] Number of iterations to perform. Can only be set and makes sense if epochs is 1</li>
+<li><strong>only_test</strong> [default: False] Only perform testing. Requires at least one ckpt</li>
+<li><strong>only_train</strong> [default: False] Only perform training and validation.</li>
+<li><strong>experimentloc</strong> [default: /home/simon/experiments]</li>
+<li><strong>optionname</strong> [default: None] name for chosen set of options, if multiple checkpoints provided, there needs to be 1 or the same number of names here</li>
+<li><strong>fullparameters</strong> [default: None]</li>
+</ul>
+</li>
+<li><strong>evaluationinstance</strong> (<em>instance of an evaluation class</em>) – Will be used to call train and test routines on.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="mdgru.runner.Runner._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'checkpointfiles': {'value': None, 'help': 'provide checkpointfile for this template. If no modelname is provided, we will infer one from this file. Multiple files are only allowed if only_test is set. If the same number of optionnames are provided, they will be used to name the different results. If only one optionname is provided, they will be numbered in order and the checkpoint filename will be included in the result file.', 'nargs': '+', 'name': 'ckpt'}, 'epochs': {'value': 1, 'help': 'Number of times through the training dataset. Cant be used together with &quot;iterations&quot;'}, 'experimentloc': '/home/simon/experiments', 'fullparameters': None, 'iterations': {'value': None, 'type': &lt;class 'int'&gt;, 'help': 'Number of iterations to perform. Can only be set and makes sense if epochs is 1'}, 'notifyme': {'value': None, 'nargs': '?', 'type': &lt;class 'str'&gt;, 'help': 'Experimental feature that when something goes amiss, this telegram chat id will be used to inform the respective user of the error. This requires a file called config.json in the same folder as this file, containing a simple dict structure as follows: {&quot;chat_id&quot;: CHATID, &quot;token&quot;: TOKEN}, where CHATID and TOKEN have to be created with Telegrams BotFather. The chatid from config can be overriden using a parameter together with this option.'}, 'only_test': {'value': False, 'help': 'Only perform testing. Requires at least one ckpt'}, 'only_train': {'value': False, 'help': 'Only perform training and validation.'}, 'optionname': {'value': None, 'nargs': '+', 'help': 'name for chosen set of options, if multiple checkpoints provided, there needs to be 1 or the same number of names here'}, 'perform_full_image_validation': {'value': True, 'invert_meaning': 'dont_', 'help': 'Use random samples instead of the complete validation images'}, 'plot_each': {'value': 2500, 'type': &lt;class 'int'&gt;}, 'results_to_csv': {'value': True, 'help': 'Do not create csv with validation results'}, 'save_each': {'value': None, 'type': &lt;class 'int'&gt;, 'help': 'save after # training iterations'}, 'save_validation_results': {'value': True, 'invert_meaning': 'dont_', 'help': 'Do not save validation results on the disk'}, 'test_each': {'value': 2500, 'type': &lt;class 'int'&gt;, 'help': 'validate after # training iterations', 'name': 'validate_each'}, 'test_first': {'value': False, 'help': 'Perform validation on the untrained model as well.', 'name': 'validate_first'}, 'test_iters': {'value': 1, 'type': &lt;class 'int'&gt;, 'help': 'number of validations to perform on random samples. Only makes sense if full_image_validation is not set', 'name': 'validation_iterations'}, 'test_size': {'value': 1}}</em><a class="headerlink" href="#mdgru.runner.Runner._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.runner.Runner._finish">
+<code class="descname">_finish</code><span class="sig-paren">(</span><em>signal</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/runner.html#Runner._finish"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.runner.Runner._finish" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.runner.Runner.calc_min_mean_median_max_errors">
+<code class="descname">calc_min_mean_median_max_errors</code><span class="sig-paren">(</span><em>errors</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/runner.html#Runner.calc_min_mean_median_max_errors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.runner.Runner.calc_min_mean_median_max_errors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.runner.Runner.ignore_signal">
+<code class="descname">ignore_signal</code><em class="property"> = True</em><a class="headerlink" href="#mdgru.runner.Runner.ignore_signal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.runner.Runner.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/runner.html#Runner.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.runner.Runner.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.runner.Runner.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/runner.html#Runner.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.runner.Runner.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.runner.Runner.test">
+<code class="descname">test</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/runner.html#Runner.test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.runner.Runner.test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.runner.Runner.train">
+<code class="descname">train</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/runner.html#Runner.train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.runner.Runner.train" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.runner.Runner.validation">
+<code class="descname">validation</code><span class="sig-paren">(</span><em>showIt=True</em>, <em>name=1539791424.9457493</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/runner.html#Runner.validation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.runner.Runner.validation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.runner.Runner.write_error_to_csv">
+<code class="descname">write_error_to_csv</code><span class="sig-paren">(</span><em>errors</em>, <em>filename</em>, <em>minerrors</em>, <em>avgerrors</em>, <em>medianerrors</em>, <em>maxerrors</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/runner.html#Runner.write_error_to_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.runner.Runner.write_error_to_csv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 
 

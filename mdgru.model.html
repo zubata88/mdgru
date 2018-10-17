@@ -1,0 +1,834 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Model (Tensorflow Backend) &mdash; mdgru 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Convolutional RNN" href="mdgru.model.crnn.html" />
+    <link rel="prev" title="Start script" href="RUN_mdgru.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> mdgru
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_install.html">How to Install</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="RUN_mdgru.html">Start script</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Model (Tensorflow Backend)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mdgru.model.crnn.html">Convolutional RNN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdgru.model.mdrnn.html">MDRNN</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-mdgru.model.mdgru_classification">MDGRUClassification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-mdgru.model">Module Contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data loader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helper.html">Helper routines and functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runner.html">Runner module</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">mdgru</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Model (Tensorflow Backend)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/mdgru.model.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="model-tensorflow-backend">
+<h1>Model (Tensorflow Backend)<a class="headerlink" href="#model-tensorflow-backend" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="mdgru.model.crnn.html">Convolutional RNN</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mdgru.model.crnn.html#module-mdgru.model.crnn.cgru">CGRU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdgru.model.crnn.html#module-mdgru.model.crnn">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mdgru.model.mdrnn.html">MDRNN</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mdgru.model.mdrnn.html#module-mdgru.model.mdrnn.mdgru">MDGRU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mdgru.model.mdrnn.html#module-mdgru.model.mdrnn">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="module-mdgru.model.mdgru_classification">
+<span id="mdgruclassification"></span><h2>MDGRUClassification<a class="headerlink" href="#module-mdgru.model.mdgru_classification" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassification">
+<em class="property">class </em><code class="descclassname">mdgru.model.mdgru_classification.</code><code class="descname">MDGRUClassification</code><span class="sig-paren">(</span><em>data</em>, <em>target</em>, <em>dropout</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdgru_classification.html#MDGRUClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">mdgru.model.ClassificationModel</span></code>, <code class="xref py py-class docutils literal"><span class="pre">mdgru.model.mdrnn.MDGRUNet</span></code></p>
+<p>Provides a full MDGRU default network.</p>
+<p>Using this class,
+Using the parameters fc_channels and mdgru_channels, which have to be lists of the same length, a
+MDGRU network of a number of mdgru and voxel-wise fully connected layers can be generated. Strides can be
+set for each MDGRU layer as a list of lists of strides per dimension. Furthermore, entries in fc_channels may be
+None, when MDGRU layer should be stacked directly after each other.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ignore_label</strong> – Implements omitting a certain label, usage of this parameter is discouraged.</li>
+<li><strong>fc_channels</strong> – Defines the number of channels per voxel-wise fully connected layer</li>
+<li><strong>mdgru_channels</strong> – Defines the number of channels per MDGRU layer</li>
+<li><strong>strides</strong> – list of list defining the strides per dimension per MDGRU layer. None means strides of 1</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassification._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'model_seed': {'value': 12345678, 'help': 'Override default model initialization random seed'}}</em><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassification._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassification.collect_parameters">
+<em class="property">static </em><code class="descname">collect_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdgru_classification.html#MDGRUClassification.collect_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassification.collect_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassification.compile_arguments">
+<em class="property">static </em><code class="descname">compile_arguments</code><span class="sig-paren">(</span><em>kw</em>, <em>keep_entries=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdgru_classification.html#MDGRUClassification.compile_arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassification.compile_arguments" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassification.cost">
+<code class="descname">cost</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassification.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the cost per batch</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassification.costs">
+<code class="descname">costs</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassification.costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cross entropy cost function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassification.get_model_name_from_ckpt">
+<code class="descname">get_model_name_from_ckpt</code><span class="sig-paren">(</span><em>ckpt</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassification.get_model_name_from_ckpt" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns root node name of tensorflow graph stored in checkpoint ckpt</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassification.logits">
+<code class="descname">logits</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassification.logits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the logits of the prediction</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassification.mdgru_bb">
+<code class="descname">mdgru_bb</code><span class="sig-paren">(</span><em>inp</em>, <em>dropout</em>, <em>num_hidden</em>, <em>num_output</em>, <em>noactivation=False</em>, <em>name=None</em>, <em>**kw</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassification.mdgru_bb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function to combine a MDRNN layer with a voxel-wise fully connected layer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>inp</strong> – input data</li>
+<li><strong>dropout</strong> – dropout rate</li>
+<li><strong>num_hidden</strong> – number of hidden units, output units of the MDRNN</li>
+<li><strong>num_output</strong> – number of output units of the voxel-wise fully connected layer
+(Can be None -&gt; no voxel-wise fully connected layer)</li>
+<li><strong>noactivation</strong> – Flag to disable activation of voxel-wise fully connected layer</li>
+<li><strong>name</strong> – Name for this particular MDRNN + vw fully connected layer</li>
+<li><strong>kw</strong> – Arguments for MDRNN and the vw fully connected layer (can override this class’ attributes)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Output of the voxelwise fully connected layer and MDRNN mix</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassification.optimize">
+<code class="descname">optimize</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassification.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optimization routine using the Adadelta optimizer</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassification.prediction">
+<code class="descname">prediction</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassification.prediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides prediction in the form of a discrete probability distribution per voxel</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassification.set_allowed_gpu_memory_fraction">
+<code class="descname">set_allowed_gpu_memory_fraction</code><span class="sig-paren">(</span><em>gpuboundfraction</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassification.set_allowed_gpu_memory_fraction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss">
+<em class="property">class </em><code class="descclassname">mdgru.model.mdgru_classification.</code><code class="descname">MDGRUClassificationWithDiceLoss</code><span class="sig-paren">(</span><em>data</em>, <em>target</em>, <em>dropout</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdgru_classification.html#MDGRUClassificationWithDiceLoss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mdgru.model.mdgru_classification.MDGRUClassification" title="mdgru.model.mdgru_classification.MDGRUClassification"><code class="xref py py-class docutils literal"><span class="pre">mdgru.model.mdgru_classification.MDGRUClassification</span></code></a></p>
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'model_seed': {'value': 12345678, 'help': 'Override default model initialization random seed'}}</em><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.collect_parameters">
+<code class="descname">collect_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.collect_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.compile_arguments">
+<code class="descname">compile_arguments</code><span class="sig-paren">(</span><em>kw</em>, <em>keep_entries=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.compile_arguments" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.cost">
+<code class="descname">cost</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the cost per batch</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.costs">
+<code class="descname">costs</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.costs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.get_model_name_from_ckpt">
+<code class="descname">get_model_name_from_ckpt</code><span class="sig-paren">(</span><em>ckpt</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.get_model_name_from_ckpt" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns root node name of tensorflow graph stored in checkpoint ckpt</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.logits">
+<code class="descname">logits</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.logits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the logits of the prediction</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.mdgru_bb">
+<code class="descname">mdgru_bb</code><span class="sig-paren">(</span><em>inp</em>, <em>dropout</em>, <em>num_hidden</em>, <em>num_output</em>, <em>noactivation=False</em>, <em>name=None</em>, <em>**kw</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.mdgru_bb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function to combine a MDRNN layer with a voxel-wise fully connected layer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>inp</strong> – input data</li>
+<li><strong>dropout</strong> – dropout rate</li>
+<li><strong>num_hidden</strong> – number of hidden units, output units of the MDRNN</li>
+<li><strong>num_output</strong> – number of output units of the voxel-wise fully connected layer
+(Can be None -&gt; no voxel-wise fully connected layer)</li>
+<li><strong>noactivation</strong> – Flag to disable activation of voxel-wise fully connected layer</li>
+<li><strong>name</strong> – Name for this particular MDRNN + vw fully connected layer</li>
+<li><strong>kw</strong> – Arguments for MDRNN and the vw fully connected layer (can override this class’ attributes)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Output of the voxelwise fully connected layer and MDRNN mix</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.optimize">
+<code class="descname">optimize</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optimization routine using the Adadelta optimizer</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.prediction">
+<code class="descname">prediction</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.prediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides prediction in the form of a discrete probability distribution per voxel</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.set_allowed_gpu_memory_fraction">
+<code class="descname">set_allowed_gpu_memory_fraction</code><span class="sig-paren">(</span><em>gpuboundfraction</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithDiceLoss.set_allowed_gpu_memory_fraction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss">
+<em class="property">class </em><code class="descclassname">mdgru.model.mdgru_classification.</code><code class="descname">MDGRUClassificationWithGeneralizedDiceLoss</code><span class="sig-paren">(</span><em>data</em>, <em>target</em>, <em>dropout</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model/mdgru_classification.html#MDGRUClassificationWithGeneralizedDiceLoss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mdgru.model.mdgru_classification.MDGRUClassification" title="mdgru.model.mdgru_classification.MDGRUClassification"><code class="xref py py-class docutils literal"><span class="pre">mdgru.model.mdgru_classification.MDGRUClassification</span></code></a></p>
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'model_seed': {'value': 12345678, 'help': 'Override default model initialization random seed'}}</em><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.collect_parameters">
+<code class="descname">collect_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.collect_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.compile_arguments">
+<code class="descname">compile_arguments</code><span class="sig-paren">(</span><em>kw</em>, <em>keep_entries=True</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.compile_arguments" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.cost">
+<code class="descname">cost</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the cost per batch</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.costs">
+<code class="descname">costs</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.costs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.get_model_name_from_ckpt">
+<code class="descname">get_model_name_from_ckpt</code><span class="sig-paren">(</span><em>ckpt</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.get_model_name_from_ckpt" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns root node name of tensorflow graph stored in checkpoint ckpt</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.logits">
+<code class="descname">logits</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.logits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the logits of the prediction</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.mdgru_bb">
+<code class="descname">mdgru_bb</code><span class="sig-paren">(</span><em>inp</em>, <em>dropout</em>, <em>num_hidden</em>, <em>num_output</em>, <em>noactivation=False</em>, <em>name=None</em>, <em>**kw</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.mdgru_bb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function to combine a MDRNN layer with a voxel-wise fully connected layer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>inp</strong> – input data</li>
+<li><strong>dropout</strong> – dropout rate</li>
+<li><strong>num_hidden</strong> – number of hidden units, output units of the MDRNN</li>
+<li><strong>num_output</strong> – number of output units of the voxel-wise fully connected layer
+(Can be None -&gt; no voxel-wise fully connected layer)</li>
+<li><strong>noactivation</strong> – Flag to disable activation of voxel-wise fully connected layer</li>
+<li><strong>name</strong> – Name for this particular MDRNN + vw fully connected layer</li>
+<li><strong>kw</strong> – Arguments for MDRNN and the vw fully connected layer (can override this class’ attributes)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Output of the voxelwise fully connected layer and MDRNN mix</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.optimize">
+<code class="descname">optimize</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optimization routine using the Adadelta optimizer</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.prediction">
+<code class="descname">prediction</code><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.prediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides prediction in the form of a discrete probability distribution per voxel</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.set_allowed_gpu_memory_fraction">
+<code class="descname">set_allowed_gpu_memory_fraction</code><span class="sig-paren">(</span><em>gpuboundfraction</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.mdgru_classification.MDGRUClassificationWithGeneralizedDiceLoss.set_allowed_gpu_memory_fraction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-mdgru.model">
+<span id="module-contents"></span><h2>Module Contents<a class="headerlink" href="#module-mdgru.model" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mdgru.model.ClassificationModel">
+<em class="property">class </em><code class="descclassname">mdgru.model.</code><code class="descname">ClassificationModel</code><span class="sig-paren">(</span><em>data</em>, <em>target</em>, <em>dropout</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#ClassificationModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.ClassificationModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">mdgru.model.Model</span></code></p>
+<p>Abstract model class.</p>
+<dl class="attribute">
+<dt id="mdgru.model.ClassificationModel._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'model_seed': {'value': 12345678, 'help': 'Override default model initialization random seed'}}</em><a class="headerlink" href="#mdgru.model.ClassificationModel._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.ClassificationModel.cost">
+<code class="descname">cost</code><a class="headerlink" href="#mdgru.model.ClassificationModel.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the cost per batch</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.ClassificationModel.costs">
+<code class="descname">costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.ClassificationModel.costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the costs per sample.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.ClassificationModel.get_model_name_from_ckpt">
+<code class="descname">get_model_name_from_ckpt</code><span class="sig-paren">(</span><em>ckpt</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.ClassificationModel.get_model_name_from_ckpt" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns root node name of tensorflow graph stored in checkpoint ckpt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.ClassificationModel.prediction">
+<code class="descname">prediction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.ClassificationModel.prediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property call to produce a prediction in tensorflow.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.ClassificationModel.set_allowed_gpu_memory_fraction">
+<code class="descname">set_allowed_gpu_memory_fraction</code><span class="sig-paren">(</span><em>gpuboundfraction</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.ClassificationModel.set_allowed_gpu_memory_fraction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mdgru.model.GANModel">
+<em class="property">class </em><code class="descclassname">mdgru.model.</code><code class="descname">GANModel</code><span class="sig-paren">(</span><em>data</em>, <em>dropout</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#GANModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.GANModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">mdgru.model.Model</span></code></p>
+<p>Abstract model class for GANs.</p>
+<dl class="attribute">
+<dt id="mdgru.model.GANModel._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'model_seed': {'value': 12345678, 'help': 'Override default model initialization random seed'}}</em><a class="headerlink" href="#mdgru.model.GANModel._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.GANModel.cost">
+<code class="descname">cost</code><a class="headerlink" href="#mdgru.model.GANModel.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the cost per batch</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.GANModel.costs">
+<code class="descname">costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.GANModel.costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the costs per sample.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.GANModel.get_model_name_from_ckpt">
+<code class="descname">get_model_name_from_ckpt</code><span class="sig-paren">(</span><em>ckpt</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.GANModel.get_model_name_from_ckpt" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns root node name of tensorflow graph stored in checkpoint ckpt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.GANModel.prediction">
+<code class="descname">prediction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.GANModel.prediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property call to produce a prediction in tensorflow.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.GANModel.set_allowed_gpu_memory_fraction">
+<code class="descname">set_allowed_gpu_memory_fraction</code><span class="sig-paren">(</span><em>gpuboundfraction</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.GANModel.set_allowed_gpu_memory_fraction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mdgru.model.Model">
+<em class="property">class </em><code class="descclassname">mdgru.model.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>data</em>, <em>target</em>, <em>dropout</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Abstract Model class</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kw</strong> (<em>dict containing the following options.</em>) – <ul class="simple">
+<li><strong>model_seed</strong> [default: 12345678] Override default model initialization random seed</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="mdgru.model.Model._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'model_seed': {'value': 12345678, 'help': 'Override default model initialization random seed'}}</em><a class="headerlink" href="#mdgru.model.Model._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.Model.cost">
+<code class="descname">cost</code><a class="headerlink" href="#mdgru.model.Model.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the cost per batch</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.Model.costs">
+<code class="descname">costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#Model.costs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.Model.costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the costs per sample.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="mdgru.model.Model.get_model_name_from_ckpt">
+<em class="property">static </em><code class="descname">get_model_name_from_ckpt</code><span class="sig-paren">(</span><em>ckpt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#Model.get_model_name_from_ckpt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.Model.get_model_name_from_ckpt" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns root node name of tensorflow graph stored in checkpoint ckpt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.Model.prediction">
+<code class="descname">prediction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#Model.prediction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.Model.prediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property call to produce a prediction in tensorflow.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="mdgru.model.Model.set_allowed_gpu_memory_fraction">
+<em class="property">static </em><code class="descname">set_allowed_gpu_memory_fraction</code><span class="sig-paren">(</span><em>gpuboundfraction</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#Model.set_allowed_gpu_memory_fraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.Model.set_allowed_gpu_memory_fraction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mdgru.model.ReconstructionModel">
+<em class="property">class </em><code class="descclassname">mdgru.model.</code><code class="descname">ReconstructionModel</code><span class="sig-paren">(</span><em>data</em>, <em>dropout</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#ReconstructionModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.ReconstructionModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">mdgru.model.Model</span></code></p>
+<p>Abstract model class for reconstruction tasks.</p>
+<dl class="attribute">
+<dt id="mdgru.model.ReconstructionModel._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'model_seed': {'value': 12345678, 'help': 'Override default model initialization random seed'}}</em><a class="headerlink" href="#mdgru.model.ReconstructionModel._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.ReconstructionModel.cost">
+<code class="descname">cost</code><a class="headerlink" href="#mdgru.model.ReconstructionModel.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the cost per batch</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.ReconstructionModel.costs">
+<code class="descname">costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.ReconstructionModel.costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the costs per sample.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.ReconstructionModel.get_model_name_from_ckpt">
+<code class="descname">get_model_name_from_ckpt</code><span class="sig-paren">(</span><em>ckpt</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.ReconstructionModel.get_model_name_from_ckpt" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns root node name of tensorflow graph stored in checkpoint ckpt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.ReconstructionModel.prediction">
+<code class="descname">prediction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.ReconstructionModel.prediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property call to produce a prediction in tensorflow.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.ReconstructionModel.set_allowed_gpu_memory_fraction">
+<code class="descname">set_allowed_gpu_memory_fraction</code><span class="sig-paren">(</span><em>gpuboundfraction</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.ReconstructionModel.set_allowed_gpu_memory_fraction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mdgru.model.RegressionModel">
+<em class="property">class </em><code class="descclassname">mdgru.model.</code><code class="descname">RegressionModel</code><span class="sig-paren">(</span><em>data</em>, <em>target</em>, <em>dropout</em>, <em>kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#RegressionModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.RegressionModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">mdgru.model.Model</span></code></p>
+<p>Abstract model class for regression tasks.</p>
+<dl class="attribute">
+<dt id="mdgru.model.RegressionModel._defaults">
+<code class="descname">_defaults</code><em class="property"> = {'model_seed': {'value': 12345678, 'help': 'Override default model initialization random seed'}}</em><a class="headerlink" href="#mdgru.model.RegressionModel._defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mdgru.model.RegressionModel.cost">
+<code class="descname">cost</code><a class="headerlink" href="#mdgru.model.RegressionModel.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the cost per batch</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.RegressionModel.costs">
+<code class="descname">costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.RegressionModel.costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property to compute the costs per sample.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.RegressionModel.get_model_name_from_ckpt">
+<code class="descname">get_model_name_from_ckpt</code><span class="sig-paren">(</span><em>ckpt</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.RegressionModel.get_model_name_from_ckpt" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns root node name of tensorflow graph stored in checkpoint ckpt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.RegressionModel.prediction">
+<code class="descname">prediction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.RegressionModel.prediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>lazy property call to produce a prediction in tensorflow.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mdgru.model.RegressionModel.set_allowed_gpu_memory_fraction">
+<code class="descname">set_allowed_gpu_memory_fraction</code><span class="sig-paren">(</span><em>gpuboundfraction</em><span class="sig-paren">)</span><a class="headerlink" href="#mdgru.model.RegressionModel.set_allowed_gpu_memory_fraction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.model._save_summary_for_2d_image">
+<code class="descclassname">mdgru.model.</code><code class="descname">_save_summary_for_2d_image</code><span class="sig-paren">(</span><em>name</em>, <em>grid</em>, <em>num_channels</em>, <em>collections=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#_save_summary_for_2d_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model._save_summary_for_2d_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper to summarize 2d images in tensorboard, by saving one for each channel.
+:param name: name of the image to be saved
+:param grid: 2d image
+:param num_channels: num channels to display
+:param collections: which collection should be used for tensorboard, defaults to default summary collection.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.model.batch_norm">
+<code class="descclassname">mdgru.model.</code><code class="descname">batch_norm</code><span class="sig-paren">(</span><em>x</em>, <em>name_scope</em>, <em>training</em>, <em>epsilon=0.001</em>, <em>decay=0.999</em>, <em>bias=True</em>, <em>m=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#batch_norm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.batch_norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the batch_norm for x</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.model.convolution_helper_padding_same">
+<code class="descclassname">mdgru.model.</code><code class="descname">convolution_helper_padding_same</code><span class="sig-paren">(</span><em>inp</em>, <em>convolution_filter</em>, <em>filter_shape</em>, <em>strides</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#convolution_helper_padding_same"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.convolution_helper_padding_same" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper to allow for convolution strides with less than 1.</p>
+<p>Strides less than one are performed using transposed convolutions, strides larger than one are performed using
+normal convolutions. This helper function only works if all filters are larger or equal than one or smaller or equal
+than 1. If this is not given, an error is raised. given that the used padding
+is chosen to be “SAME”.
+:param inp: input data to convolve
+:param convolution_filter: filter to perform convolution with
+:param filter_shape: filter shape as list
+:param strides: list of strides to be used for the spatial dimensions of inp during the convolution.
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.model.get_modified_xavier_method">
+<code class="descclassname">mdgru.model.</code><code class="descname">get_modified_xavier_method</code><span class="sig-paren">(</span><em>num_elements</em>, <em>uniform_init=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#get_modified_xavier_method"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.get_modified_xavier_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modified Glorot initializer.</p>
+<p>Returns an initializer using Glorots method for uniform or Gaussian distributions
+depending on the flag “uniform_init”.
+:param num_elements: How many elements are there
+:param uniform_init: Shall we use uniform or Gaussian distribution?
+:return: Glorot/Xavier initializer</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.model.get_pseudo_orthogonal_block_circulant_initialization">
+<code class="descclassname">mdgru.model.</code><code class="descname">get_pseudo_orthogonal_block_circulant_initialization</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#get_pseudo_orthogonal_block_circulant_initialization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.get_pseudo_orthogonal_block_circulant_initialization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates pseudo-orthogonal initialization for given shape.</p>
+<p>Pseudo-orthogonal initialization is achieved assuming circular convolution and a signal size equal to the filter
+size. Hence, if applied to signals larger than the filter, or not using circular convolution leads to non orthogonal
+filter initializations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">pseudo-orthogonal initialization for given shape</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mdgru.model.save_summary_for_nd_images">
+<code class="descclassname">mdgru.model.</code><code class="descname">save_summary_for_nd_images</code><span class="sig-paren">(</span><em>name</em>, <em>grid</em>, <em>collections=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mdgru/model.html#save_summary_for_nd_images"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mdgru.model.save_summary_for_nd_images" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper to summarize 3d images in tensorboard, saving an image along each axis.
+:param name: name of image
+:param grid: image data
+:param collections: collection this image is associated with, defaults to the standard tensorboard summary collection</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="mdgru.model.crnn.html" class="btn btn-neutral float-right" title="Convolutional RNN" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="RUN_mdgru.html" class="btn btn-neutral" title="Start script" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Andermatt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

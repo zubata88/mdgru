@@ -80,15 +80,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../model.html">Model (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../eval.html">Evaluation module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data loader module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../helper.html">Helper routines and functions</a></li>
@@ -171,18 +172,20 @@
 
 
 <div class="viewcode-block" id="SupervisedEvaluationTorch"><a class="viewcode-back" href="../../../eval.html#mdgru.eval.torch.SupervisedEvaluationTorch">[docs]</a><span class="k">class</span> <span class="nc">SupervisedEvaluationTorch</span><span class="p">(</span><span class="n">SupervisedEvaluation</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Base class for all evaluation classes. Child classes implement various</span>
-<span class="sd">        test_* methods to test modeldependent aspects.</span>
-
-<span class="sd">    Attributes:</span>
-<span class="sd">        sess: tensorflow session. contains all the model data.</span>
-<span class="sd">        saver: tensorflow saver to save or load the model data.</span>
-
-<span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelcls</span><span class="p">,</span> <span class="n">collectioninst</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">SupervisedEvaluationTorch</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modelcls</span><span class="p">,</span> <span class="n">collectioninst</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modelcls</span><span class="p">,</span> <span class="n">datacls</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluation class for the pytorch backend</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        modelcls: cls</span>
+<span class="sd">            Python class defining the model to be evaluated</span>
+<span class="sd">        datacls: cls</span>
+<span class="sd">            Python class defining the loading and saving of the data being evaluated here</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SupervisedEvaluationTorch</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">modelcls</span><span class="p">,</span> <span class="n">datacls</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
         <span class="n">eval_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">SupervisedEvaluationTorch</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">eval_kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
@@ -205,7 +208,17 @@
 
         <span class="c1"># check_if_kw_empty(self.__class__.__name__, kw, &#39;eval&#39;)</span>
 
-    <span class="k">def</span> <span class="nf">check_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batchlabs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SupervisedEvaluationTorch.check_input"><a class="viewcode-back" href="../../../eval.html#mdgru.eval.torch.SupervisedEvaluationTorch.check_input">[docs]</a>    <span class="k">def</span> <span class="nf">check_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batchlabs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to check correctness of input and convert them to cuda pytorch tensors</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        batch : ndarray</span>
+<span class="sd">            input data to be moved to pytorch</span>
+<span class="sd">        batchlabs : ndarray</span>
+<span class="sd">            label information to be moved to pytorch</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">batch</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">batchlabs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">batchlabs</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">batchlabs</span><span class="p">)</span>
@@ -216,7 +229,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">batchlabs</span><span class="o">.</span><span class="n">resize_</span><span class="p">(</span><span class="n">batchlabs</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">batch</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">batchlabs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">batchlabs</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">batchlabs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batchlabs</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">batchlabs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SupervisedEvaluationTorch._train"><a class="viewcode-back" href="../../../eval.html#mdgru.eval.torch.SupervisedEvaluationTorch._train">[docs]</a>    <span class="k">def</span> <span class="nf">_train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batchlabs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;set inputs and run torch training iteration&quot;&quot;&quot;</span>
@@ -252,8 +265,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prediction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">reorder</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">get_globalstep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()[</span><span class="s1">&#39;state&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()))[</span><span class="s1">&#39;step&#39;</span><span class="p">]</span>
+<div class="viewcode-block" id="SupervisedEvaluationTorch.get_globalstep"><a class="viewcode-back" href="../../../eval.html#mdgru.eval.torch.SupervisedEvaluationTorch.get_globalstep">[docs]</a>    <span class="k">def</span> <span class="nf">get_globalstep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()[</span><span class="s1">&#39;state&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()))[</span><span class="s1">&#39;step&#39;</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="SupervisedEvaluationTorch._save"><a class="viewcode-back" href="../../../eval.html#mdgru.eval.torch.SupervisedEvaluationTorch._save">[docs]</a>    <span class="k">def</span> <span class="nf">_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Save model&quot;&quot;&quot;</span>

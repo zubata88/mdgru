@@ -80,15 +80,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../model.html">Model (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../eval.html">Evaluation module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data loader module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../helper.html">Helper routines and functions</a></li>
@@ -167,7 +168,7 @@
 <span class="kn">from</span> <span class="nn">.mdgru</span> <span class="k">import</span> <span class="n">MDRNN</span>
 
 
-<div class="viewcode-block" id="MDGRUBlock"><a class="viewcode-back" href="../../../mdrnn_th.html#mdgru.model_pytorch.mdrnn.MDGRUBlock">[docs]</a><span class="k">class</span> <span class="nc">MDGRUBlock</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<div class="viewcode-block" id="MDGRUBlock"><a class="viewcode-back" href="../../../obs/mdrnn_th.html#mdgru.model_pytorch.mdrnn.MDGRUBlock">[docs]</a><span class="k">class</span> <span class="nc">MDGRUBlock</span><span class="p">(</span><span class="n">th</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Convenience class combining attributes to be used for multiple MDRNN and voxel-wise fully connected layers.</span>
 <span class="sd">        :param num_spatial_dims: Number of spatial dimensions to consider</span>
 <span class="sd">        :param dropout: Dropout rate provided as &quot;keep&quot; rate</span>
@@ -218,7 +219,7 @@
                 <span class="n">model</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">vwfc_activation</span><span class="p">()]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">th</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">model</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MDGRUBlock.forward"><a class="viewcode-back" href="../../../mdrnn_th.html#mdgru.model_pytorch.mdrnn.MDGRUBlock.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+<div class="viewcode-block" id="MDGRUBlock.forward"><a class="viewcode-back" href="../../../mdgru.model_pytorch.mdrnn.html#mdgru.model_pytorch.mdrnn.MDGRUBlock.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span></div></div>
 
 

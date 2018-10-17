@@ -80,15 +80,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">General</span></p>
+              <p class="caption"><span class="caption-text">Guides</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../includeme.html">Multi-dimensional Gated Recurrent Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_use.html">How to Use through Examples (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_install.html">How to Install</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules</span></p>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../RUN_mdgru.html">Start script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../model.html">Model (Tensorflow Backend)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../model_pytorch.html">Model (PyTorch Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mdgru.model.html">Model (Tensorflow Backend)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mdgru.model_pytorch.html">Model (Pytorch Backend)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../eval.html">Evaluation module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../data.html">Data loader module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../helper.html">Helper routines and functions</a></li>
@@ -172,7 +173,7 @@
 <span class="kn">from</span> <span class="nn">mdgru.model.mdrnn.mdgru</span> <span class="k">import</span> <span class="n">MDRNN</span>
 
 
-<div class="viewcode-block" id="MDGRUNet"><a class="viewcode-back" href="../../../mdrnn_tf.html#mdgru.model.mdrnn.MDGRUNet">[docs]</a><span class="k">class</span> <span class="nc">MDGRUNet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="MDGRUNet"><a class="viewcode-back" href="../../../obs/mdrnn_tf.html#mdgru.model.mdrnn.MDGRUNet">[docs]</a><span class="k">class</span> <span class="nc">MDGRUNet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Convenience class combining attributes to be used for multiple MDRNN and voxel-wise fully connected layers.&quot;&quot;&quot;</span>
     <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;add_e_bn&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
@@ -188,7 +189,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mdrnn_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="n">MDRNN</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">crnn_kw</span><span class="p">,</span> <span class="n">kw</span> <span class="o">=</span> <span class="n">compile_arguments</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mdrnn_kw</span><span class="p">[</span><span class="s1">&#39;crnn_class&#39;</span><span class="p">],</span> <span class="n">kw</span><span class="p">,</span> <span class="n">transitive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MDGRUNet.mdgru_bb"><a class="viewcode-back" href="../../../mdrnn_tf.html#mdgru.model.mdrnn.MDGRUNet.mdgru_bb">[docs]</a>    <span class="k">def</span> <span class="nf">mdgru_bb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">num_hidden</span><span class="p">,</span> <span class="n">num_output</span><span class="p">,</span> <span class="n">noactivation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<div class="viewcode-block" id="MDGRUNet.mdgru_bb"><a class="viewcode-back" href="../../../obs/mdrnn_tf.html#mdgru.model.mdrnn.MDGRUNet.mdgru_bb">[docs]</a>    <span class="k">def</span> <span class="nf">mdgru_bb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">num_hidden</span><span class="p">,</span> <span class="n">num_output</span><span class="p">,</span> <span class="n">noactivation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Convenience function to combine a MDRNN layer with a voxel-wise fully connected layer.</span>
 
