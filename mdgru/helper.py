@@ -197,6 +197,7 @@ def compile_arguments(cls, kw, transitive=False, override_static=False, keep_ent
     :param cls: instance or class having property or attribute "_defaults", which is a dict of default parameters.
     :param transitive: determines if parent classes should also be consulted
     :param kw: the keyword dictionary to separate into valid arguments and rest
+    :return: tuple of dicts, one with extracted/copied relevant keywords and one with the rest
     """
     if keep_entries:
         kw = copy.copy(kw)

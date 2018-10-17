@@ -176,7 +176,7 @@ added for the training procedure:
 
 The first parameter is a scalar in radians which allows for random
 rotation around a random vector for 3d data, and around the center point
-for 2d data between [-ANGLE,+ANGLE] degrees. The parameter is sampled
+for 2d data between [-ANGLE,+ANGLE] radians. The parameter is sampled
 uniformly. The scaling parameter allows for random scaling between
 [1/scale,scale], where we sample form an exponential distribution and
 each axis has its own scaling parameter. The last two parameters have to

@@ -17,13 +17,14 @@
    :caption: API Reference 
 
    RUN_mdgru
-   model
-   model_pytorch
+   mdgru.model
+   mdgru.model_pytorch
    eval
    data
    helper
    runner
 
+   
 Indices and tables
 ==================
 

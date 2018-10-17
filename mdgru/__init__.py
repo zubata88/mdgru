@@ -16,6 +16,3 @@ except ModuleNotFoundError as e:
         print("Pytorch is not installed")
     else:
         raise e
-import mdgru.runner
-import mdgru.helper
-import mdgru.eval
