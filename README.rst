@@ -21,6 +21,9 @@ changes in CuDNN, not tested), but a snapshot of it is included in this
 release in the folder tensorflow\_extra\_ops as additional operation for
 tensorflow.
 
+The model has been developed in Python>=3.5. Additional requirements are: *nibabel*, *numpy*, *pydicom*, *matplotlib*, *scikit-image*,
+*simpleitk*, *tensorflow-gpu>=1.8*, *torch*, *torchvision*, and *visdom*. It is best to set up a virtual environment in order to develop the model.
+
 The latest full documentation is available `here <https://mdgru.readthedocs.io/en/latest/index.html>`_.
 
 Papers
@@ -53,16 +56,19 @@ Code also used for (with modifications):
       note = {{{[accepted]}}},
       organization={Springer}
     }
+    
     @article{andermatt2017b,
       title={Multi-dimensional Gated Recurrent Units for Automated Anatomical Landmark Localization},
       author={Andermatt, Simon and Pezold, Simon and Amann, Michael and Cattin, Philippe C},
       journal={arXiv preprint arXiv:1708.02766},
       year={2017}
     }
+    
     @article{andermatt2017wmh,
       title={Multi-dimensional Gated Recurrent Units for the Segmentation of White Matter Hyperintensites},
       author={Andermatt, Simon and Pezold, Simon and Cattin, Philippe}
     }
+    
     @inproceedings{andermatt2017brats,
     title = {Multi-dimensional Gated Recurrent Units for
     Brain Tumor Segmentation},
