@@ -9,17 +9,19 @@ segmentation challenge, *2nd place* in the white matter hyperintensities
 challenge of MICCAI 2017 (and its previous implementation using CAFFE made
 *3rd place* in the MrBrainS13 Segmentation challenge). 
 It was also applied in the BraTS 2017 competition, where the information on the exact rank are still
-unknown. 
+unknown.
+
 Since being published the firs time, the code has been improved on quite a
 bit, especially to facilitate handling training and testing runs. The
 reported results should still be reproducible though using this
 implementation.
+
 The former CAFFE code is not maintained anymore (there are probably breaking
 changes in CuDNN, not tested), but a snapshot of it is included in this
 release in the folder tensorflow\_extra\_ops as additional operation for
 tensorflow.
 
-The latest full documentation is available `here <https://zubata88.github.io/mdgru>`_.
+The latest full documentation is available `here <https://mdgru.readthedocs.io/en/latest/index.html>`_.
 
 Papers
 ''''''
