@@ -208,7 +208,7 @@ which are named temp-\$i, where \$i is the iteration number, if no epochs
 are specified or temp-epoch\$epoch-\$i otherwise. On the file system, the 
 files also have appendices like ".data-00000-of-00001" or ".meta" or 
 ".index", but these can be ignored and should not be specified when 
-specifying a checkpoint. **After the whole training procedure, a *final* 
+specifying a checkpoint. **After the whole training procedure, a final 
 checkpoint is created, which saves the final state of the network.**
 If the training process is interrupted, a "interrupt-\$i"
 checkpoint is created, where $i is again the iteration number. All of
