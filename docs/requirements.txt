@@ -1,4 +1,3 @@
-Python==3.5
 nibabel
 numpy
 pydicom
