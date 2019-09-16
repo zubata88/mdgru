@@ -4,7 +4,9 @@ How to Install
 
 Requirements (on ubuntu) can be installed
 using the following lines of code. On other systems, use the
-corresponding packages. Make sure to use tensorflow v 1.8 for the tensorflow backend.
+corresponding packages. **Make sure to use tensorflow>=1.8 for the TensorFlow backend.**
+
+It's best to use a virtual environment with Python 3.5.
 
 ::
 
@@ -12,9 +14,10 @@ corresponding packages. Make sure to use tensorflow v 1.8 for the tensorflow bac
 
     sudo pip3 install --upgrade pip
 
-    # either with a gpu, and cuda + cudnn installed:
+    # Either with a GPU, and CUDA/CUDNN installed:
+    
     sudo pip3 install "tensorflow-gpu>=1.8"
-    # or
+    # Or:
     sudo pip3 install "tensorflow>=1.8"
 
     sudo pip3 install torch torchvision visdom
@@ -29,4 +32,4 @@ Or simply install mdgru from github using pip:
 
 ::
 
-    pip3 install git+https://github.com/zubata88/mdgru.git
+    pip3 install git+https://github.com/gtancev/mdgru.git
