@@ -1,4 +1,4 @@
-Start script
+Start Script
 ============
 
 .. automodule:: RUN_mdgru
