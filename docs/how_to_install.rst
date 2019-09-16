@@ -6,7 +6,7 @@ Requirements (on ubuntu) can be installed
 using the following lines of code. On other systems, use the
 corresponding packages. **Make sure to use tensorflow>=1.8 for the TensorFlow backend.**
 
-It's best to use a virtual environment with Python 3.5.
+It's best to use a virtual environment with Python>=3.5.
 
 ::
 
