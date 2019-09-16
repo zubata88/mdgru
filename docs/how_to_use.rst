@@ -11,16 +11,16 @@ As the RUN\_mdgru.py file contains a overly large number of parameters,
 a sample train+test, individual train, and individual test run are
 detailed in the following:
 
-First, the data have to be prepared and have to have a certain format:
+**First, the data have to be prepared and have to have a certain format.**
 Each sample should be contained in one folder, with the label and
-feature (e.g. different Sequences) files consistently named after a
+feature (e.g. different sequences) files consistently named after a
 certain scheme. Furthermore, all the samples belonging to test, train
 and validation set should be located in respective folders. The
 following shows an example, where we have training, testing and
 validation folders train\_data, test\_data and val\_data respectively,
-containing each some samples. Each sample consists of two featurefiles
+containing each some samples. **Each sample consists of two featurefiles
 (seq1.nii.gz and seq2.nii.gz) and one labelfile (lab.nii.gz), as shown
-in the following example:
+in the following example.**
 
 ::
 
@@ -69,14 +69,14 @@ in the following example:
             ├── seq1.nii.gz
             └── seq2.nii.gz
 
-The Labelfiles need to be consistent with increasing class numbers. Eg.
+The label files need to be consistent with increasing class numbers. Eg.
 if we model the background, white matter, gray matter and csf for
 instance, we have 4 classes and hence distribute them to the numbers 0,
-1, 2 and 3. Furthermore, the labelfiles should also be encoded as
-integer files (e.g. nifti uint8), and the feature and label files need
-to have matching dimensions.
+1, 2 and 3. Furthermore, the label files should also be encoded as
+integer files (e.g. nifti uint8), and the **feature and label files need
+to have matching dimensions**.
 
-Train + Test
+Train & Test
 ------------
 
 In the following, we show the case, where we train a model on the above
@@ -92,7 +92,7 @@ data and also immediately evaluate our model on the last training state
     --nclasses 4 --ignore_nifti_header --num_threads 4
 
 The above first four parameters tell the script, where our different
-data lie. Furthermore, it will create a folder experiments in
+data can be found. Furthermore, it will create a folder experiments in
 "path/to/samplestructure". Inside this experiments folder, a folder for
 the current setting is created. The name of this folder can be
 determined with "--optionname". For each individual
@@ -208,8 +208,8 @@ which are named temp-\$i, where \$i is the iteration number, if no epochs
 are specified or temp-epoch\$epoch-\$i otherwise. On the file system, the 
 files also have appendices like ".data-00000-of-00001" or ".meta" or 
 ".index", but these can be ignored and should not be specified when 
-specifying a checkpoint. After the whole training procedure, a *final* 
-checkpoint is created, which saves the final state of the network. 
+specifying a checkpoint. **After the whole training procedure, a *final* 
+checkpoint is created, which saves the final state of the network.**
 If the training process is interrupted, a "interrupt-\$i"
 checkpoint is created, where $i is again the iteration number. All of
 these three types of checkpoints can be used to evaluate the model.
