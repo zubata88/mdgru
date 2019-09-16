@@ -2,8 +2,8 @@ Multi-dimensional Gated Recurrent Units
 =======================================
 
 This repository contains the code used to generate the result in the
-paper **Automated Segmentation of Multiple Sclerosis Lesions using
-Multi-Dimensional Gated Recurrent Units**. It is implemented in **PyTorch** and **TensorFlow** each, modified versions were also
+paper *Automated Segmentation of Multiple Sclerosis Lesions using
+Multi-Dimensional Gated Recurrent Units*. It is implemented in **Python** using the deep learning libraries **PyTorch** and **TensorFlow** each, modified versions were also
 used to reach *1st place* in the ISBI 2015 longitudinal lesion
 segmentation challenge, *2nd place* in the white matter hyperintensities
 challenge of MICCAI 2017 (and its previous implementation using CAFFE made
