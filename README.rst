@@ -22,7 +22,7 @@ release in the folder tensorflow\_extra\_ops as additional operation for
 TensorFlow.
 
 The code has been developed in Python>=3.5. Additional requirements are: *nibabel*, *numpy*, *pydicom*, *matplotlib*, *scikit-image*,
-*simpleitk*, *tensorflow*, *tensorflow-gpu>=1.8*, *torch*, *torchvision*, and *visdom*. It is best to set up a **virtual environment** with these properties in order to develop the deep learning model. After training, the model is saved and can be embedded in a seperate software for operation (you can use the requirements.txt in the /docs).
+*simpleitk*, *tensorflow*, *tensorflow-gpu>=1.8*, *torch*, *torchvision*, and *visdom*. It is best to set up a **virtual environment** with these properties in order to develop the deep learning model. After training, the model is saved and can be embedded in a seperate software for operation.
 
 The latest full documentation is available `here <https://mdgru.readthedocs.io/en/latest/index.html>`_.
 
