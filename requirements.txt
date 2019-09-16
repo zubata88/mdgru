@@ -1,0 +1,12 @@
+nibabel
+numpy
+pydicom
+matplotlib
+scikit-image
+simpleitk
+tensorflow
+tensorflow-gpu>=1.8
+torch
+torchvision
+visdom
+
