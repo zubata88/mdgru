@@ -1,9 +1,0 @@
-python:
-   version: 3.5
-   install:
-      - method: pip
-        path: .
-        extra_requirements:
-           - docs
-      - method: setuptools
-        path: package
