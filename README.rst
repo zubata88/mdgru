@@ -21,8 +21,8 @@ changes in CuDNN, not tested), but a snapshot of it is included in this
 release in the folder tensorflow\_extra\_ops as additional operation for
 TensorFlow.
 
-The model has been developed in Python>=3.5. Additional requirements are: *nibabel*, *numpy*, *pydicom*, *matplotlib*, *scikit-image*,
-*simpleitk*, *tensorflow-gpu>=1.8*, *torch*, *torchvision*, and *visdom*. It is best to set up a **virtual environment** in order to develop the model.
+The code has been developed in Python>=3.5. Additional requirements are: *nibabel*, *numpy*, *pydicom*, *matplotlib*, *scikit-image*,
+*simpleitk*, *tensorflow-gpu>=1.8*, *torch*, *torchvision*, and *visdom*. It is best to set up a **virtual environment** with these properties in order to develop the deep learning model. After training, the model is saved and can be embedded in a seperate software for operation.
 
 The latest full documentation is available `here <https://mdgru.readthedocs.io/en/latest/index.html>`_.
 
