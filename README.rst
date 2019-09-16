@@ -1,22 +1,23 @@
 Multi-dimensional Gated Recurrent Units
 =======================================
 
-This repository contains the code used to produce the results in the
+This repository contains the code used to produce the result in the
 papers **Automated Segmentation of Multiple Sclerosis Lesions using
-Multi-Dimensional Gated Recurrent Units**. It is implemented in **PyTorch** and was
+Multi-Dimensional Gated Recurrent Units**. It is implemented in **PyTorch** and **TensorFlow** each, and it was
 used to reach *1st place* in the ISBI 2015 longitudinal lesion
 segmentation challenge, *2nd place* in the white matter hyperintensities
 challenge of MICCAI 2017 (and its previous implementation in CAFFE made
 *3rd place* in the MrBrainS13 Segmentation challenge). 
-We also competed in BraTS 2017, where the information on the exact rank are still
-unknown. This release is implemented using the **TensorFlow** framework. 
+It was also applied in the BraTS 2017 competition, where the information on the exact rank are still
+unknown. 
+Since being published the firs time, the code has been improved on quite a
+bit, especially to facilitate handling training and testing runs. The
+reported results should still be reproducible though using this
+implementation.
 The former CAFFE code is not maintained anymore (there are probably breaking
 changes in CuDNN, not tested), but a snapshot of it is included in this
 release in the folder tensorflow\_extra\_ops as additional operation for
-tensorflow. Since being published, the code has been improved on quite a
-bit, especially to facilitate handling training and testing runs. The
-reported results should still be reproducible though using this
-implementation. 
+tensorflow.
 
 The latest full documentation is available `here <https://zubata88.github.io/mdgru>`_.
 
