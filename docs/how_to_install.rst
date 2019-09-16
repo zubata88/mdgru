@@ -15,8 +15,8 @@ It's best to use a virtual environment with Python 3.5.
     sudo pip3 install --upgrade pip
 
     # Either with a GPU, and CUDA/CUDNN installed:
-    
     sudo pip3 install "tensorflow-gpu>=1.8"
+    
     # Or:
     sudo pip3 install "tensorflow>=1.8"
 
