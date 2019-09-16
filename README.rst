@@ -19,10 +19,10 @@ implementation.
 The former CAFFE code is not maintained anymore (there are probably breaking
 changes in CuDNN, not tested), but a snapshot of it is included in this
 release in the folder tensorflow\_extra\_ops as additional operation for
-tensorflow.
+TensorFlow.
 
 The model has been developed in Python>=3.5. Additional requirements are: *nibabel*, *numpy*, *pydicom*, *matplotlib*, *scikit-image*,
-*simpleitk*, *tensorflow-gpu>=1.8*, *torch*, *torchvision*, and *visdom*. It is best to set up a virtual environment in order to develop the model.
+*simpleitk*, *tensorflow-gpu>=1.8*, *torch*, *torchvision*, and *visdom*. It is best to set up a **virtual environment** in order to develop the model.
 
 The latest full documentation is available `here <https://mdgru.readthedocs.io/en/latest/index.html>`_.
 
