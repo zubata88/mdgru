@@ -1,6 +1,6 @@
 
-How to Use through Examples (Tensorflow Backend) 
-''''''''''''''''''''''''''''''''''''''''''''''''
+Instruction (for Tensorflow backend) 
+''''''''''''''''''''''''''''''''''''
 
 The file *RUN\_mdgru.py* is used for
 basically all segmentation tasks. For now, please refer to it's help
@@ -8,7 +8,7 @@ message by calling *python3 RUN\_mdgru.py* and the documentation in the
 code.
 
 As the RUN\_mdgru.py file contains a overly large number of parameters,
-a sample train+test, individual train, and individual test run are
+a sample train & test, individual train, and individual test run are
 detailed in the following:
 
 **First, the data have to be prepared and have to have a certain format.**
@@ -89,7 +89,7 @@ data and also immediately evaluate our model on the last training state
     --locationvalidation val_data --locationtesting test_data \
     --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
     -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
-    --nclasses 4 --ignore_nifti_header --num_threads 4
+    --nclasses 4 --num_threads 4
 
 The above first four parameters tell the script, where our different
 data can be found. Furthermore, it will create a folder experiments in
@@ -159,7 +159,7 @@ that data. We can do this by using the following command:
     --locationvalidation val_data \
     --optionname onlytrainrun --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
     -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
-    --nclasses 4 --ignore_nifti_header --num_threads 4 --onlytrain
+    --nclasses 4 --num_threads 4 --onlytrain
 
 In this setup, we can omit the '--locationtesting' and append
 '--onlytrain' in its place, to specify, that we want to stop the
@@ -196,7 +196,7 @@ Only Test
     --locationtesting test_data\
     --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
     -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz \
-    --nclasses 4 --ignore_nifti_header --onlytest --ckpt path/to/samplestructure/experiments/onlytrainrun/1524126169/cache/temp-22500 --notestingmask
+    --nclasses 4 --onlytest --ckpt path/to/samplestructure/experiments/onlytrainrun/1524126169/cache/temp-22500 --notestingmask
 
 Usually, after conducting a training run, it is the best idea to simply
 copy the training parameters, remove the "onlytest", add the
