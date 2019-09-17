@@ -1,5 +1,5 @@
 
-Instruction (for Tensorflow backend) 
+Instruction (uses Tensorflow backend) 
 ''''''''''''''''''''''''''''''''''''
 
 The file *RUN\_mdgru.py* is used for
