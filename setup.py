@@ -15,7 +15,7 @@ setup(
     packages=find_packages('.') + ['.'],
     license="LGPL",
     python_requires='==3.5.2',
-    install_requires=["nibabel", "numpy=1.15.1", "scipy==1.0.0", "pydicom", "matplotlib", "scikit-image", "simpleitk", "tensorflow-gpu>=1.8", "torch", "torchvision", "visdom"],
+    install_requires=["nibabel", "numpy=1.15.1", "scipy==1.0.0", "pydicom", "matplotlib", "scikit-image", "simpleitk", "tensorflow-gpu==1.8", "torch", "torchvision", "visdom"],
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)',
