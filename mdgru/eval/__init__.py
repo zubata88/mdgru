@@ -342,8 +342,8 @@ class SupervisedEvaluation(object):
                     slicesb[ind] = slice(-pp, None)
                     slicesa = tuple(slicesa)
                     slicesb = tuple(slicesb)
-                    certainty[slicesa] *= np.arange(1.0 / (pp + 1), 1, 1.0 / (pp + 1)).reshape(reshapearr)
-                    certainty[slicesb] *= np.arange(1.0 / (pp + 1), 1, 1.0 / (pp + 1))[::-1].reshape(reshapearr)
+                    certainty[slicesa] *= np.arange(1.0 / pp, 1, 1.0 / (pp + 1)).reshape(reshapearr)
+                    certainty[slicesb] *= np.arange(1.0 / pp, 1, 1.0 / (pp + 1))[::-1].reshape(reshapearr)
 
             certainty = certainty.reshape([1] + w + [1])
             # read, compute, merge, write back
