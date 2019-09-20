@@ -13,10 +13,10 @@ Start Script
     -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
     --nclasses 4 --num_threads 4 (--use_pytorch)
     
- ::
+
     
-    --datapath: path to folders with train/val/test data
-    --locationxxx: name of folder with data for respective purpose
+--datapath: path to folders with train/val/test data
+--locationxxx: name of folder with data for respective purpose
     --optionname: options
     --modelname: name of model
     -w: subvolume size (for each dimension)
