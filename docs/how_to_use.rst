@@ -106,7 +106,7 @@ cache folder, there will be a log file, logging all relevant information
 to the current run, all validation files will be saved here as well as
 the checkpoints and tensorboard data.
 
-Expecially for 2d data, and if a large number of samples is available,
+Expecially for 2D data, and if a large number of samples is available,
 the whole image can be processed. There, we set the subvolume
 (patchsize) parameter to the size of the images, and the padding
 parameters to 0. This has the effect, that we only sample inside the
@@ -129,8 +129,6 @@ sampling images during the training and testing phase:
 
 .. figure:: https://github.com/zubata88/mdgru/blob/master/sampling.png?raw=true
    :alt: Sampling subvolumes/patches
-
- Sampling Subvolumes/Patches
 
 The remaining options given above are the --modelname, which is a
 optional, userspecified name for the model we are creating in the
