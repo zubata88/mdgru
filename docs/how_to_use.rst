@@ -91,6 +91,7 @@ data and also immediately evaluate our model on the last training state
     -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
     --nclasses 4 --num_threads 4
 
+(The PyTorch backend can be used with --use_pytorch.)
 The above first four parameters tell the script, where our different
 data can be found. Furthermore, it will create a folder experiments in
 "path/to/samplestructure". Inside this experiments folder, a folder for
@@ -222,8 +223,6 @@ Otherwise, it will not find testing samples, as it uses the mask file as
 a requirement for each folder to be accepted as valid sample. If there
 are labelmaps for the test samples, this flag can be omitted, leading to
 an automatic evaluation using predefined metrics during the evaluation.
-
-The PyTorch backend can be used with --use_pytorch.
 
 Localization code
 -----------------
