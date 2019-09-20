@@ -1,5 +1,5 @@
 
-Instruction (uses Tensorflow backend) 
+Instruction (Tensorflow Backend) 
 ''''''''''''''''''''''''''''''''''''
 
 The file *RUN\_mdgru.py* is used for
@@ -130,7 +130,7 @@ sampling images during the training and testing phase:
 .. figure:: https://github.com/zubata88/mdgru/blob/master/sampling.png?raw=true
    :alt: Sampling subvolumes/patches
 
-   Sampling subvolumes/patches
+ Sampling Subvolumes/Patches
 
 The remaining options given above are the --modelname, which is a
 optional, userspecified name for the model we are creating in the
