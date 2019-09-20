@@ -17,13 +17,13 @@ Start Script
     
 --datapath: path to folders with train/val/test data
 --locationxxx: name of folder with data for respective purpose
-    --optionname: options
-    --modelname: name of model
-    -w: subvolume size (for each dimension)
-    -p: padding size (for each dimension)
-    -f: sequences to include
-    -m: masks to include
-    --interations: number of iterations
-    --nclasses: numbber of classe (min. 2)
-    --num_threads: number of threads
-    --use_pythorch: use PyTorch version (requires GPU)
+--optionname: options
+--modelname: name of model
+-w: subvolume size (for each dimension)
+-p: padding size (for each dimension)
+-f: sequences to include
+-m: masks to include
+--interations: number of iterations
+--nclasses: numbber of classe (min. 2)
+--num_threads: number of threads
+--use_pythorch: use PyTorch version (requires GPU)
