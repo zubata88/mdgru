@@ -16,14 +16,14 @@ It's best to use a virtual environment with Python==3.5.2.
     sudo pip3 install --upgrade pip
 
     # Either with a GPU, and CUDA/CUDNN installed:
-    sudo pip3 install tensorflow-gpu===1.8
+    sudo pip3 install "tensorflow-gpu===1.8"
     
     # Or:
-    sudo pip3 install tensorflow==1.8
+    sudo pip3 install "tensorflow==1.8"
 
     sudo pip3 install torch torchvision visdom
 
-    sudo pip3 install nibabel numpy==1.15.1 scipy==1.0.0 matplotlib pynrrd
+    sudo pip3 install nibabel "numpy==1.15.1" "scipy==1.0.0" matplotlib pynrrd
 
     sudo pip3 install scikit-image scikit-learn simpleitk torch visdom
 
