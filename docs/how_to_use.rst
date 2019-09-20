@@ -18,7 +18,7 @@ certain scheme. Furthermore, all the samples belonging to test, train
 and validation set should be located in respective folders. The
 following shows an example, where we have training, testing and
 validation folders train\_data, test\_data and val\_data respectively,
-containing each some samples. **Each sample consists of two featurefiles
+containing each some samples. **Each sample consists of two featurefiles in this case
 (seq1.nii.gz and seq2.nii.gz, e.g. t2.nii.gz, flair.nii.gz, ...) and one labelfile (lab.nii.gz, e.g. mask1.nii.gz), as shown
 in the following example.**
 
