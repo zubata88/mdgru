@@ -223,6 +223,8 @@ a requirement for each folder to be accepted as valid sample. If there
 are labelmaps for the test samples, this flag can be omitted, leading to
 an automatic evaluation using predefined metrics during the evaluation.
 
+The PyTorch backend can be used with --use_pytorch.
+
 Localization code
 -----------------
 
