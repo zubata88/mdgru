@@ -33,8 +33,8 @@ Start Script
 
 --interations: number of iterations
 
---nclasses: numbber of classe (min. 2)
+--nclasses: number of classes (min. 2)
 
 --num_threads: number of threads
 
---use_pythorch: use PyTorch version (requires GPU)
+--use_pythorch: use PyTorch version (requires GPUs)
