@@ -1,5 +1,5 @@
 
-Instruction (Tensorflow Backend) 
+Instruction (Tensorflow backend) 
 ''''''''''''''''''''''''''''''''''''
 
 The file *RUN\_mdgru.py* is used for
@@ -76,7 +76,7 @@ instance, we have 4 classes and hence distribute them to the numbers 0,
 integer files (e.g. nifti uint8), and the **feature and label files need
 to have matching dimensions**.
 
-Train & Test
+Train & test
 ------------
 
 In the following, we show the case, where we train a model on the above
@@ -145,7 +145,7 @@ the log file or stdout on the console, values larger than 0.1 seconds
 are used for "io", it might be advisable to increase this value, as
 valuable time is wasted on waiting for the data loading routine.
 
-Only Train (CURRENTLY NOT POSSIBLE)
+Only train (CURRENTLY NOT POSSIBLE)
 -----------------------------------
 
 Usually, we want to use the validation set to determine, which state of
@@ -186,7 +186,7 @@ Gaussian which is used at each grid point to sample a random vector.
 This low resolution grid is then interpolated quadratically and used to
 deform the sampling of the subvolumes or patches. 
 
-Only Test
+Only test
 ---------
 
 ::

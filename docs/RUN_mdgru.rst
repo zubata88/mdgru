@@ -1,4 +1,4 @@
-Start Script
+Start script
 ============
 
 .. automodule:: RUN_mdgru
@@ -13,7 +13,7 @@ Start Script
     -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
     --nclasses 4 --num_threads 4
     
-Mandatory Inputs
+Mandatory inputs
 ----------------
 
 --datapath: str, path to folders with train/val/test data
@@ -38,7 +38,7 @@ Mandatory Inputs
 
 --num_threads: int, number of threads
 
-Optional Inputs
+Optional inputs
 ---------------
 
 --use_pythorch: bool (default: False), use PyTorch version (requires GPUs)

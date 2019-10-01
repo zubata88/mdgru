@@ -1,5 +1,5 @@
 
-How to Install 
+How to install 
 ''''''''''''''
 
 Requirements (on ubuntu) can be installed
