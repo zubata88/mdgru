@@ -1,4 +1,4 @@
-Model (Tensorflow Backend)
+Model (Tensorflow backend)
 ====================
 
 Subpackages
