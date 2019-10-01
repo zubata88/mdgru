@@ -1,4 +1,4 @@
-Model (Pytorch Backend)
+Model (PyTorch Backend)
 =======================
 
 Subpackages
