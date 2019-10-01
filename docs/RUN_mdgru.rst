@@ -11,7 +11,7 @@ Start Script
     --locationvalidation val_data --locationtesting test_data \
     --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
     -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
-    --nclasses 4 --num_threads 4 (--use_pytorch)
+    --nclasses 4 --num_threads 4
     
 Mandatory Inputs
 ----------------
@@ -43,7 +43,7 @@ Optional Inputs
 
 --use_pythorch: bool (default: False), use PyTorch version (requires GPUs)
 
---dropbout_rate: float [0,1] (default: 0.5), probability for dropout_rate
+--dropout_rate: float [0,1] (default: 0.5), probability for dropout_rate
 
 --only_cpu: bool (default: False) use only only_cpu
 
