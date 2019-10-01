@@ -15,7 +15,7 @@ Tensorflow Backend
     :members:
     :undoc-members:
 
-Pytorch Backend
+PyTorch Backend
 ---------------
 
 .. automodule:: mdgru.eval.torch

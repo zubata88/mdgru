@@ -89,7 +89,7 @@ data and also immediately evaluate our model on the last training state
     --locationvalidation val_data --locationtesting test_data \
     --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
     -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
-    --nclasses 4 --num_threads 4 (--use_pytorch)
+    --nclasses 4 --num_threads 4
 
 (The PyTorch backend can be used with --use_pytorch.)
 The above first four parameters tell the script, where our different
