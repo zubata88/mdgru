@@ -21,11 +21,12 @@ changes in CuDNN, not tested), but a snapshot of it is included in this
 release in the folder tensorflow\_extra\_ops as additional operation for
 TensorFlow.
 
-The code has been developed in Python==3.5.2. It is best to set up a **virtual environment** (e.g. with conda) with the mentioned properties in order to develop the deep learning model. Follow the insturction in the docs, or install mdgru using pip.
+The code has been developed in Python==3.5.2. It is best to set up a **virtual environment** (e.g. with conda) with the mentioned properties in order to develop the deep learning model. Follow the instructions in the docs, or install mdgru (together with mvloader) using pip.
 
 ::
 
     pip3 install git+https://github.com/gtancev/mdgru.git
+    pip3 install git+https://github.com/spezold/mvloader.git
 
 After training, the model is saved and can be embedded in a seperate software for operation.
 
