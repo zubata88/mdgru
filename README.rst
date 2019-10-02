@@ -23,14 +23,13 @@ TensorFlow.
 
 The code has been developed in Python==3.5.2. It is best to set up a **virtual environment** (e.g. with conda) with the mentioned properties in order to develop the deep learning model. Follow the instructions in the docs, or install mdgru (together with mvloader) using pip.
 
+The latest full documentation is available `here <https://mdgru.readthedocs.io/en/latest/index.html>`_.
+
 ::
 
     pip3 install git+https://github.com/gtancev/mdgru.git
     pip3 install git+https://github.com/spezold/mvloader.git
 
-After training, the model is saved and can be embedded in a seperate software for operation.
-
-The latest full documentation is available `here <https://mdgru.readthedocs.io/en/latest/index.html>`_.
 
 Papers
 ''''''
