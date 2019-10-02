@@ -36,36 +36,33 @@ The slurm submission file should look like this>
 
     #!/bin/bash
 
-    #SBATCH --job-name=mdgru                   #This is the name of your job
-    #SBATCH --cpus-per-task=1                  #This is the number of cores reserved
-    #SBATCH --mem-per-cpu=8G              #This is the memory reserved per core.
+    #SBATCH --job-name=mdgru
+    #SBATCH --cpus-per-task=1
+    #SBATCH --mem-per-cpu=8G
     #Total memory reserved: 8GB
-    #SBATCH --partition=k80     # or pascal / titanx
-    #SBATCH --gres=gpu:2        # --gres=gpu:2 for two GPU, aso.
+    #SBATCH --partition=k80     
+    #SBATCH --gres=gpu:2 
 
-    #SBATCH --time=00:30:00        #This is the time that your task will run
-    #SBATCH --qos=30min           #You will run in this queue
+    #SBATCH --time=00:30:00
+    #SBATCH --qos=30min
 
     # Paths to STDOUT or STDERR files should be absolute or relative to current working directory
-    #SBATCH --output=stdout     #This is the joined STDOUT and STDERR file
+    #SBATCH --output=stdout
     #SBATCH --mail-type=END,FAIL,TIME_LIMIT
-    #SBATCH --mail-user=georgi.tancev@unibas.ch        #You will be notified via email when your task ends or fails
+    #SBATCH --mail-user=your.email@adress.com
 
     #This job runs from the current working directory
-
 
     #Remember:
     #The variable $TMPDIR points to the local hard disks in the computing nodes.
     #The variable $HOME points to your home directory.
     #The variable $JOB_ID stores the ID number of your task.
 
-
     #load your required modules below
     #################################
     ml Python/3.5.2-goolf-1.7.20
     ml CUDA/9.0.176
     ml cuDNN/7.3.1.20-CUDA-9.0.176
-
 
     #export your required environment variables below
     #################################################
