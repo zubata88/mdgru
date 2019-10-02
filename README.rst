@@ -30,7 +30,7 @@ The code has been developed in Python==3.5.2. It is best to set up a **virtual e
 
 Usage on a High Performance Computing Cluster
 '''''''''''''''''''''''''''''''''''''''''''''
-The slurm submission file should look like this>
+The slurm submission file should look like this:
 
 ::
 
