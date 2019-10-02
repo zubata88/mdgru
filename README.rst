@@ -21,13 +21,63 @@ changes in CuDNN, not tested), but a snapshot of it is included in this
 release in the folder tensorflow\_extra\_ops as additional operation for
 TensorFlow.
 
-The code has been developed in Python==3.5.2. It is best to set up a **virtual environment** (e.g. with `conda <https://uoa-eresearch.github.io/eresearch-cookbook/recipe/2014/11/20/conda/>`_) with the mentioned properties in order to develop the deep learning model. Follow the instructions in the `docs <https://mdgru.readthedocs.io/en/latest/index.html>`_, or install mdgru (together with mvloader) using pip.
+The code has been developed in Python==3.5.2. It is best to set up a **virtual environment** (e.g. with `conda <https://uoa-eresearch.github.io/eresearch-cookbook/recipe/2014/11/20/conda/>`_) with the mentioned properties in order to develop the deep learning model. For this purpose, follow the instructions in the `docs <https://mdgru.readthedocs.io/en/latest/index.html>`_, and install mdgru (together with mvloader) using pip.
 
 ::
 
     pip3 install git+https://github.com/gtancev/mdgru.git
     pip3 install git+https://github.com/spezold/mvloader.git
 
+Usage on a High Performance Computing Cluster
+'''''''''''''''''''''''''''''''''''''''''''''
+The slurm submission file should look like this>
+
+::
+
+    #!/bin/bash
+
+    #SBATCH --job-name=mdgru                   #This is the name of your job
+    #SBATCH --cpus-per-task=1                  #This is the number of cores reserved
+    #SBATCH --mem-per-cpu=8G              #This is the memory reserved per core.
+    #Total memory reserved: 8GB
+    #SBATCH --partition=k80     # or pascal / titanx
+    #SBATCH --gres=gpu:2        # --gres=gpu:2 for two GPU, aso.
+
+    #SBATCH --time=00:30:00        #This is the time that your task will run
+    #SBATCH --qos=30min           #You will run in this queue
+
+    # Paths to STDOUT or STDERR files should be absolute or relative to current working directory
+    #SBATCH --output=stdout     #This is the joined STDOUT and STDERR file
+    #SBATCH --mail-type=END,FAIL,TIME_LIMIT
+    #SBATCH --mail-user=georgi.tancev@unibas.ch        #You will be notified via email when your task ends or fails
+
+    #This job runs from the current working directory
+
+
+    #Remember:
+    #The variable $TMPDIR points to the local hard disks in the computing nodes.
+    #The variable $HOME points to your home directory.
+    #The variable $JOB_ID stores the ID number of your task.
+
+
+    #load your required modules below
+    #################################
+    ml Python/3.5.2-goolf-1.7.20
+    ml CUDA/9.0.176
+    ml cuDNN/7.3.1.20-CUDA-9.0.176
+
+
+    #export your required environment variables below
+    #################################################
+    source "/pathtoyourfolderbeforeanaconda3/anaconda3/bin/activate" nameofvirtualenvironment
+
+    #add your command lines below
+    #############################
+    python3 RUN_mdgru.py --datapath files --locationtraining train \
+    --locationvalidation val --locationtesting test \
+    --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
+    -f pd_pp.nii t2_pp.nii flair_pp.nii mprage_pp.nii -m mask.nii --iterations 10 \
+    --nclasses 2 --num_threads 4
 
 Papers
 ''''''
