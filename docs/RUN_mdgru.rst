@@ -89,15 +89,30 @@ Optional inputs
     
     --only_cpu False
 
---gpubound: float [0,1] (default: 1.0), fraction of GPU memory to use
+**fraction of GPU memory to use (dtype=float) in [0,1]**
+::    
+    
+    --gpubound 1.0
 
---SubtractGaussSigma: int (default: 5), data augmentation, standard deviation to use for Gaussian filtered images during high pass filtering
+**data augmentation: standard deviation to use for Gaussian filtered images during high pass filtering (dtype=int)**
+::
 
---nooriginal: bool (default: False), use only Gauss-Sigma filtered images
+    --SubtractGaussSigma 5
+    
+**data augmentation: use only Gauss-Sigma filtered images (dtype=bool)**
+::
 
---deform: int (default: 0), deformation grid spacing in pixels, if zero, no deformation will be applied
+    --nooriginal False
 
---deformSigma: float (default: 0.0), given a deformation grid spacing, this determines the standard deviations for each dimension of the random deformation vectors
+**data augmentation: deformation grid spacing in pixels (dtype=int); if zero: no deformation will be applied**
+::
+    
+    --deform 0
+
+**data augmentation: given a deformation grid spacing, this determines the standard deviations for each dimension of the random deformation vectors (dtype=float)**
+::
+
+    --deformSigma 0.0
 
 --mirror: bool (default: False), activate random mirroring along the specified axes during training
 
