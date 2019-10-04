@@ -55,10 +55,10 @@ Mandatory inputs
     
     -m mask1.nii
 
-**iterations of training to perform (dtype=int)**
+**iterations of training to perform (dtype=int); only possible if --epochs 1**
 ::
     
-    --interations 10000
+    --interations 100000
 
 **number of classes (dtype=int)**
 ::
@@ -72,6 +72,11 @@ Mandatory inputs
 
 Optional inputs
 ---------------
+
+**epochs to perform (dtype=int); does not work together with iterations**
+::
+    
+    --epochs 1
 
 **use PyTorch version (dtype=bool)**
 ::
