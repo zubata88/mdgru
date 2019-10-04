@@ -15,21 +15,30 @@ Start script
     
 Mandatory inputs
 ----------------
-path to folders with train/val/test data (dtype=str)
+**path to folders with train/val/test data (dtype=str)**
 ::
 
     --datapath [path]
 
-name of folder with data for respective purpose (dtype=str)
+**name of folder with data for respective purpose (dtype=str)**
 ::
     
-    --locationxxx [foldernamexxx]
+    --locationtraining [foldernametrain] --locationvalidation [foldernameval] --locationtesting [foldernametest]
+
+**name of options/settings (dtype=str)**
+::
+
+    --optionname [bestoptionsever]
+
+**name of model (dtype=str)**
+::
     
---optionname: str, options/settings
+    --modelname [bestmodelever]
 
---modelname: name of model
-
--w: int of shape n_dims, subvolume size (for each dimension)
+**subvolume size (dtype=int) of shape (1, n_dims)**
+::
+    
+    -w [128 128 128]
 
 -p: int of shape n_dims, padding size (for each dimension)
 
