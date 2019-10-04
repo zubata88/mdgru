@@ -15,13 +15,16 @@ Start script
     
 Mandatory inputs
 ----------------
-path to folders with train/val/test data, str
+path to folders with train/val/test data (dtype=str)
 ::
 
-    --datapath: str, path to folders with train/val/test data
+    --datapath [path]
 
---locationxxx: str, name of folder with data for respective purpose
-
+name of folder with data for respective purpose (dtype=str)
+::
+    
+    --locationxxx [foldernamexxx]
+    
 --optionname: str, options/settings
 
 --modelname: name of model
