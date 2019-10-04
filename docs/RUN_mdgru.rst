@@ -73,7 +73,7 @@ These are mandatory inputs for which no default values are set.
 Optional inputs
 ---------------
 
-These are optional inputs for which the default values (listed in the commands below) can be changed manually.
+These are optional inputs for which the default values (listed in the commands below) can be changed manually. In the data loader module, you can learn about additional optional data augmentation methods.
 
 **epochs to perform (dtype=int); does not work together with iterations**
 ::
