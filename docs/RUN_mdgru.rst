@@ -76,7 +76,7 @@ Optional inputs
 **use PyTorch version (dtype=bool)**
 ::
     
-    --use_pythorch False
+    --use_pytorch False
 
 **probability for dropout (dtype=float) in [0,1]**
 ::  
