@@ -11,15 +11,13 @@ challenge of MICCAI 2017 (and its previous implementation using CAFFE made
 It was also applied in the BraTS 2017 competition, where the information on the exact rank are still
 unknown.
 
-Since being published the firs time, the code has been improved on quite a
+Since being published the first time using a CAFFE implementation, the code has been improved on quite a
 bit, especially to facilitate handling training and testing runs. The
-reported results should still be reproducible though using this
-implementation.
-
-The former CAFFE code is not maintained anymore (there are probably breaking
+reported results should still be reproducible though using this new
+implementation with TensorFlow and PyTorch. (The former CAFFE code is not maintained anymore (there are probably breaking
 changes in CuDNN, not tested), but a snapshot of it is included in this
 release in the folder tensorflow\_extra\_ops as additional operation for
-TensorFlow.
+TensorFlow.)
 
 The code has been developed in Python==3.5.2. It is best to set up a **virtual environment** (e.g. with `conda <https://uoa-eresearch.github.io/eresearch-cookbook/recipe/2014/11/20/conda/>`_) with the mentioned properties in order to develop the deep learning model. For this purpose, follow the instructions in the `docs <https://mdgru.readthedocs.io/en/latest/index.html>`_, and install mdgru (together with mvloader) using pip.
 
