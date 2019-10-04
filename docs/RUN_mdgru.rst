@@ -116,12 +116,12 @@ These are optional inputs for which the default values (listed in the commands b
 **use batch normalization (dtype=bool)**
 ::  
 
-    --add_e_bn
+    --add_e_bn False
     
 **use skip connections/residual learning; add a residual connection around a MDGRU block (dtype=bool)**
 ::  
 
-    --resmdgru
+    --resmdgru False
 
 **data augmentation: standard deviation to use for Gaussian filtered images during high pass filtering (dtype=int)**
 ::
