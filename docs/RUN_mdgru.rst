@@ -5,6 +5,8 @@ Start script
     :members:
     :undoc-members:
 
+Below is a sample start script with minimum inputs.
+
 ::
 
     python3 RUN_mdgru.py --datapath path/to/samplestructure --locationtraining train_data \
