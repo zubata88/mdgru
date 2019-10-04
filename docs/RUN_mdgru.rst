@@ -15,8 +15,10 @@ Start script
     
 Mandatory inputs
 ----------------
+path to folders with train/val/test data, str
+::
 
---datapath: str, path to folders with train/val/test data
+    --datapath: str, path to folders with train/val/test data
 
 --locationxxx: str, name of folder with data for respective purpose
 
