@@ -18,35 +18,47 @@ Mandatory inputs
 **path to folders with train/val/test data (dtype=str)**
 ::
 
-    --datapath [path]
+    --datapath path
 
 **name of folder with data for respective purpose (dtype=str)**
 ::
     
-    --locationtraining [foldernametrain] --locationvalidation [foldernameval] --locationtesting [foldernametest]
+    --locationtraining foldernametrain --locationvalidation foldernameval --locationtesting foldernametest
 
 **name of options/settings (dtype=str)**
 ::
 
-    --optionname [bestoptionsever]
+    --optionname bestoptionsever
 
 **name of model (dtype=str)**
 ::
     
-    --modelname [bestmodelever]
+    --modelname bestmodelever
 
 **subvolume size (dtype=int) of shape (1, n_dims)**
 ::
     
-    -w [128 128 128]
+    -w 128 128 128
 
--p: int of shape n_dims, padding size (for each dimension)
+**padding size (dtype=int) of shape (1, n_dims)**
+::
+    
+    -p 5 5 5
 
--f: str, sequences to include
+**sequences to include (dtype=str)**
+::
+    
+    -f t2.nii flair.nii
+    
+**masks to include (dtype=str)**
+::
+    
+    -m mask1.nii
 
--m: str, masks to include
-
---interations: int, number of iterations
+**iterations of training to perform (dtype=int)**
+::
+    
+    --interations 10000
 
 --nclasses: int, number of classes (min. 2)
 
