@@ -26,54 +26,6 @@ The code has been developed in Python==3.5.2. It is best to set up a **virtual e
     pip3 install git+https://github.com/gtancev/mdgru.git
     pip3 install git+https://github.com/spezold/mvloader.git
 
-Usage on a high performance computing (HPC) cluster
-'''''''''''''''''''''''''''''''''''''''''''''''''''
-The slurm submission file should look like this:
-
-::
-
-    #!/bin/bash
-
-    #SBATCH --job-name=mdgru
-    #SBATCH --cpus-per-task=1
-    #SBATCH --mem-per-cpu=8G
-    #Total memory reserved: 8GB
-    #SBATCH --partition=k80     
-    #SBATCH --gres=gpu:2 
-
-    #SBATCH --time=00:30:00
-    #SBATCH --qos=30min
-
-    # Paths to STDOUT or STDERR files should be absolute or relative to current working directory
-    #SBATCH --output=stdout
-    #SBATCH --mail-type=END,FAIL,TIME_LIMIT
-    #SBATCH --mail-user=your.email@adress.com
-
-    #This job runs from the current working directory
-
-    #Remember:
-    #The variable $TMPDIR points to the local hard disks in the computing nodes.
-    #The variable $HOME points to your home directory.
-    #The variable $JOB_ID stores the ID number of your task.
-
-    #load your required modules below
-    #################################
-    ml Python/3.5.2-goolf-1.7.20
-    ml CUDA/9.0.176
-    ml cuDNN/7.3.1.20-CUDA-9.0.176
-
-    #export your required environment variables below
-    #################################################
-    source "/pathtoyourfolderbeforeanaconda3/anaconda3/bin/activate" nameofvirtualenvironment
-
-    #add your command lines below
-    #############################
-    python3 RUN_mdgru.py --datapath files --locationtraining train \
-    --locationvalidation val --locationtesting test \
-    --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
-    -f pd_pp.nii t2_pp.nii flair_pp.nii mprage_pp.nii -m mask.nii --iterations 10 \
-    --nclasses 2 --num_threads 4
-
 Papers
 ''''''
 
