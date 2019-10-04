@@ -13,7 +13,7 @@ Below is a sample start script with minimum inputs.
     --locationvalidation val_data --locationtesting test_data \
     --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
     -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
-    --nclasses 4 --num_threads 4
+    --nclasses 4
     
 Mandatory inputs
 ----------------
@@ -70,15 +70,16 @@ These are mandatory inputs for which no default values are set.
 
     --nclasses 2
 
-**number of threads (dtype=int)**
-::
-    
-    --num_threads 4
-
 Optional inputs
 ---------------
 
 These are optional inputs for which the default values (listed in the commands below) can be changed manually.
+
+
+**number of threads in data collection for data prefetching (dtype=int)**
+::
+    
+    --num_threads 3
 
 **epochs to perform (dtype=int); does not work together with iterations**
 ::
