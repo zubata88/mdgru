@@ -164,13 +164,28 @@ Optional inputs
 
     --whiten True
 
---each_with_labels: int (default: 0), force each n-th sample to contain labelled data
+**force each n-th sample to contain labelled data (dtype=int)**
+::
 
---channels_first: bool (default: False), whether channels appear first (PyTorch) or last (TensorFlow)
+    --each_with_labels 0
+    
+**whether channels appear first (PyTorch) or last (TensorFlow) (dtype=bool)**
+::
 
---choose_mask_at_random: bool (default: False),if multiple masks are provided, we select one at random for each sample
+    --channels_first False
 
---perform_one_hot_encoding: bool (default: True)
+**if multiple masks are provided, we select one at random for each sample (dtype=bool)**
+::
 
---ignore_missing_mask: bool (defaul: False)
+    --choose_mask_at_random False
+
+**perform one-hot-encoding from probability distributions (dtype=bool)**
+::
+
+    --perform_one_hot_encoding True
+
+**ignore missing masks (dtype=bool)**
+::
+    
+    --ignore_missing_mask False
 
