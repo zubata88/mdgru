@@ -114,25 +114,55 @@ Optional inputs
 
     --deformSigma 0.0
 
---mirror: bool (default: False), activate random mirroring along the specified axes during training
+**data augmentation: activate random mirroring along the specified axes during training (dtype=bool)**
+::
+    
+    --mirror False
 
---gaussiannoise: bool (default: False), random mult. Gaussian noise (unit mean, unit variance)
+**data augmentation: random multiplicative Gaussian noise with unit mean, unit variance (dtype=bool)**
+::
+    
+    --gaussiannoise False
 
---scaling: float (default: 0.0), amount of randomly scaling images (per dimension) as a factor (e.g. 1.5)
+**data augmentation: amount of randomly scaling images per dimension as a factor (dtype=float)**
+::
+    
+    --scaling 0.0
 
---rotation: float (default: 0.0), amount in radians to randomly rotate the input around a randomly drawn vector
+**data augmentation: amount in radians to randomly rotate the input around a randomly drawn vector (dtype=float)**
+::
 
---shift:  float (default: 0.0), sampling outside of discrete coordinates
+    --rotation 0.0
 
---interpolate_always: bool (default: False), interpolate when using no deformation grids
+**sampling outside of discrete coordinates (dtype=float)**
+::
 
---deformseed: int (default: 1234), define random seed for deformation variables
+    --shift 0.0
 
---interpolation_order: int (default: 3), spline order interpolation_order (0 (constant), 1 (linear), 2 (cubic))
+**interpolation when using no deformation grids (dtype=bool)**
+::
 
---padding_rule: str (default: "constant"), rule on how to add values outside image boundaries ("constant", "nearest", "reflect", "wrap")
+    --interpolate_always False
 
---whiten: bool (default: True), whiten image data to mean 0 and unit variance
+**define random seed for deformation variables (dtype=int)**
+::
+
+    --deformseed 1234
+
+**spline order interpolation_order in 0 (constant), 1 (linear), 2 (cubic) (dtype=int)**
+::
+
+    --interpolation_order 3
+
+**rule on how to add values outside image boundaries ("constant", "nearest", "reflect", "wrap") (dtype=str)**
+::
+
+    --padding_rule constant
+
+**whiten image data to mean 0 and unit variance (dtype=bool)**
+::
+
+    --whiten True
 
 --each_with_labels: int (default: 0), force each n-th sample to contain labelled data
 
