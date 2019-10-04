@@ -60,9 +60,15 @@ Mandatory inputs
     
     --interations 10000
 
---nclasses: int, number of classes (min. 2)
+**number of classes (dtype=int)**
+::
 
---num_threads: int, number of threads
+    --nclasses 2
+
+**number of threads (dtype=int)**
+::
+    
+    --num_threads: int, number of threads
 
 Optional inputs
 ---------------
