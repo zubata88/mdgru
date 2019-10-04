@@ -8,7 +8,7 @@ Supervised Evaluation
     :members:
     :undoc-members:
 
-Tensorflow Backend
+TensorFlow Backend
 ------------------
 
 .. automodule:: mdgru.eval.tf
