@@ -75,21 +75,20 @@ Optional inputs
 
 These are optional inputs for which the default values (listed in the commands below) can be changed manually.
 
+**epochs to perform (dtype=int); does not work together with iterations**
+::
+    
+    --epochs 1
 
 **number of threads in data collection for data prefetching (dtype=int)**
 ::
     
     --num_threads 3
     
-**non-threaded data collection (dtype=int)**
+**use non-threaded data collection (dtype=bool)**
 ::
     
     --nonthreaded
-
-**epochs to perform (dtype=int); does not work together with iterations**
-::
-    
-    --epochs 1
 
 **use PyTorch version (dtype=bool)**
 ::
