@@ -84,11 +84,6 @@ Optional inputs
 ::
     
     --use_pytorch False
-
-**probability for dropout (dtype=float) in [0,1]**
-::  
-
-    --dropout_rate 0.5
     
 **use only CPU (dtype=bool)**
 
@@ -100,6 +95,22 @@ Optional inputs
 ::    
     
     --gpubound 1.0
+    
+
+**probability for dropout (dtype=float) in [0,1]**
+::  
+
+    --dropout_rate 0.5
+
+**use batch normalization (dtype=bool)**
+::  
+
+    --add_e_bn False
+    
+**use skip connections/residual learning; add a residual connection around a MDGRU block (dtype=bool)**
+::  
+
+    --resmdgru False
 
 **data augmentation: standard deviation to use for Gaussian filtered images during high pass filtering (dtype=int)**
 ::
