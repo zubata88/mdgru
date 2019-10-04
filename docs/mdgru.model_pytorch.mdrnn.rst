@@ -1,6 +1,15 @@
 Multi-dimensional GRU
 =====================
 
+MDGRU
+-----
+
+.. automodule:: mdgru.model_pytorch.mdrnn.mdgru
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 These are optional model inputs.
 
 **stride (dtype=int)**
@@ -37,15 +46,6 @@ These are optional model inputs.
 ::
 
     --use_static_rnn False
-
-MDGRU
------
-
-.. automodule:: mdgru.model_pytorch.mdrnn.mdgru
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------
