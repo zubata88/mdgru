@@ -8,7 +8,9 @@ CGRU
     :members:
     :undoc-members:
     :show-inheritance:
-    
+
+These are optional parameters for the CGRUnits inside a MDGRU block.
+
 **periodic convolution on input x (dtype=bool)**
 ::
 
