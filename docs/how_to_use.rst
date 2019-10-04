@@ -91,7 +91,7 @@ data and also immediately evaluate our model on the last training state
     -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
     --nclasses 4 --num_threads 4
 
-(The PyTorch backend can be used with --use_pytorch.)
+Read more about the start script options by selecting **start script** in the navigation bar.
 The above first four parameters tell the script, where our different
 data can be found. Furthermore, it will create a folder experiments in
 "path/to/samplestructure". Inside this experiments folder, a folder for
