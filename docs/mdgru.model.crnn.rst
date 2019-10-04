@@ -33,6 +33,41 @@ CGRU
 ::
 
     --dropconnecth False
+    
+**add batch normalization at the input x in gate (dtype=bool)**
+::
+
+    --add_x_bn
+    
+**add batch normalization at the input h in candidate (dtype=bool)**
+::
+
+    --add_h_bn False
+    
+**add batch normalization at the candidates input and state (dtype=bool)**
+::
+
+    --add_a_bn False
+    
+**add residual learning to the input x of each cgru (dtype=bool)**
+::
+
+    --resgrux False
+    
+**add residual learning to the input h of each cgru (dtype=bool)**
+::
+
+    --resgruh False
+    
+**move the reset gate to the location the original GRU applies it at (dtype=bool)**
+::
+
+    --put_r_back False
+    
+**apply dropconnect on the candidate weights as well (dtype=bool)**
+::
+
+    --use_dropconnect_on_state False
 
 Module contents
 ---------------
