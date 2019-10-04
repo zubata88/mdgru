@@ -80,6 +80,11 @@ These are optional inputs for which the default values (listed in the commands b
 ::
     
     --num_threads 3
+    
+**non-threaded data collection (dtype=int)**
+::
+    
+    --nonthreaded
 
 **epochs to perform (dtype=int); does not work together with iterations**
 ::
