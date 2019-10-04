@@ -9,7 +9,7 @@ MDGRU
     :undoc-members:
     :show-inheritance:
     
-These are optional model inputs.
+These are optional parameters for the CGRUnits inside a MDGRU block.
 
 **stride (dtype=int)**
 ::
