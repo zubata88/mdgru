@@ -6,15 +6,15 @@ paper *Automated Segmentation of Multiple Sclerosis Lesions using
 Multi-Dimensional Gated Recurrent Units*. It is implemented in **Python** using the deep learning libraries **PyTorch** and **TensorFlow** each, modified versions were also
 used to reach *1st place* in the ISBI 2015 longitudinal lesion
 segmentation challenge, *2nd place* in the white matter hyperintensities
-challenge of MICCAI 2017 (and its previous implementation using CAFFE made
+challenge of MICCAI 2017 (and its previous implementation using Caffe made
 *3rd place* in the MrBrainS13 Segmentation challenge). 
 It was also applied in the BraTS 2017 competition, where the information on the exact rank are still
 unknown.
 
-Since being published the first time using a CAFFE implementation, the code has been improved on quite a
+Since being published the first time using a Caffe implementation, the code has been improved on quite a
 bit, especially to facilitate handling training and testing runs. The
 reported results should still be reproducible though using this new
-implementation with TensorFlow and PyTorch. (The former CAFFE code is not maintained anymore (there are probably breaking
+implementation with TensorFlow and PyTorch. (The former Caffe code is not maintained anymore (there are probably breaking
 changes in CuDNN, not tested), but a snapshot of it is included in this
 release in the folder tensorflow\_extra\_ops as additional operation for
 TensorFlow.)
