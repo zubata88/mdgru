@@ -68,16 +68,26 @@ Mandatory inputs
 **number of threads (dtype=int)**
 ::
     
-    --num_threads: int, number of threads
+    --num_threads 4
 
 Optional inputs
 ---------------
 
---use_pythorch: bool (default: False), use PyTorch version (requires GPUs)
+**use PyTorch version (dtype=bool)**
+::
+    
+    --use_pythorch False
 
---dropout_rate: float [0,1] (default: 0.5), probability for dropout_rate
+**probability for dropout (dtype=float) in [0,1]**
+::  
 
---only_cpu: bool (default: False) use only only_cpu
+    --dropout_rate 0.5
+    
+**use only CPU (dtype=bool)**
+
+::
+    
+    --only_cpu False
 
 --gpubound: float [0,1] (default: 1.0), fraction of GPU memory to use
 
