@@ -217,4 +217,8 @@ These are optional inputs for which the default values (listed in the commands b
 ::
     
     --ignore_missing_mask False
-
+    
+**correct nifti orientation (dtype=bool)**
+::
+    
+    --correct_orientation True
