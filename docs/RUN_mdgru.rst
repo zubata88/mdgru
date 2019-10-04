@@ -17,6 +17,9 @@ Below is a sample start script with minimum inputs.
     
 Mandatory inputs
 ----------------
+
+These are mandatory inputs for which no default values are set.
+
 **path to folders with train/val/test data (dtype=str)**
 ::
 
@@ -74,6 +77,8 @@ Mandatory inputs
 
 Optional inputs
 ---------------
+
+These are optional inputs for which the default values (listed in the commands below) can be changed manually.
 
 **epochs to perform (dtype=int); does not work together with iterations**
 ::
