@@ -16,7 +16,7 @@ Below is a sample start script with minimum inputs.
     --nclasses 4
     
 Mandatory inputs
-================
+----------------
 
 These are mandatory inputs for which no default values are set.
 
@@ -71,7 +71,7 @@ These are mandatory inputs for which no default values are set.
     --nclasses 2
 
 Optional inputs
-===============
+---------------
 
 These are optional inputs for which the default values (listed in the commands below) can be changed manually.
 
