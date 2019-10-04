@@ -26,8 +26,8 @@ The code has been developed in Python==3.5.2. It is best to set up a **virtual e
     pip3 install git+https://github.com/gtancev/mdgru.git
     pip3 install git+https://github.com/spezold/mvloader.git
 
-Usage on a High Performance Computing Cluster
-'''''''''''''''''''''''''''''''''''''''''''''
+Usage on a high performance computing (HPC) cluster
+'''''''''''''''''''''''''''''''''''''''''''''''''''
 The slurm submission file should look like this:
 
 ::
