@@ -94,13 +94,13 @@ These are optional inputs for which the default values (listed in the commands b
 **use PyTorch version (dtype=bool)**
 ::
     
-    --use_pytorch False
+    --use_pytorch
     
 **use only CPU (dtype=bool)**
 
 ::
     
-    --only_cpu False
+    --only_cpu
 
 **fraction of GPU memory to use (dtype=float) in [0,1]**
 ::    
@@ -116,12 +116,12 @@ These are optional inputs for which the default values (listed in the commands b
 **use batch normalization (dtype=bool)**
 ::  
 
-    --add_e_bn False
+    --add_e_bn
     
 **use skip connections/residual learning; add a residual connection around a MDGRU block (dtype=bool)**
 ::  
 
-    --resmdgru False
+    --resmdgru
 
 **data augmentation: standard deviation to use for Gaussian filtered images during high pass filtering (dtype=int)**
 ::
