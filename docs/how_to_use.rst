@@ -160,7 +160,7 @@ that data. We can do this by using the following command:
     --nclasses 4 --num_threads 4 --only_train
 
 In this setup, we can omit the '--locationtesting' and append
-'--onlytrain' in its place, to specify, that we want to stop the
+'--only_train' in its place, to specify, that we want to stop the
 procedure after the training process.
 
 Furthermore, it is in most cases advisable to use a certain amount of
@@ -197,7 +197,7 @@ Only test
     --nclasses 4 --only_test --ckpt path/to/samplestructure/experiments/onlytrainrun/1524126169/cache/temp-22500 --notestingmask
 
 Usually, after conducting a training run, it is the best idea to simply
-copy the training parameters, remove the "onlytest", add the
+copy the training parameters, remove the "only_test", add the
 locationtesting and the checkpointfile with "--ckpt". Some other
 parameters can also be left out as shown above, since they do not have
 an impact on the testing process. The training process before, when
