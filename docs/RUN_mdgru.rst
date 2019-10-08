@@ -94,6 +94,12 @@ These are optional inputs for which the default values (listed in the commands b
 ::
     
     --use_pytorch
+
+**set GPU IDs for usage, e.g. using GPUs with IDs 0,1, and 2 (dtype=int)**
+
+::
+    
+    --gpu 0 1 2
     
 **use only CPU (dtype=bool)**
 
