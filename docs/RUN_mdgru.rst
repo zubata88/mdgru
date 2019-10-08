@@ -133,7 +133,7 @@ These are optional inputs for which the default values (listed in the commands b
 
     --only_train
     
-**perform only testing without training, make sure to load a checkpoint (dtype=bool)**
+**perform only testing without training, make sure to add a checkpoint (dtype=bool)**
 ::  
 
-    --only_test
+    --only_test --ckpt path/to/checkpoint/file
