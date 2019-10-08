@@ -145,8 +145,8 @@ the log file or stdout on the console, values larger than 0.1 seconds
 are used for "io", it might be advisable to increase this value, as
 valuable time is wasted on waiting for the data loading routine.
 
-Only train (CURRENTLY NOT POSSIBLE)
------------------------------------
+Only train
+----------
 
 Usually, we want to use the validation set to determine, which state of
 the network works best for our data and then evaluate our testset on
