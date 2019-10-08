@@ -127,3 +127,13 @@ These are optional inputs for which the default values (listed in the commands b
 ::  
 
     --resmdgru False
+
+**perform only training without testing (dtype=bool)**
+::  
+
+    --only_train
+    
+**perform only testing without training, make sure to load a checkpoint (dtype=bool)**
+::  
+
+    --only_test
