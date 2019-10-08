@@ -9,8 +9,8 @@
    :maxdepth: 6
    :caption: Guides
 
-   how_to_use
    how_to_install
+   how_to_use
    
 .. toctree::
    :maxdepth: 6
