@@ -97,7 +97,7 @@ data can be found. Furthermore, it will create a folder experiments in
 "path/to/samplestructure". Inside this experiments folder, a folder for
 the current setting is created. The name of this folder can be
 determined with "--optionname". For each individual
-train/test/train+test run, a folder with logging data is created using
+train/test/train&test run, a folder with logging data is created using
 the latest timestamp in seconds inside this settings folder. Any log
 data for the experiment can then in turn be found inside the cache
 subfolder. (e.g.
@@ -106,11 +106,11 @@ cache folder, there will be a log file, logging all relevant information
 to the current run, all validation files will be saved here as well as
 the checkpoints and tensorboard data.
 
-Expecially for 2D data, and if a large number of samples is available,
+Expecially for 2-D data - and if a large number of samples is available -
 the whole image can be processed. There, we set the subvolume
-(patchsize) parameter to the size of the images, and the padding
-parameters to 0. This has the effect, that we only sample inside the
-image, with a padding of 0 and hence just take the full image. As
+(patchsize) parameter to the size of the images and the padding
+parameters to 0. This has the effect that we only sample inside the
+image with a padding of 0, and hence just take the full image. As
 current hardware can rarely support the full volume for volumetric data
 though, a subvolume needs to be specified. Imagine we are using
 volumetric data with dimensions 256x256x192. Since this will not fit, we
@@ -137,8 +137,7 @@ tensorflow graph. -f and -m specify feature and mask files to be used.
 background, white matter, grey matter and csf). --iterations specifies
 the maximum number of iterations to train. If we cancel the training
 process at any time, the current state is saved in a checkpoint called
-*interrupt*. Finally, --ignore\_nifti\_header is required due to a bug
-in the nifti reorientation code and num\_threads is a parameter which
+*interrupt*. Finally, --num\_threads is a parameter which
 defines how many threads should be used to load data concurrently. This
 can initially be set to a low value such as 4. If during training, in
 the log file or stdout on the console, values larger than 0.1 seconds
@@ -158,7 +157,7 @@ that data. We can do this by using the following command:
     --locationvalidation val_data \
     --optionname onlytrainrun --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
     -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
-    --nclasses 4 --num_threads 4 --onlytrain
+    --nclasses 4 --num_threads 4 --only_train
 
 In this setup, we can omit the '--locationtesting' and append
 '--onlytrain' in its place, to specify, that we want to stop the
@@ -195,7 +194,7 @@ Only test
     --locationtesting test_data\
     --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
     -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz \
-    --nclasses 4 --onlytest --ckpt path/to/samplestructure/experiments/onlytrainrun/1524126169/cache/temp-22500 --notestingmask
+    --nclasses 4 --only_test --ckpt path/to/samplestructure/experiments/onlytrainrun/1524126169/cache/temp-22500 --notestingmask
 
 Usually, after conducting a training run, it is the best idea to simply
 copy the training parameters, remove the "onlytest", add the
