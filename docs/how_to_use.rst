@@ -234,8 +234,8 @@ The slurm submission file should look like this:
     #SBATCH --cpus-per-task=1
     #SBATCH --mem-per-cpu=8G
     #Total memory reserved: 8GB
-    #SBATCH --partition=k80     
-    #SBATCH --gres=gpu:2 
+    #SBATCH --partition=pascal      # pascal / titanx
+    #SBATCH --gres=gpu:6            # --gres=gpu:2 for two GPU, aso.
 
     #SBATCH --time=00:30:00
     #SBATCH --qos=30min
@@ -268,7 +268,7 @@ The slurm submission file should look like this:
     --locationvalidation val --locationtesting test \
     --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
     -f pd_pp.nii t2_pp.nii flair_pp.nii mprage_pp.nii -m mask.nii --iterations 10 \
-    --nclasses 2 --num_threads 4
+    --nclasses 2 --num_threads 4  --gpu 0 1 2 3 4 5
 
 
 Localization code
