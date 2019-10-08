@@ -11,9 +11,9 @@ Below is a sample start script with minimum inputs.
 
     python3 RUN_mdgru.py --datapath path/to/samplestructure --locationtraining train_data \
     --locationvalidation val_data --locationtesting test_data \
-    --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
-    -f seq1.nii.gz seq2.nii.gz -m lab.nii.gz --iterations 100000 \
-    --nclasses 4
+    --optionname bestsettingsever --modelname bestmodelever -w 64 64 64 -p 5 5 5 \
+    -f t2.nii.gz flair.nii.gz -m mask1.nii.gz --iterations 100000 \
+    --nclasses 2
     
 Mandatory inputs
 ----------------
@@ -43,7 +43,7 @@ These are mandatory inputs for which no default values are set.
 **subvolume size (dtype=int) of shape (1, n_dims)**
 ::
     
-    -w 128 128 128
+    -w 64 64 64
 
 **padding size (dtype=int) of shape (1, n_dims)**
 ::
