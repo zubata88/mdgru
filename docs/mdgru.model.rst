@@ -19,7 +19,7 @@ MDGRUClassification
     :show-inheritance:
 
 
-Module Contents
+Module contents
 ---------------
 
 .. automodule:: mdgru.model
