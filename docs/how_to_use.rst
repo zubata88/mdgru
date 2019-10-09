@@ -19,7 +19,7 @@ and validation set should be located in respective folders. The
 following shows an example, where we have training, testing and
 validation folders train\_data, test\_data and val\_data respectively,
 containing each some samples. **Each sample consists of two featurefiles in this case
-(seq1.nii.gz and seq2.nii.gz, e.g. t2.nii.gz, flair.nii.gz, ...) and one labelfile (lab.nii.gz, e.g. mask1.nii.gz), as shown
+(seq1.nii(.gz) and seq2.nii(.gz), e.g. t2.nii(.gz), flair.nii(.gz), ...) and one labelfile (lab.nii(.gz), e.g. mask1.nii(.gz)), as shown
 in the following example.**
 
 ::
@@ -108,9 +108,9 @@ the checkpoints and tensorboard data.
 
 Expecially for 2-D data - and if a large number of samples is available -
 the whole image can be processed. There, we set the subvolume
-(patchsize) parameter to the size of the images and the padding
+(patchsize) parameter to the size of the images (-w 200 200 200) and the padding
 parameters to 0. This has the effect that we only sample inside the
-image with a padding of 0, and hence just take the full image. As
+image with a padding of 0 (-p 0 0 0), and hence just take the full image. As
 current hardware can rarely support the full volume for volumetric data
 though, a subvolume needs to be specified. Imagine we are using
 volumetric data with dimensions 256x256x192. Since this will not fit, we
@@ -170,7 +170,9 @@ added for the training procedure:
 
 ::
 
-    --rotate ANGLE --scale scale1 scale2... --deformation gridspacing1 gridspacing2... --deformSigma samplingstdev1 samplingstdev2...
+    --rotate ANGLE --scale scale1 scale2... 
+    --deformation gridspacing1 gridspacing2... 
+    --deformSigma samplingstdev1 samplingstdev2...
 
 The first parameter is a scalar in radians which allows for random
 rotation around a random vector for 3d data, and around the center point
@@ -223,7 +225,7 @@ an automatic evaluation using predefined metrics during the evaluation.
 
 Usage on a high performance computing (HPC) cluster
 ---------------------------------------------------
-The slurm submission file should look like this:
+When using the code on a HPC cluster, make sure to set the GPU IDs. The slurm submission file should look like this:
 
 ::
 
