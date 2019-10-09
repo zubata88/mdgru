@@ -225,7 +225,7 @@ an automatic evaluation using predefined metrics during the evaluation.
 
 Usage on a high performance computing (HPC) cluster
 ---------------------------------------------------
-When using the code on a HPC cluster, make sure to set the GPU IDs. The slurm submission file should look like this:
+When using the code on a HPC cluster, make sure to set the GPU IDs. Copy the RUN_mdgru script in your working directory. The slurm submission file should look like this:
 
 ::
 
