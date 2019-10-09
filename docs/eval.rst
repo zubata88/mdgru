@@ -54,7 +54,7 @@ Evaluation module
 
     --evaluate_uncertainty_saveall False
 
-Supervised Evaluation
+Supervised evaluation
 ---------------
 
 .. automodule:: mdgru.eval 
@@ -62,14 +62,14 @@ Supervised Evaluation
     :undoc-members:
     
 
-TensorFlow Backend
+TensorFlow backend
 ------------------
 
 .. automodule:: mdgru.eval.tf
     :members:
     :undoc-members:
 
-PyTorch Backend
+PyTorch backend
 ---------------
 
 .. automodule:: mdgru.eval.torch
