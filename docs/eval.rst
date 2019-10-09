@@ -1,20 +1,31 @@
 Evaluation module
 =================
 
-Supervised Evaluation
----------------
+**iterations after which to evaluate on validation set (dtype=int)**
+::
 
-.. automodule:: mdgru.eval 
-    :members:
-    :undoc-members:
-
-TensorFlow Backend
-------------------
-
-.. automodule:: mdgru.eval.tf
-    :members:
-    :undoc-members:
+    --test_each 2500
     
+**iterations after which to create a checkpoint (dtype=int)**
+::
+
+    --save_each None
+    
+**iteration after which to create a plot (dtype=int)**
+::
+
+    --plot_each 2500
+
+**test size (dtype=int)**
+::
+    
+    --test_size 1
+
+**whether to perform validation on the full images (dtype=bool)**
+::
+    
+    --perform_full_image_validation True
+
 **save only labels and no probability distributions (dtype=bool)**
 ::
     
@@ -42,6 +53,21 @@ TensorFlow Backend
 ::
 
     --evaluate_uncertainty_saveall False
+
+Supervised Evaluation
+---------------
+
+.. automodule:: mdgru.eval 
+    :members:
+    :undoc-members:
+    
+
+TensorFlow Backend
+------------------
+
+.. automodule:: mdgru.eval.tf
+    :members:
+    :undoc-members:
 
 PyTorch Backend
 ---------------
