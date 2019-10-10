@@ -1,6 +1,5 @@
-
-Instruction (Tensorflow backend) 
-''''''''''''''''''''''''''''''''''''
+How to use (Tensorflow backend) 
+'''''''''''''''''''''''''''''''
 
 The file *RUN\_mdgru.py* is used for
 basically all segmentation tasks. For now, please refer to it's help
@@ -223,6 +222,11 @@ a requirement for each folder to be accepted as valid sample. If there
 are labelmaps for the test samples, this flag can be omitted, leading to
 an automatic evaluation using predefined metrics during the evaluation.
 
+Fine tuning
+-----------
+
+In order to fine tune the model and increase the performance even more, several data augmentation options are available, and these can be found in the **data loader module**. In addition, dice loss is implemented for cases with skewed classes, e.g. when only few pixels in a subvolume are part of the positive class such as in tumor or lesion segmentation. Read more about dice loss in the **start script** options.
+
 Usage on a high performance computing (HPC) cluster
 ---------------------------------------------------
 When using the code on a HPC cluster, make sure to set the GPU IDs. Copy the RUN_mdgru.py script to your working directory. The slurm submission file should look like this:
@@ -270,7 +274,6 @@ When using the code on a HPC cluster, make sure to set the GPU IDs. Copy the RUN
     --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
     -f pd_pp.nii t2_pp.nii flair_pp.nii mprage_pp.nii -m mask.nii --iterations 10 \
     --nclasses 2 --num_threads 4  --gpu 0 1 2 3 4 5
-
 
 Localization code
 -----------------
