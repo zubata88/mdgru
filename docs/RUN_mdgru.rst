@@ -137,3 +137,20 @@ These are optional inputs for which the default values (listed in the commands b
 ::  
 
     --only_test --ckpt path/to/checkpoint/file
+    
+**application of dice loss to label i, by default turned off (dtype=int)**
+::
+    
+    --dice_loss_label 0 1
+    
+**weights for dice loss, if label(s) are provided (dtype=float)**
+::
+    
+    --dice_loss_weight 0.0
+    
+**weights for dice loss, automatized instead of manual (dtype=bool)**
+::
+
+    --dice_autoweighted # weights the label dices with the squared inverse gold standard area/volume - specify which labels with dice_loss_label, sum(dice_loss_weight) is used as a weighting between crossentropy and diceloss
+    --dice_generalized # total intersections of all labels over total sums of all labels, instead of linearly combined class dices
+    --dice_cc # dice loss for binary segmentation per true component
