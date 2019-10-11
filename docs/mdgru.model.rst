@@ -18,6 +18,11 @@ These are optional controllable parameters for the CGRUnits inside a MDGRU block
 
     --use_bernoulli False
     
+**stride (dtype=int)**
+::
+
+    --strides None
+
 **use dropconnect on input x (dtype=bool)**
 ::
 
@@ -28,10 +33,31 @@ These are optional controllable parameters for the CGRUnits inside a MDGRU block
 
     --use_dropconnect_h True
     
+**don't use average pooling (dtype=bool)**
+::
+    
+    --no_avg_pooling True
+    
+**filter size for input x (dtype=int)**
+::
+
+    --filter_size_x 7
+    
+**filter size for input h (dtype=int)**
+::
+
+    --filter_size_h 7
+    
+**use static RNN (dtype=bool)**
+::
+
+    --use_static_rnn False
+
+    
 **add batch normalization at the input x in gate (dtype=bool)**
 ::
 
-    --add_x_bn
+    --add_x_bn False
     
 **add batch normalization at the input h in candidate (dtype=bool)**
 ::
