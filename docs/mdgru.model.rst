@@ -21,12 +21,12 @@ These are *not* controllable parameters for the CGRUnits inside a MDGRU block.
 **use dropconnect on input x (dtype=bool)**
 ::
 
-    --dropconnectx False
+    --use_dropconnect_x True
     
 **use dropconnect on input h (dtype=bool)**
 ::
 
-    --dropconnecth False
+    --use_dropconnect_h True
     
 **add batch normalization at the input x in gate (dtype=bool)**
 ::
@@ -41,7 +41,7 @@ These are *not* controllable parameters for the CGRUnits inside a MDGRU block.
 **add batch normalization at the candidates input and state (dtype=bool)**
 ::
 
-    --add_a_bn False
+    --add_e_bn False
     
 **add residual learning to the input x of each cgru (dtype=bool)**
 ::
