@@ -1,7 +1,7 @@
 Model (Tensorflow backend)
 ==========================
 
-These are optional parameters for the CGRUnits inside a MDGRU block.
+These are *not* controllable parameters for the CGRUnits inside a MDGRU block.
 
 **periodic convolution on input x (dtype=bool)**
 ::
