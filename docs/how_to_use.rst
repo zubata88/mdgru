@@ -272,8 +272,8 @@ When using the code on a HPC cluster, make sure to set the GPU IDs. Copy the RUN
     python3 RUN_mdgru.py --datapath files --locationtraining train \
     --locationvalidation val --locationtesting test \
     --optionname defaultsettings --modelname mdgrudef48 -w 64 64 64 -p 5 5 5 \
-    -f pd_pp.nii t2_pp.nii flair_pp.nii mprage_pp.nii -m mask.nii --iterations 10 \
-    --nclasses 2 --num_threads 4  --gpu 0 1 2 3 4 5
+    -f pd_pp.nii t2_pp.nii flair_pp.nii mprage_pp.nii -m mask.nii --iterations 10000 \
+    --nclasses 2 --num_threads 4  --gpu 0
 
 Localization code
 -----------------
