@@ -11,7 +11,7 @@ setup(
     long_description="Details can be found in the Readme file",
     author="Simon Andermatt",
     author_email="simon.andermatt@unibas.ch",
-    url="https://github.com/gtancev/mdgru",
+    url="https://github.com/zubata88/mdgru",
     packages=find_packages('.') + ['.'],
     license="LGPL",
     python_requires='>=3.5',
