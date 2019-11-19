@@ -1,30 +1,35 @@
 Multi-dimensional Gated Recurrent Units
 =======================================
 
-This repository contains the code used to produce the results in the
-papers **Automated Segmentation of Multiple Sclerosis Lesions using
-Multi-Dimensional Gated Recurrent Units** and **Multi-dimensional Gated
-Recurrent Units for Automated Anatomical Landmark Localization**. It was
+This repository contains the code used to generate the result in the
+paper `Automated Segmentation of Multiple Sclerosis Lesions using
+Multi-Dimensional Gated Recurrent Units <https://link.springer.com/chapter/10.1007/978-3-319-75238-9_3>`_. It is implemented in **Python** using the deep learning libraries **PyTorch** and **TensorFlow** each, modified versions were also
 used to reach *1st place* in the ISBI 2015 longitudinal lesion
 segmentation challenge, *2nd place* in the white matter hyperintensities
-challenge of MICCAI 2017 and its previous implementation in CAFFE made
-*3rd place* in the MrBrainS13 Segmentation challenge. We also competed
-in BraTS 2017, where the information on the exact rank are still
-unknown. This release is implemented using the tensorflow framework. The
-CAFFE code is not maintained anymore (there are probably breaking
+challenge of MICCAI 2017 (and its previous implementation using Caffe made
+*3rd place* in the MrBrainS13 Segmentation challenge). 
+It was also applied in the BraTS 2017 competition, where the information on the exact rank are still
+unknown.
+
+Since being published the first time using a Caffe implementation, the code has been improved on quite a
+bit, especially to facilitate handling training and testing runs. The
+reported results should still be reproducible though using this new
+implementation with TensorFlow and PyTorch. (The former Caffe code is not maintained anymore (there are probably breaking
 changes in CuDNN, not tested), but a snapshot of it is included in this
 release in the folder tensorflow\_extra\_ops as additional operation for
-tensorflow. Since being published, the code has been improved on quite a
-bit, especially to facilitate handling training and testing runs. The
-reported results should still be reproducible though using this
-implementation. 
+TensorFlow.)
 
-The latest full documentation is available `here <https://zubata88.github.io/mdgru>`_.
+The code has been developed in Python==3.5.2. It is best to set up a **virtual environment** (e.g. with `conda <https://uoa-eresearch.github.io/eresearch-cookbook/recipe/2014/11/20/conda/>`_) with the mentioned properties in order to develop the deep learning model. For this purpose, follow the instructions in the `docs <https://mdgru.readthedocs.io/en/latest/index.html>`_, and install mdgru (together with mvloader) using pip. In addition, make sure you have `CUDA <https://developer.nvidia.com/cuda-90-download-archive>`_/`cuDNN <https://docs.nvidia.com/deeplearning/sdk/cudnn-install/index.html>`_ installed.
+
+::
+
+    pip install git+https://github.com/gtancev/mdgru.git
+    pip install git+https://github.com/spezold/mvloader.git
 
 Papers
 ''''''
 
-Reference implementation for - and based on - Caffe version:
+Reference implementation (and based on former Caffe version):
 
 ::
 
@@ -37,7 +42,7 @@ Reference implementation for - and based on - Caffe version:
       organization={Springer}
     }
 
-Code used for:
+Code also used for (with modifications):
 
 ::
 
@@ -51,16 +56,19 @@ Code used for:
       note = {{{[accepted]}}},
       organization={Springer}
     }
+    
     @article{andermatt2017b,
       title={Multi-dimensional Gated Recurrent Units for Automated Anatomical Landmark Localization},
       author={Andermatt, Simon and Pezold, Simon and Amann, Michael and Cattin, Philippe C},
       journal={arXiv preprint arXiv:1708.02766},
       year={2017}
     }
+    
     @article{andermatt2017wmh,
       title={Multi-dimensional Gated Recurrent Units for the Segmentation of White Matter Hyperintensites},
       author={Andermatt, Simon and Pezold, Simon and Cattin, Philippe}
     }
+    
     @inproceedings{andermatt2017brats,
     title = {Multi-dimensional Gated Recurrent Units for
     Brain Tumor Segmentation},

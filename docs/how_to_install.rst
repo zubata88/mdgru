@@ -1,32 +1,10 @@
 
-How to Install 
+How to install 
 ''''''''''''''
 
-Requirements (on ubuntu) can be installed
-using the following lines of code. On other systems, use the
-corresponding packages. Make sure to use tensorflow v 1.8 for the tensorflow backend.
+The code has been developed in Python==3.5.2. It is best to set up a **virtual environment** (e.g. with `conda <https://uoa-eresearch.github.io/eresearch-cookbook/recipe/2014/11/20/conda/>`_) with the mentioned properties in order to develop the deep learning model. For this purpose, install mdgru (together with mvloader) using pip. In addition, make sure you have `CUDA <https://developer.nvidia.com/cuda-90-download-archive>`_/`cuDNN <https://docs.nvidia.com/deeplearning/sdk/cudnn-install/index.html>`_ installed.
 
 ::
 
-    sudo apt-get install cmake python3-pip curl git python3-dicom
-
-    sudo pip3 install --upgrade pip
-
-    # either with a gpu, and cuda + cudnn installed:
-    sudo pip3 install "tensorflow-gpu>=1.8"
-    # or
-    sudo pip3 install "tensorflow>=1.8"
-
-    sudo pip3 install torch torchvision visdom
-
-    sudo pip3 install nibabel numpy scipy matplotlib pynrrd
-
-    sudo pip3 install scikit-image scikit-learn simpleitk torch visdom
-
-    sudo pip3 install git+https://github.com/spezold/mvloader.git
-
-Or simply install mdgru from github using pip:
-
-::
-
-    pip3 install git+https://github.com/zubata88/mdgru.git
+    pip install git+https://github.com/gtancev/mdgru.git
+    pip install git+https://github.com/spezold/mvloader.git

@@ -6,14 +6,14 @@
 .. include:: includeme.rst
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 6
    :caption: Guides
 
-   how_to_use
    how_to_install
+   how_to_use
    
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 6
    :caption: API Reference 
 
    RUN_mdgru
