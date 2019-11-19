@@ -23,7 +23,7 @@ The code has been developed in Python==3.5.2. It is best to set up a **virtual e
 
 ::
 
-    pip install git+https://github.com/gtancev/mdgru.git
+    pip install git+https://github.com/zubata88/mdgru.git
     pip install git+https://github.com/spezold/mvloader.git
 
 Papers
