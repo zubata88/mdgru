@@ -8,13 +8,16 @@ from os import listdir
 from os.path import isfile, isdir, join, splitext
 from threading import Thread
 
-import nibabel as nib
-import mvloader.nifti as ni
-import mvloader.nrrd as nr
-import mvloader.dicom as dm
-import pydicom
-from mvloader.volume import Volume
-import nrrd
+try:
+    import nibabel as nib
+    import mvloader.nifti as ni
+    import mvloader.nrrd as nr
+    import mvloader.dicom as dm
+    import pydicom
+    from mvloader.volume import Volume
+    import nrrd
+except Exception as e:
+    logging.warning("Cannot load medical libraries, will assume they are not used in this project ({})".format(e))
 import numpy as np
 import skimage.io as skio
 from scipy.misc import imsave, imread
