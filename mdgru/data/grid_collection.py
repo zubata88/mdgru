@@ -261,7 +261,8 @@ class GridDataCollection(DataCollection):
                         return np.transpose(data, [2, 0, 1])
                     else:
                         return data
-                    return imread(file)
+                elif ending in ['.tif', '.jpeg', '.jpg', '.tiff']:
+                    return imread(file).squeeze()
                 else:
                     raise Exception('{} not known'.format(ending))
 
