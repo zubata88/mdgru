@@ -20,7 +20,7 @@ except Exception as e:
     logging.warning("Cannot load medical libraries, will assume they are not used in this project ({})".format(e))
 import numpy as np
 import skimage.io as skio
-from scipy.misc import imsave, imread
+from imageio import imsave, imread
 from scipy.ndimage.filters import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.measurements import label
