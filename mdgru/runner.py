@@ -120,27 +120,27 @@ class Runner(object):
         self.experiments = os.path.join(experiments_nots, str(int(time.time())))
         self.cachefolder = os.path.join(self.experiments, 'cache')
         os.makedirs(self.cachefolder)
-        # logging:
+        
+        # Add Logging.FileHandler (StreamHandler was added already in RUN_mdgru.py)
         loggers = [logging.getLogger(n) for n in ['model', 'eval', 'runner', 'helper', 'data']]
         formatter = logging.Formatter('%(asctime)s %(name)s\t%(levelname)s:\t%(message)s')
         logfile = argget(kw, 'logfile', os.path.join(self.cachefolder, 'log.txt'))
         fh = logging.FileHandler(logfile)
         fh.setLevel(argget(kw, 'logfileloglvl', logging.DEBUG))
         fh.setFormatter(formatter)
-
-        ch = logging.StreamHandler()
-        ch.setFormatter(formatter)
-        ch.setLevel(argget(kw, 'loglvl', logging.WARNING))
+        # ch = logging.StreamHandler()
+        # ch.setFormatter(formatter)
+        # ch.setLevel(argget(kw, 'loglvl', logging.DEBUG))        
         for logger in loggers:
-            logger.addHandler(ch)
             logger.setLevel(logging.DEBUG)
+            # logger.addHandler(ch)
             logger.addHandler(fh)
 
         for k in self.origargs:
-            logging.getLogger('runner').info('arg {}:{}'.format(k, self.origargs[k]))
+            logging.getLogger('runner').info('args runner {}:{}'.format(k, self.origargs[k]))
         self.ev = evaluationinstance
         for k in self.ev.origargs:
-            logging.getLogger('eval/data/model').info('arg {}:{}'.format(k, self.ev.origargs[k]))
+            logging.getLogger('runner').info('args eval/data/model {}:{}'.format(k, self.ev.origargs[k]))
         # for k in self.ev.trdc.origargs:
         #     logging.getLogger('data').info(' trdc arg {}:{}'.format(k, self.ev.trdc.origargs[k]))
         # for k in self.ev.tedc.origargs:

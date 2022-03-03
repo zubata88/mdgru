@@ -4,7 +4,7 @@ __author__ = "Simon Andermatt"
 __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import logging
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO) #- this statement would cuas dupplicate logs
 import os
 import numpy as np
 import sys
@@ -17,6 +17,17 @@ import argparse
 
 def run_mdgru(args=None):
     """Executes a training/ testing or training and testing run for the mdgru network"""
+
+    # Add logging.Streamhandler already in RUN_mdgru.py, to allow catching early debug logs; instead, FileHandler will still be added later in runner.py
+    loggers = [logging.getLogger(n) for n in ['model', 'eval', 'runner', 'helper', 'data']]
+    formatter = logging.Formatter('%(asctime)s %(name)s\t%(levelname)s:\t%(message)s')
+    ch = logging.StreamHandler()
+    ch.setFormatter(formatter)
+    ch.setLevel(logging.DEBUG)
+    for logger in loggers:
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(ch)
+    logging.getLogger('runner').info('Starting argument parsing!')
 
     # Parse arguments
     fullparameters = " ".join(args if args is not None else sys.argv)
@@ -89,6 +100,10 @@ def run_mdgru(args=None):
             args_eval['namespace'] = modelcls.get_model_name_from_ckpt(args.checkpointfiles[0])
     args_eval['channels_first'] = args.use_pytorch
 
+    #--- add dice loss options
+    args_eval['dice_loss_label'] = args.dice_loss_label
+    args_eval['dice_loss_weight'] = args.dice_loss_weight
+    args_eval['dice_autoweighted'] = args.dice_autoweighted
 
     # if args_tr is not None:
     #     traindc = tdc(**args_tr)
@@ -102,8 +117,10 @@ def run_mdgru(args=None):
     #     datadict = {"train": traindc, "validation": valdc, "test": valdc}
     # else:
     #     datadict = {"train": traindc, "validation": valdc, "test": testdc}
-
+    
+    logging.getLogger('runner').debug('Starting class initialization!')
     ev = evalcls(modelcls, tdc, args_eval)
+    logging.getLogger('runner').debug('Finished class initialization!')
 
     # Set up runner
     args_runner, _ = compile_arguments(Runner, kw, True, keep_entries=True)
@@ -113,6 +130,7 @@ def run_mdgru(args=None):
         # "estimatefilenames": optionname
     })
     runner = Runner(ev, **args_runner)
+
     # Run computation
     return runner.run()
 

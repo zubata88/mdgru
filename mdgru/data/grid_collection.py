@@ -17,7 +17,8 @@ from mvloader.volume import Volume
 import nrrd
 import numpy as np
 import skimage.io as skio
-from scipy.misc import imsave, imread
+# from scipy.misc import imsave, imread #--- imsave deprecated, use imageio.imwrite and imageio.imread instead
+from imageio import imwrite, imread
 from scipy.ndimage.filters import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.measurements import label
@@ -281,13 +282,13 @@ class GridDataCollection(DataCollection):
             except Exception as e:
                 ending = os.path.splitext(self.featurefiles[0])[-1]
         if ending in ['.mhd']:
-            skio.imsave(filename + ending, data, plugin='simpleitk')
+            skio.imwrite(filename + ending, data, plugin='simpleitk')
         elif ending in ['.raw']:
             data.astype('int16').tofile(filename + ending)
         elif ending in ['.png', '.jpeg', '.png', '.pgm', '.pnm', '.gif', '.tif', '.tiff']:
             if np.max(data) <= 1.0 and np.min(data) >= 0:
                 np.int8(np.clip(data * 256, 0, 255))
-                imsave(filename + ending, data.squeeze())
+                imwrite(filename + ending, data.squeeze())
         else:
             # ending in ['.nii', '.hdr', '.nii.gz', '.gz', '.dcm'] or len(data.squeeze().shape) > 2:
             if self.correct_orientation and tporigin is not None:
