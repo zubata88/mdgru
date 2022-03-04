@@ -3,6 +3,7 @@ __copyright__ = "Copyright (C) 2017 Simon Andermatt"
 
 import numpy as np
 import tensorflow as tf
+import logging
 
 from mdgru.helper import argget, collect_parameters, define_arguments, compile_arguments
 from mdgru.model import save_summary_for_nd_images
@@ -111,6 +112,12 @@ class MDGRUClassificationWithDiceLoss(MDGRUClassification):
         self.dice_loss_weight = argget(kw, "dice_loss_weight", [])
         self.dice_autoweighted = argget(kw, "dice_autoweighted", False)
 
+        self.logger = logging.getLogger('runner.model')
+        self.logger.debug('initialization MDGRUClassificationWithDiceLoss:')
+        self.logger.debug(f' self.dice_loss_label: {self.dice_loss_label}')
+        self.logger.debug(f' self.dice_loss_weight: {self.dice_loss_weight}')
+        self.logger.debug(f' self.dice_autoweighted: {self.dice_autoweighted}')
+        
         if len(self.dice_loss_label) != len(self.dice_loss_weight) and not self.dice_autoweighted:
             raise Exception("dice_loss_label and dice_loss_weight need to be of the same length")
 
@@ -155,6 +162,12 @@ class MDGRUClassificationWithGeneralizedDiceLoss(MDGRUClassification):
         self.dice_loss_weight = argget(kw, "dice_loss_weight", [])
         self.dice_autoweighted = argget(kw, "dice_autoweighted", False)
 
+        self.logger = logging.getLogger('runner.model')
+        self.logger.debug('initialization MDGRUClassificationWithGeneralizedDiceLoss:')
+        self.logger.debug(f' self.dice_loss_label: {self.dice_loss_label}')
+        self.logger.debug(f' self.dice_loss_weight: {self.dice_loss_weight}')
+        self.logger.debug(f' self.dice_autoweighted: {self.dice_autoweighted}')
+        
         if len(self.dice_loss_label) != len(self.dice_loss_weight) and not self.dice_autoweighted:
             raise Exception("dice_loss_label and dice_loss_weight need to be of the same length")
 
