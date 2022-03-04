@@ -282,7 +282,7 @@ class GridDataCollection(DataCollection):
             except Exception as e:
                 ending = os.path.splitext(self.featurefiles[0])[-1]
         if ending in ['.mhd']:
-            skio.imwrite(filename + ending, data, plugin='simpleitk')
+            skio.imsave(filename + ending, data, plugin='simpleitk')
         elif ending in ['.raw']:
             data.astype('int16').tofile(filename + ending)
         elif ending in ['.png', '.jpeg', '.png', '.pgm', '.pnm', '.gif', '.tif', '.tiff']:
